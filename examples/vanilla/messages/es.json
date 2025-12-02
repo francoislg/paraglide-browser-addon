@@ -1,0 +1,19 @@
+{
+  "welcome": "¡Bienvenido a Paraglide Browser Addon!",
+  "greeting": "¡Hola, {name}!",
+  "description": "Este es un ejemplo simple que demuestra el complemento Vite personalizado para ParaglideJS.",
+  "language_switcher": "Cambiar idioma",
+  "current_language": "Idioma actual: Español",
+  "pluralization_demo": "Demostración de Pluralización",
+  "items_count": [{
+    "declarations": [
+      "input count",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural"],
+    "match": {
+      "countPlural=one": "Tienes {count} elemento en tu carrito.",
+      "countPlural=other": "Tienes {count} elementos en tu carrito."
+    }
+  }]
+}

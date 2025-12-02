@@ -1,0 +1,22 @@
+{
+  "name": "paraglide-browser-addon-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vite plugin for ParaglideJS debug metadata injection - Monorepo",
+  "scripts": {
+    "dev:vanilla": "pnpm --filter vanilla dev",
+    "build:plugin": "pnpm --filter vite-plugin-paraglide-debug build",
+    "dev:all": "pnpm -r --parallel dev"
+  },
+  "keywords": [
+    "vite",
+    "plugin",
+    "paraglide",
+    "i18n",
+    "debug",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}

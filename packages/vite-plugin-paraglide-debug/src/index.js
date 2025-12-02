@@ -1,0 +1,158 @@
+import path from 'path';
+import fs from 'fs';
+import { wrapParaglideIndex } from '../scripts/post-compile.js';
+
+/**
+ * Custom Vite plugin for ParaglideJS debug metadata injection
+ * @param {Object} options - Plugin options
+ * @param {string} options.outdir - Output directory where Paraglide generates files
+ * @returns {import('vite').Plugin}
+ */
+export function paraglideBrowserDebugPlugin(options = {}) {
+  const {
+    outdir = './src/paraglide'
+  } = options;
+
+  let viteConfig;
+  let isDebugMode = false;
+
+  return {
+    name: 'paraglide-browser-debug',
+    enforce: 'post', // Run after the official Paraglide plugin
+
+    configResolved(config) {
+      viteConfig = config;
+      // Check environment variable from Vite's loaded .env files
+      isDebugMode = config.env.VITE_PARAGLIDE_BROWSER_DEBUG === 'true';
+      console.log('[paraglide-debug] Plugin configured');
+      console.log('[paraglide-debug] Debug mode:', isDebugMode);
+      console.log('[paraglide-debug] Environment check:', config.env.VITE_PARAGLIDE_BROWSER_DEBUG);
+    },
+
+    // Serve raw JSON translations for debugging
+    configureServer(server) {
+      if (!isDebugMode) return;
+
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/paraglide-debug-langs.json') {
+          const rootPath = viteConfig.root || process.cwd();
+          const projectPath = path.join(rootPath, 'project.inlang');
+
+          try {
+            // Read settings to get the pathPattern
+            const settingsPath = path.join(projectPath, 'settings.json');
+            if (!fs.existsSync(settingsPath)) {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: 'settings.json not found' }));
+              return;
+            }
+
+            const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+            const locales = settings.locales || [];
+            const pathPattern = settings['plugin.inlang.messageFormat']?.pathPattern || './messages/{locale}.json';
+
+            // Collect all language JSON files
+            // pathPattern is relative to the project root, not project.inlang
+            const languages = {};
+            for (const locale of locales) {
+              const messagePath = path.join(
+                rootPath,
+                pathPattern.replace('{locale}', locale).replace('./', '')
+              );
+
+              console.log('[paraglide-debug] Looking for:', messagePath);
+
+              if (fs.existsSync(messagePath)) {
+                const messages = JSON.parse(fs.readFileSync(messagePath, 'utf-8'));
+                languages[locale] = messages;
+                console.log('[paraglide-debug] ✓ Loaded:', locale);
+              } else {
+                console.log('[paraglide-debug] ✗ Not found:', messagePath);
+              }
+            }
+
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.end(JSON.stringify(languages, null, 2));
+
+            console.log('[paraglide-debug] ✓ Served raw translations for:', Object.keys(languages).join(', '));
+          } catch (err) {
+            console.error('[paraglide-debug] Error serving translations:', err);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        } else {
+          next();
+        }
+      });
+
+      console.log('[paraglide-debug] ✓ Serving translations at /paraglide-debug-langs.json');
+    },
+
+    // Transform _index.js to wrap with debug metadata
+    transform(code, id) {
+      const normalizedId = id.replace(/\\/g, '/');
+
+      // Check if this is a request for the original (unwrapped) code
+      const isOriginalQuery = normalizedId.includes('_index.js?original');
+      const isIndexFile = normalizedId.includes('/paraglide/messages/') &&
+                          normalizedId.includes('_index.js') &&
+                          !isOriginalQuery;
+
+      // Return stored original code when requested with ?original
+      if (isOriginalQuery) {
+        return {
+          code: this.originalIndexCode,
+          map: null
+        };
+      }
+
+      if (!isDebugMode || !isIndexFile) {
+        return null;
+      }
+
+      console.log('[paraglide-debug] ✓ Intercepting _index.js');
+
+      // Store the original code
+      this.originalIndexCode = code;
+      this.originalIndexId = id;
+
+      // Extract function names from exports
+      const functionNames = [];
+      const exportMatches = code.matchAll(/export const (\w+) = /g);
+      for (const match of exportMatches) {
+        functionNames.push(match[1]);
+      }
+
+      console.log('[paraglide-debug] Found message functions:', functionNames.join(', '));
+
+      // Generate wrapper that imports original via ?original query
+      const wrapperCode = `
+// Debug wrapper for Paraglide messages
+// Generated by vite-plugin-paraglide-debug
+
+import * as _original from './_index.js?original';
+
+// Debug wrapper function
+function __debugWrap(text, key, params) {
+  if (typeof text !== 'string') return text;
+  const paramsStr = params && Object.keys(params).length > 0
+    ? \` params:\${JSON.stringify(params)}\`
+    : '';
+  return \`<!-- paraglide:\${key}\${paramsStr} -->\${text}<!-- /paraglide:\${key} -->\`;
+}
+
+// Export wrapped versions of all message functions
+${functionNames.map(name => `export const ${name} = (inputs, options) => {
+  const result = _original.${name}(inputs, options);
+  return __debugWrap(result, "${name}", inputs);
+};`).join('\n')}
+`;
+
+      return {
+        code: wrapperCode,
+        map: null
+      };
+    }
+  };
+}
