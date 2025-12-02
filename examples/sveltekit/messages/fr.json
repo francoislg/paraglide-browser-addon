@@ -1,0 +1,27 @@
+{
+  "welcome": "Bienvenue dans Paraglide avec SvelteKit!",
+  "nav_home": "Accueil",
+  "nav_about": "À propos",
+  "nav_products": "Produits",
+  "greeting": "Bonjour, {name}!",
+  "description": "Cet exemple démontre l'intégration de Paraglide avec SvelteKit et le plugin de métadonnées de débogage.",
+  "language_switcher": "Changer de langue",
+  "current_language": "Langue actuelle: Français",
+  "home_title": "Page d'accueil",
+  "home_content": "Ceci est la page d'accueil de notre exemple SvelteKit avec internationalisation Paraglide.",
+  "about_title": "Page À propos",
+  "about_content": "Découvrez comment Paraglide fonctionne avec SvelteKit pour fournir un support i18n transparent.",
+  "products_title": "Page des produits",
+  "pluralization_demo": "Démonstration de comptage de produits",
+  "items_count": [{
+    "declarations": [
+      "input count",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural"],
+    "match": {
+      "countPlural=one": "Vous avez {count} produit dans votre catalogue.",
+      "countPlural=other": "Vous avez {count} produits dans votre catalogue."
+    }
+  }]
+}

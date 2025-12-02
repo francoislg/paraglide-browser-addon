@@ -1,0 +1,27 @@
+{
+  "welcome": "Welcome to Paraglide with React Router!",
+  "nav_home": "Home",
+  "nav_about": "About",
+  "nav_products": "Products",
+  "greeting": "Hello, {name}!",
+  "description": "This example demonstrates Paraglide integration with React Router and the debug metadata plugin.",
+  "language_switcher": "Switch Language",
+  "current_language": "Current Language: English",
+  "home_title": "Home Page",
+  "home_content": "This is the home page of our React Router example with Paraglide internationalization.",
+  "about_title": "About Page",
+  "about_content": "Learn more about how Paraglide works with React Router to provide seamless i18n support.",
+  "products_title": "Products Page",
+  "pluralization_demo": "Product Count Demo",
+  "items_count": [{
+    "declarations": [
+      "input count",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural"],
+    "match": {
+      "countPlural=one": "You have {count} product in your catalog.",
+      "countPlural=other": "You have {count} products in your catalog."
+    }
+  }]
+}

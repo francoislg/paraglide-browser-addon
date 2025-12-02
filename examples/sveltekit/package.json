@@ -1,0 +1,23 @@
+{
+  "name": "sveltekit-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SvelteKit example for vite-plugin-paraglide-debug",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "VITE_PARAGLIDE_BROWSER_DEBUG=true vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@sveltejs/kit": "^2.8.5"
+  },
+  "devDependencies": {
+    "@inlang/paraglide-js": "2.5.0",
+    "@sveltejs/adapter-static": "^3.0.6",
+    "@sveltejs/vite-plugin-svelte": "^5.0.2",
+    "svelte": "^5.2.10",
+    "vite": "^6.0.0",
+    "vite-plugin-paraglide-debug": "workspace:*"
+  }
+}

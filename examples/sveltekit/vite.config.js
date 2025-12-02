@@ -1,3 +1,4 @@
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug';
@@ -7,27 +8,20 @@ export default defineConfig({
     // Official Paraglide plugin - generates message functions
     paraglideVitePlugin({
       project: './project.inlang',
-      outdir: './src/paraglide'
+      outdir: './src/lib/paraglide'
     }),
     // Debug plugin - injects HTML comment metadata in development
     paraglideBrowserDebugPlugin({
-      outdir: './src/paraglide'
-    })
+      outdir: './src/lib/paraglide'
+    }),
+    sveltekit()
   ],
   server: {
-    port: 3210,
+    port: 3230,
     strictPort: true
   },
   preview: {
-    port: 3210,
+    port: 3230,
     strictPort: true
-  },
-  build: {
-    outDir: 'dist',
-    rollupOptions: {
-      input: {
-        main: './index.html'
-      }
-    }
   }
 });

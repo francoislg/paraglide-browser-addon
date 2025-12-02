@@ -1,0 +1,25 @@
+{
+  "name": "react-router-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "React Router example for vite-plugin-paraglide-debug",
+  "scripts": {
+    "dev": "vite",
+    "build": "VITE_PARAGLIDE_BROWSER_DEBUG=true vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@inlang/paraglide-js": "2.5.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.0",
+    "vite-plugin-paraglide-debug": "workspace:*"
+  }
+}

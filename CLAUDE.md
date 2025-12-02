@@ -25,12 +25,31 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 This is a Paraglide Browser Addon demonstrating a Vite plugin for ParaglideJS internationalization with debug metadata injection capabilities.
 
+## Example Projects
+
+The repository contains three example projects demonstrating Paraglide integration:
+
+1. **Vanilla JS** (`examples/vanilla/`) - Port 3210
+2. **React Router** (`examples/react-router/`) - Port 3220
+3. **SvelteKit** (`examples/sveltekit/`) - Port 3230
+
+### Running Examples
+
+Use the `/run` slash command to start example projects:
+- `/run vanilla` - Run vanilla example on http://localhost:3210
+- `/run react` - Run React Router example on http://localhost:3220
+- `/run svelte` - Run SvelteKit example on http://localhost:3230
+- `/run vanilla,react,svelte` - Run multiple examples
+
 ## CRITICAL: Translation File Location
 
 **NEVER FORGET THIS:**
-- Translation JSON files MUST be in `examples/vanilla/messages/*.json`
+- Translation JSON files MUST be in `examples/{project}/messages/*.json`
 - NOT in `project.inlang/messages/`
-- Path pattern: `examples/vanilla/messages/{locale}.json`
+- Path patterns:
+  - `examples/vanilla/messages/{locale}.json`
+  - `examples/react-router/messages/{locale}.json`
+  - `examples/sveltekit/messages/{locale}.json`
 
 ## Architecture
 
@@ -64,7 +83,25 @@ The project includes a debug Vite plugin (`packages/vite-plugin-paraglide-debug/
 
 ## Key Files
 
-- `examples/vanilla/messages/{locale}.json` - Translation source files
-- `examples/vanilla/project.inlang/settings.json` - Inlang configuration
-- `examples/vanilla/.env` - Contains `VITE_PARAGLIDE_BROWSER_DEBUG=true`
+### Debug Plugin
 - `packages/vite-plugin-paraglide-debug/src/index.js` - Debug plugin implementation
+
+### Example Projects (each follows the same structure)
+- `examples/{project}/messages/{locale}.json` - Translation source files
+- `examples/{project}/project.inlang/settings.json` - Inlang configuration
+- `examples/{project}/.env` - Contains `VITE_PARAGLIDE_BROWSER_DEBUG=true`
+- `examples/{project}/vite.config.js` - Vite configuration with static port
+
+### Vanilla Example
+- `examples/vanilla/src/main.js` - Main JavaScript entry
+- `examples/vanilla/index.html` - HTML entry point
+
+### React Router Example
+- `examples/react-router/src/App.jsx` - Main React component with routing
+- `examples/react-router/src/pages/` - Page components
+- `examples/react-router/src/components/` - Reusable components
+
+### SvelteKit Example
+- `examples/sveltekit/src/routes/` - SvelteKit file-based routing
+- `examples/sveltekit/src/routes/+layout.svelte` - Layout component
+- `examples/sveltekit/svelte.config.js` - SvelteKit configuration
