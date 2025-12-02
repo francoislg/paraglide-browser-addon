@@ -65,32 +65,6 @@
       border-radius: 8px;
       font-size: 1.1em;
     }
-    .db-section {
-      background: rgba(255, 255, 255, 0.15);
-      padding: 20px;
-      border-radius: 12px;
-      margin: 20px 0;
-    }
-    .db-section h3 {
-      margin-top: 0;
-      font-size: 1.2em;
-    }
-    .db-status {
-      margin: 15px 0;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      font-size: 0.95em;
-    }
-    #sync-btn {
-      background: #4CAF50;
-      color: white;
-    }
-    #sync-btn:disabled {
-      background: #666;
-      cursor: not-allowed;
-      transform: none;
-    }
   </style>
 </head>
 <body>
@@ -105,12 +79,6 @@
     <div class="plural-demo">
       <h3 id="pluralization-demo"></h3>
       <ul class="plural-list" id="plural-list"></ul>
-    </div>
-
-    <div class="db-section">
-      <h3>Translation Database</h3>
-      <div class="db-status" id="db-status">Initializing...</div>
-      <button id="sync-btn" onclick="syncDB()">Sync Translations</button>
     </div>
 
     <div>
