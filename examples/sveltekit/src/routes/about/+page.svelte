@@ -18,6 +18,6 @@
 </style>
 
 <div class="page">
-  <h2>{@html m.about_title()}</h2>
-  <p>{@html m.about_content()}</p>
+  <h2>{m.about_title()}</h2>
+  <p>{m.about_content()}</p>
 </div>

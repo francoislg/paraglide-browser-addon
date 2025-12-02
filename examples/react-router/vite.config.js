@@ -11,7 +11,7 @@ export default defineConfig({
       project: './project.inlang',
       outdir: './src/paraglide'
     }),
-    // Debug plugin - injects HTML comment metadata in development
+    // Debug plugin - wraps message functions with runtime tracking
     paraglideBrowserDebugPlugin({
       outdir: './src/paraglide'
     })

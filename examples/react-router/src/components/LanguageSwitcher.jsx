@@ -12,13 +12,13 @@ function LanguageSwitcher() {
 
   return (
     <div className="language-switcher">
-      <h3 dangerouslySetInnerHTML={{ __html: m.language_switcher() }} />
+      <h3>{m.language_switcher()}</h3>
       <div>
         <button onClick={() => switchLanguage('en')}>English</button>
         <button onClick={() => switchLanguage('es')}>Español</button>
         <button onClick={() => switchLanguage('fr')}>Français</button>
       </div>
-      <div className="current" dangerouslySetInnerHTML={{ __html: m.current_language() }} />
+      <div className="current">{m.current_language()}</div>
     </div>
   );
 }

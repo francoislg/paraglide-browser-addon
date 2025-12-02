@@ -1,13 +1,14 @@
 # vite-plugin-paraglide-debug
 
-A Vite plugin that injects debug metadata into ParaglideJS translation strings, allowing you to inspect which translation key was used to generate each string in your browser.
+Vite plugin that injects debug metadata into ParaglideJS translation strings for browser extensions and debugging tools.
 
 ## Features
 
-- 🔍 **Debug Mode Only** - Activated via `VITE_PARAGLIDE_BROWSER_DEBUG=true` environment variable
-- 🏷️ **Metadata Injection** - Wraps translated strings with `<span data-i18n-key="..." data-i18n-params="...">`
-- 🚀 **Zero Runtime Overhead** - Only active in development when explicitly enabled
-- 🔌 **Framework Agnostic** - Works with any framework using ParaglideJS and Vite
+- 🔍 **Runtime Element Tracking**: Automatically tracks DOM elements containing translations
+- 🎯 **Zero Developer Friction**: Just use `m.message_key()` normally - no special syntax required
+- 🌐 **Framework Agnostic**: Works with React, SvelteKit, Svelte, Vue, and vanilla JS
+- 🔧 **TypeScript Support**: Full type definitions for the browser API
+- 🚀 **Dev & Prod Builds**: Works in both development and production modes
 
 ## Installation
 
@@ -15,125 +16,156 @@ A Vite plugin that injects debug metadata into ParaglideJS translation strings, 
 npm install vite-plugin-paraglide-debug
 # or
 pnpm add vite-plugin-paraglide-debug
-# or
-yarn add vite-plugin-paraglide-debug
 ```
 
-## Usage
+## Setup
 
-### 1. Add to Vite Config
+### 1. Add Plugin to Vite Config
 
 ```javascript
-import { defineConfig } from 'vite';
-import { paraglideVitePlugin } from '@inlang/paraglide-js';
+// vite.config.js
+import { paraglide } from '@inlang/paraglide-vite';
 import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug';
 
 export default defineConfig({
   plugins: [
-    // Official Paraglide plugin MUST come first
-    paraglideVitePlugin({
+    paraglide({
       project: './project.inlang',
-      outdir: './src/paraglide'
+      outdir: './src/paraglide',
     }),
-    // Debug plugin runs after
     paraglideBrowserDebugPlugin({
-      outdir: './src/paraglide'
-    })
-  ]
+      outdir: './src/paraglide', // Should match paraglide plugin
+    }),
+  ],
 });
 ```
 
 ### 2. Enable Debug Mode
 
-Create a `.env` file:
-```
+Create a `.env` file in your project root:
+
+```env
 VITE_PARAGLIDE_BROWSER_DEBUG=true
 ```
 
-### 3. Update Your Code
+That's it! The plugin will automatically:
+- Wrap your message functions to track translations
+- Inject the runtime client script
+- Expose the global API at `window.__paraglideBrowserDebug`
 
-When debug mode is active, you need to use `innerHTML` instead of `textContent` to render the metadata:
+## Browser API
+
+### Global Object
+
+```typescript
+window.__paraglideBrowserDebug: {
+  // Map of translated text → metadata
+  registry: Map<string, TranslationMetadata>;
+
+  // Array of tracked DOM elements (may contain stale refs)
+  elements: TrackedElement[];
+
+  // Re-scan the DOM to update tracked elements
+  refresh(): void;
+
+  // Get fresh list of elements (re-queries DOM)
+  getElements(): TrackedElement[];
+}
+```
+
+### TypeScript Definitions
+
+For browser extensions or TypeScript projects, import the types:
+
+```typescript
+import type {
+  ParaglideBrowserDebug,
+  TrackedElement,
+  TranslationMetadata
+} from 'vite-plugin-paraglide-debug/client';
+
+// Access the global API
+const debug = window.__paraglideBrowserDebug;
+
+if (debug) {
+  const elements = debug.getElements();
+
+  elements.forEach(({ element, key, params, text }) => {
+    console.log(`Element with key "${key}":`, element);
+  });
+}
+```
+
+## Debug Endpoints
+
+When debug mode is enabled, the plugin serves:
+
+- **`/@paraglide-debug/client.js`**: Runtime client script
+- **`/@paraglide-debug/langs.json`**: Raw translation JSON files
+
+## Example: Browser Extension
 
 ```javascript
-// Detect debug mode
-const isDebugMode = import.meta.env.VITE_PARAGLIDE_BROWSER_DEBUG === 'true';
+// content-script.js
+function highlightTranslations() {
+  const debug = window.__paraglideBrowserDebug;
 
-// Helper function
-function setContent(element, content) {
-  if (isDebugMode) {
-    element.innerHTML = content;
-  } else {
-    element.textContent = content;
+  if (!debug) {
+    console.warn('Paraglide debug mode not enabled');
+    return;
   }
+
+  const elements = debug.getElements();
+
+  elements.forEach(({ element, key, params }) => {
+    // Highlight element
+    element.style.outline = '2px solid orange';
+
+    // Add tooltip on hover
+    element.title = `Translation key: ${key}`;
+
+    // Log to console
+    console.log(`[${key}]`, params);
+  });
 }
 
-// Usage
-import * as m from './paraglide/messages.js';
-setContent(document.getElementById('welcome'), m.welcome());
+// Run after page load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', highlightTranslations);
+} else {
+  highlightTranslations();
+}
 ```
 
 ## How It Works
 
-When `VITE_PARAGLIDE_BROWSER_DEBUG=true`, the plugin transforms generated Paraglide message functions to wrap their output:
+1. **Build Time**: The plugin intercepts Paraglide's generated `_index.js` file and wraps all message functions
+2. **Runtime**: When a message function is called, it stores a mapping of `text → metadata` in `window.__paraglideBrowserDebug.registry`
+3. **DOM Scanning**: A TreeWalker scans text nodes and matches them against the registry
+4. **Data Attributes**: Matched elements get `data-paraglide-key` attributes for persistence across re-renders
+5. **MutationObserver**: Automatically re-scans the DOM when it changes (debounced)
 
-**Before (generated by Paraglide):**
+## Limitations
+
+- **Non-Unique Text**: If multiple messages produce identical text, they'll share metadata
+- **Dynamic Text**: If translation parameters change, the registry mapping may become stale
+- **Performance**: Large DOMs may have slower scan times (mitigated by debouncing)
+
+## Development vs Production
+
+Debug mode should typically only be enabled during development:
+
 ```javascript
-export function welcome() {
-  return "Welcome to my app!";
-}
-
-export function greeting(params) {
-  return `Hello, ${params.name}!`;
-}
+// .env.development
+VITE_PARAGLIDE_BROWSER_DEBUG=true
 ```
 
-**After (transformed by debug plugin):**
 ```javascript
-function __paraglideBrowserDebugWrap(text, key, params) {
-  const hasParams = params && Object.keys(params).length > 0;
-  const paramsAttr = hasParams ? ` data-i18n-params='${JSON.stringify(params)}'` : '';
-  return `<span data-i18n-key="${key}"${paramsAttr}>${text}</span>`;
-}
-
-export function welcome() {
-  return __paraglideBrowserDebugWrap("Welcome to my app!", "welcome", {});
-}
-
-export function greeting(params) {
-  return __paraglideBrowserDebugWrap(`Hello, ${params.name}!`, "greeting", params);
-}
+// .env.production
+VITE_PARAGLIDE_BROWSER_DEBUG=false
 ```
 
-## Inspecting in Browser
-
-Once enabled, you can:
-
-1. **Inspect Elements** - Right-click any translated text and inspect to see `data-i18n-key`
-2. **Query in Console**:
-   ```javascript
-   // Find all elements with a specific key
-   document.querySelectorAll('[data-i18n-key="welcome"]')
-
-   // Get all translation keys on the page
-   Array.from(document.querySelectorAll('[data-i18n-key]'))
-     .map(el => el.dataset.i18nKey)
-   ```
-
-## Options
-
-```typescript
-interface PluginOptions {
-  outdir?: string; // Path where Paraglide generates files (default: './src/paraglide')
-}
-```
-
-## Important Notes
-
-⚠️ **Order Matters** - This plugin must come AFTER the official `paraglideVitePlugin`
-
-⚠️ **Production Safety** - Never enable `VITE_PARAGLIDE_BROWSER_DEBUG` in production builds
-
-⚠️ **Use innerHTML** - Debug metadata only works when rendering with `innerHTML`, not `textContent`
+However, it's safe to ship debug-enabled builds if needed (e.g., for QA environments).
 
 ## License
 

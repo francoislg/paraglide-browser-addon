@@ -10,11 +10,11 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1 dangerouslySetInnerHTML={{ __html: m.welcome() }} />
+        <h1>{m.welcome()}</h1>
         <nav className="nav">
-          <Link to="/" dangerouslySetInnerHTML={{ __html: m.nav_home() }} />
-          <Link to="/about" dangerouslySetInnerHTML={{ __html: m.nav_about() }} />
-          <Link to="/products" dangerouslySetInnerHTML={{ __html: m.nav_products() }} />
+          <Link to="/">{m.nav_home()}</Link>
+          <Link to="/about">{m.nav_about()}</Link>
+          <Link to="/products">{m.nav_products()}</Link>
         </nav>
         <LanguageSwitcher />
       </header>

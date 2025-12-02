@@ -1,6 +1,11 @@
-import path from 'path';
+import { createDebugMiddleware } from './middleware.js';
 import fs from 'fs';
-import { wrapParaglideIndex } from '../scripts/post-compile.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Custom Vite plugin for ParaglideJS debug metadata injection
@@ -29,64 +34,46 @@ export function paraglideBrowserDebugPlugin(options = {}) {
       console.log('[paraglide-debug] Environment check:', config.env.VITE_PARAGLIDE_BROWSER_DEBUG);
     },
 
-    // Serve raw JSON translations for debugging
+    // Resolve virtual module IDs
+    resolveId(id) {
+      if (id === '/@paraglide-debug/client.js') {
+        return id; // Always mark as resolved
+      }
+      return null;
+    },
+
+    // Load virtual module content
+    load(id) {
+      // Serve virtual module
+      if (id === '/@paraglide-debug/client.js') {
+        // If debug mode is off, return empty script
+        if (!isDebugMode) {
+          return '// Paraglide debug mode is disabled';
+        }
+
+        const runtimePath = path.join(__dirname, '../runtime.js');
+
+        try {
+          const code = fs.readFileSync(runtimePath, 'utf-8');
+          console.log('[paraglide-debug] ✓ Loaded client runtime');
+          return code;
+        } catch (err) {
+          console.error('[paraglide-debug] Error loading client:', err);
+          return 'console.error("Failed to load Paraglide debug client");';
+        }
+      }
+
+      return null;
+    },
+
+    // Serve debug endpoints
     configureServer(server) {
       if (!isDebugMode) return;
 
-      server.middlewares.use((req, res, next) => {
-        if (req.url === '/paraglide-debug-langs.json') {
-          const rootPath = viteConfig.root || process.cwd();
-          const projectPath = path.join(rootPath, 'project.inlang');
+      server.middlewares.use(createDebugMiddleware(viteConfig));
 
-          try {
-            // Read settings to get the pathPattern
-            const settingsPath = path.join(projectPath, 'settings.json');
-            if (!fs.existsSync(settingsPath)) {
-              res.statusCode = 404;
-              res.end(JSON.stringify({ error: 'settings.json not found' }));
-              return;
-            }
-
-            const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-            const locales = settings.locales || [];
-            const pathPattern = settings['plugin.inlang.messageFormat']?.pathPattern || './messages/{locale}.json';
-
-            // Collect all language JSON files
-            // pathPattern is relative to the project root, not project.inlang
-            const languages = {};
-            for (const locale of locales) {
-              const messagePath = path.join(
-                rootPath,
-                pathPattern.replace('{locale}', locale).replace('./', '')
-              );
-
-              console.log('[paraglide-debug] Looking for:', messagePath);
-
-              if (fs.existsSync(messagePath)) {
-                const messages = JSON.parse(fs.readFileSync(messagePath, 'utf-8'));
-                languages[locale] = messages;
-                console.log('[paraglide-debug] ✓ Loaded:', locale);
-              } else {
-                console.log('[paraglide-debug] ✗ Not found:', messagePath);
-              }
-            }
-
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.end(JSON.stringify(languages, null, 2));
-
-            console.log('[paraglide-debug] ✓ Served raw translations for:', Object.keys(languages).join(', '));
-          } catch (err) {
-            console.error('[paraglide-debug] Error serving translations:', err);
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: err.message }));
-          }
-        } else {
-          next();
-        }
-      });
-
-      console.log('[paraglide-debug] ✓ Serving translations at /paraglide-debug-langs.json');
+      console.log('[paraglide-debug] ✓ Serving translations at /@paraglide-debug/langs.json');
+      console.log('[paraglide-debug] Note: For SvelteKit, add script tag to app.html conditioned on env variable');
     },
 
     // Transform _index.js to wrap with debug metadata
@@ -133,13 +120,23 @@ export function paraglideBrowserDebugPlugin(options = {}) {
 
 import * as _original from './_index.js?original';
 
-// Debug wrapper function
+// Debug wrapper function - stores text mapping in global registry
 function __debugWrap(text, key, params) {
   if (typeof text !== 'string') return text;
-  const paramsStr = params && Object.keys(params).length > 0
-    ? \` params:\${JSON.stringify(params)}\`
-    : '';
-  return \`<!-- paraglide:\${key}\${paramsStr} -->\${text}<!-- /paraglide:\${key} -->\`;
+
+  // Store mapping in global registry
+  if (typeof window !== 'undefined') {
+    window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
+    window.__paraglideBrowserDebug.registry = window.__paraglideBrowserDebug.registry || new Map();
+    window.__paraglideBrowserDebug.registry.set(text, {
+      key: key,
+      params: params || {},
+      timestamp: Date.now()
+    });
+  }
+
+  // Return plain text (no HTML manipulation)
+  return text;
 }
 
 // Export wrapped versions of all message functions
@@ -153,6 +150,31 @@ ${functionNames.map(name => `export const ${name} = (inputs, options) => {
         code: wrapperCode,
         map: null
       };
+    },
+
+    // Inject runtime script to build element registry (for standard Vite apps)
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html) {
+        if (!isDebugMode) return html;
+
+        // Inject script tag that loads from the served endpoint
+        const scriptTag = '<script type="module" src="/@paraglide-debug/client.js"></script>';
+
+        // Inject before closing </body> tag
+        return html.replace('</body>', scriptTag + '\n</body>');
+      }
+    },
+
+    // SvelteKit-specific hook for HTML transformation
+    transformPageChunk({ html, done }) {
+      if (!isDebugMode || !done) return null;
+
+      // Inject script tag that loads from the served endpoint
+      const scriptTag = '<script type="module" src="/@paraglide-debug/client.js"></script>';
+
+      // Inject before closing </body> tag
+      return html.replace('</body>', scriptTag + '\n</body>');
     }
   };
 }

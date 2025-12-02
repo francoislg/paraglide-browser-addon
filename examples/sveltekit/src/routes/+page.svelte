@@ -18,8 +18,8 @@
 </style>
 
 <div class="page">
-  <h2>{@html m.home_title()}</h2>
-  <p>{@html m.greeting({ name: 'Developer' })}</p>
-  <p>{@html m.home_content()}</p>
-  <p>{@html m.description()}</p>
+  <h2>{m.home_title()}</h2>
+  <p>{m.greeting({ name: 'Developer' })}</p>
+  <p>{m.home_content()}</p>
+  <p>{m.description()}</p>
 </div>

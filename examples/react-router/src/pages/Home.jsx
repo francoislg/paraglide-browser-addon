@@ -3,10 +3,10 @@ import * as m from '../paraglide/messages.js';
 function Home() {
   return (
     <div className="page">
-      <h2 dangerouslySetInnerHTML={{ __html: m.home_title() }} />
-      <p dangerouslySetInnerHTML={{ __html: m.greeting({ name: 'Developer' }) }} />
-      <p dangerouslySetInnerHTML={{ __html: m.home_content() }} />
-      <p dangerouslySetInnerHTML={{ __html: m.description() }} />
+      <h2>{m.home_title()}</h2>
+      <p>{m.greeting({ name: 'Developer' })}</p>
+      <p>{m.home_content()}</p>
+      <p>{m.description()}</p>
     </div>
   );
 }

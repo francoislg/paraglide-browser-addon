@@ -1,23 +1,55 @@
 <script>
-  import * as m from '$lib/paraglide/messages.js';
-  import { setLocale, getLocale } from '$lib/paraglide/runtime.js';
-  import { onMount } from 'svelte';
+  import * as m from "$lib/paraglide/messages.js";
+  import { setLocale, getLocale } from "$lib/paraglide/runtime.js";
+  import { onMount } from "svelte";
+
+  let { children } = $props();
 
   let currentLocale = $state(getLocale());
 
   onMount(() => {
-    console.log('[Paraglide] App initialized with language:', getLocale());
+    console.log("[Paraglide] App initialized with language:", getLocale());
   });
 
   function switchLanguage(lang) {
     setLocale(lang, { reload: false });
-    currentLocale = lang;
+    currentLocale = getLocale(); // Update reactive state
   }
 </script>
 
+<div class="app">
+  {#key currentLocale}
+    <header class="header">
+      <h1>{m.welcome()}</h1>
+      <nav class="nav">
+        <a href="/">{m.nav_home()}</a>
+        <a href="/about">{m.nav_about()}</a>
+        <a href="/products">{m.nav_products()}</a>
+      </nav>
+
+      <div class="language-switcher">
+        <h3>{m.language_switcher()}</h3>
+        <div>
+          <button onclick={() => switchLanguage("en")}>English</button>
+          <button onclick={() => switchLanguage("es")}>Español</button>
+          <button onclick={() => switchLanguage("fr")}>Français</button>
+        </div>
+        <div class="current">{m.current_language()}</div>
+      </div>
+    </header>
+
+    <main class="main">
+      {@render children()}
+    </main>
+  {/key}
+</div>
+
 <style>
   :global(body) {
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
     margin: 0;
     padding: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -107,28 +139,3 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 </style>
-
-<div class="app">
-  <header class="header">
-    <h1>{@html m.welcome()}</h1>
-    <nav class="nav">
-      <a href="/">{@html m.nav_home()}</a>
-      <a href="/about">{@html m.nav_about()}</a>
-      <a href="/products">{@html m.nav_products()}</a>
-    </nav>
-
-    <div class="language-switcher">
-      <h3>{@html m.language_switcher()}</h3>
-      <div>
-        <button onclick={() => switchLanguage('en')}>English</button>
-        <button onclick={() => switchLanguage('es')}>Español</button>
-        <button onclick={() => switchLanguage('fr')}>Français</button>
-      </div>
-      <div class="current">{@html m.current_language()}</div>
-    </div>
-  </header>
-
-  <main class="main">
-    <slot />
-  </main>
-</div>

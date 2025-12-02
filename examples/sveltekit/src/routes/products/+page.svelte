@@ -42,13 +42,13 @@
 </style>
 
 <div class="page">
-  <h2>{@html m.products_title()}</h2>
+  <h2>{m.products_title()}</h2>
 
   <div class="plural-demo">
-    <h3>{@html m.pluralization_demo()}</h3>
+    <h3>{m.pluralization_demo()}</h3>
     <ul class="plural-list">
       {#each counts as count}
-        <li>{@html m.items_count({ count })}</li>
+        <li>{m.items_count({ count })}</li>
       {/each}
     </ul>
   </div>
