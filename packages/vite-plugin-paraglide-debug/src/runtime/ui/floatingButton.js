@@ -1,5 +1,17 @@
 /**
- * Floating button component for opening the translation editor
+ * Floating Button UI Component
+ *
+ * Purpose: Provide a floating action button to open the translation editor modal.
+ *
+ * Responsibilities:
+ * - Create and render floating button element
+ * - Handle button click to open modal
+ * - Apply hover effects and styling
+ *
+ * This module does NOT:
+ * - Contain business logic (see helpers.js)
+ * - Manage translations (see dataStore.js)
+ * - Handle modal content (see modal.js)
  */
 
 export function createFloatingButton(onOpenModal) {

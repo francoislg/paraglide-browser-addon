@@ -1,10 +1,19 @@
 /**
  * Unified Data Access Layer
  *
- * Loads server translations and local edits ONCE during initialization,
- * stores them in memory for fast synchronous access.
+ * Purpose: In-memory cache for translations and local edits.
  *
- * This eliminates repeated network calls and database queries.
+ * Responsibilities:
+ * - Load server translations ONCE during initialization
+ * - Load local edits from IndexedDB ONCE during initialization
+ * - Provide synchronous access to translation data
+ * - Manage cache updates when edits are saved
+ * - Eliminate repeated network calls and database queries
+ *
+ * This module does NOT:
+ * - Render translations (see renderer.js)
+ * - Handle UI interactions (see ui/)
+ * - Manage IndexedDB directly (see db.js)
  */
 
 import { initDB } from './db.js';

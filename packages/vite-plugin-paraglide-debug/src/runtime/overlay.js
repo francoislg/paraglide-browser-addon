@@ -1,8 +1,23 @@
 /**
- * Overlay mode manager for click-to-edit functionality
+ * Overlay Mode and Element Refresh Management
+ *
+ * Purpose: Manage overlay mode for click-to-edit functionality and refresh individual elements.
+ *
+ * Responsibilities:
+ * - Enable/disable click-to-edit overlay mode
+ * - Refresh single element's content and visual state
+ * - Apply saved edits from database to DOM elements
+ * - Handle click events for translation editing
+ * - Manage visual indicators (outlines) for translatable elements
+ *
+ * This module does NOT:
+ * - Render translation strings (see renderer.js)
+ * - Manage the element registry (see registry.js)
+ * - Handle UI components (see ui/)
  */
 
 import { getDisplayTranslation } from './dataStore.js';
+import { getAllEditedTranslations } from './db.js';
 import { renderTranslation, renderEditedTemplate } from './renderer.js';
 import { getCurrentLocale } from './languageDetection.js';
 import { createEditPopup } from './ui/popup.js';
@@ -78,6 +93,9 @@ export function refreshElement(element, locale = null) {
 /**
  * Apply saved edits from database to the DOM
  * Uses the unified dataStore and renderer for consistency
+ *
+ * This is a synchronous version that reads from the in-memory cache.
+ * Called when overlay mode initializes.
  */
 function applySavedEdits() {
   try {
@@ -97,6 +115,52 @@ function applySavedEdits() {
     });
 
     console.log(`[paraglide-debug] ✓ Applied ${appliedCount} saved edits`);
+  } catch (error) {
+    console.error('[paraglide-debug] Failed to apply saved edits:', error);
+  }
+}
+
+/**
+ * Apply saved edits from database to DOM (async version)
+ * Uses the refreshElement function which handles proper rendering with dataStore
+ *
+ * This is called after element registry is built, to apply any previously saved edits.
+ * Also called when language changes to re-apply edits for the new locale.
+ *
+ * @param {string} locale - Optional locale to apply edits for (defaults to current locale)
+ * @returns {Promise<void>}
+ */
+export async function applySavedEditsFromDB(locale = null) {
+  try {
+    // Get current locale
+    const currentLocale = locale || getCurrentLocale();
+    console.debug('[paraglide-debug] applySavedEditsFromDB: Current locale =', currentLocale);
+
+    // Get all edited translations for current locale
+    const editedTranslations = await getAllEditedTranslations(currentLocale);
+    console.debug('[paraglide-debug] applySavedEditsFromDB: Loaded edits from DB:', editedTranslations);
+
+    if (editedTranslations.length === 0) {
+      console.debug('[paraglide-debug] No saved edits found for locale:', currentLocale);
+      return;
+    }
+
+    console.debug(`[paraglide-debug] Applying ${editedTranslations.length} saved edits to page content`);
+
+    // Find all elements with translation keys and update them
+    const elements = document.querySelectorAll('[data-paraglide-key]');
+    console.debug(`[paraglide-debug] Found ${elements.length} elements with data-paraglide-key attribute`);
+
+    let appliedCount = 0;
+    elements.forEach(element => {
+      // Use refreshElement which handles proper rendering with dataStore
+      const wasUpdated = refreshElement(element, currentLocale);
+      if (wasUpdated) {
+        appliedCount++;
+      }
+    });
+
+    console.log(`[paraglide-debug] ✓ Applied ${appliedCount} saved edits to page (expected ${editedTranslations.length})`);
   } catch (error) {
     console.error('[paraglide-debug] Failed to apply saved edits:', error);
   }

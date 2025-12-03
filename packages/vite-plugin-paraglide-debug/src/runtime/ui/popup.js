@@ -1,5 +1,20 @@
 /**
- * Edit popup component for translation editing
+ * Edit Popup UI Component
+ *
+ * Purpose: Provide inline editing UI for individual translation keys.
+ *
+ * Responsibilities:
+ * - Render edit popup positioned near clicked element
+ * - Display translations for all selected languages
+ * - Handle variant/plural form editing
+ * - Save edits to database
+ * - Manage popup positioning and visibility
+ * - Coordinate with helpers for data fetching
+ *
+ * This module does NOT:
+ * - Render the final translation strings (see renderer.js)
+ * - Manage the element registry (see registry.js)
+ * - Provide the main editor modal (see modal.js)
  */
 
 import { saveTranslationEdit, deleteTranslationEdit } from '../db.js';

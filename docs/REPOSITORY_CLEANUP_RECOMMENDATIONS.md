@@ -1,0 +1,456 @@
+# Repository Cleanup Recommendations
+
+**Date**: 2025-12-03
+**Status**: Recommendations for improving top-level file organization
+
+## Issues Identified
+
+### 1. Stray Output File: `nul`
+
+**Problem**:
+- File contains rendered HTML output from SvelteKit (142 lines)
+- Appears to be accidental output redirection on Windows
+- Should NOT exist in repository
+
+**Impact**:
+- Confusing for contributors
+- Pollutes repository root
+- Tracked by git (shows as `??` in git status)
+
+**Recommendation**:
+```bash
+# Delete the file
+rm nul
+
+# Add to .gitignore to prevent future occurrences
+echo "nul" >> .gitignore
+```
+
+**Root Cause**: Likely from a command like `npm run build > nul` on Windows, where `nul` should have been `NUL` (the Windows null device).
+
+---
+
+### 2. Duplicate `AGENTS.md` File
+
+**Problem**:
+- `AGENTS.md` exists at repository root
+- Identical/similar file exists at `openspec/AGENTS.md`
+- OpenSpec instructions are already embedded in `CLAUDE.md` lines 5-17
+
+**Current Structure**:
+```
+/AGENTS.md                    ← DUPLICATE (18 lines)
+/CLAUDE.md                    ← Contains OpenSpec instructions (lines 5-17)
+/openspec/AGENTS.md          ← Authoritative OpenSpec guide (full documentation)
+```
+
+**Impact**:
+- Confusing which file is authoritative
+- Maintenance burden (need to update multiple places)
+- OpenSpec instructions are triple-documented
+
+**Recommendation**:
+```bash
+# Remove duplicate at root (OpenSpec instructions already in CLAUDE.md)
+rm AGENTS.md
+
+# The openspec/AGENTS.md is the authoritative guide and should remain
+```
+
+**Rationale**: OpenSpec instructions in `CLAUDE.md` (lines 5-17) are sufficient for Claude Code to know when to reference `openspec/AGENTS.md`.
+
+---
+
+### 3. Completed Planning Documents at Root
+
+**Problem**:
+Multiple planning/summary documents are cluttering the repository root:
+
+| File | Size | Status | Purpose |
+|------|------|--------|---------|
+| `CONFLICT_DETECTION_PLAN.md` | 163 lines | Implementation plan | Smart conflict detection |
+| `REFACTORING_PLAN.md` | 126 lines | ✅ Completed | Runtime refactoring |
+| `REFACTORING_SUMMARY.md` | 207 lines | ✅ Completed | Refactoring summary |
+| `RENDERER_IMPLEMENTATION_SUMMARY.md` | 266 lines | ✅ Completed | Renderer implementation |
+| `VARIANT_SUPPORT_PLAN.md` | 321 lines | ✅ Completed | Variant support plan |
+
+**Total**: 1,083 lines of planning documentation at root level
+
+**Impact**:
+- Cluttered repository root (harder to find important files)
+- Confusing for new contributors (are these active or historical?)
+- Mix of completed and in-progress plans
+- No clear distinction between documentation and planning
+
+**Recommendation**:
+
+**Option A: Archive in dedicated directory** (Preferred)
+```bash
+# Create archive directory
+mkdir -p docs/completed-work
+
+# Move completed documents
+mv REFACTORING_PLAN.md docs/completed-work/
+mv REFACTORING_SUMMARY.md docs/completed-work/
+mv RENDERER_IMPLEMENTATION_SUMMARY.md docs/completed-work/
+mv VARIANT_SUPPORT_PLAN.md docs/completed-work/
+
+# Move active plans
+mkdir -p docs/plans
+mv CONFLICT_DETECTION_PLAN.md docs/plans/
+```
+
+**Option B: Delete completed work** (More aggressive)
+```bash
+# Delete completed planning documents (history preserved in git)
+rm REFACTORING_PLAN.md
+rm REFACTORING_SUMMARY.md
+rm RENDERER_IMPLEMENTATION_SUMMARY.md
+rm VARIANT_SUPPORT_PLAN.md
+
+# Keep only active plans
+mkdir -p docs/plans
+mv CONFLICT_DETECTION_PLAN.md docs/plans/
+```
+
+**Rationale**:
+- Completed work is preserved in git history
+- Active plans should live in `docs/plans/` or `openspec/changes/`
+- Repository root should contain only essential documentation
+
+---
+
+### 4. Mixed Package Manager Lockfiles
+
+**Problem**:
+Two lockfiles present, indicating inconsistent package manager usage:
+
+```
+package-lock.json (45,806 bytes) ← npm lockfile
+pnpm-lock.yaml (53,101 bytes)   ← pnpm lockfile (correct one)
+```
+
+**Evidence Project Uses pnpm**:
+- `pnpm-workspace.yaml` exists
+- `README.md` instructions use `pnpm` commands
+- `.gitignore` doesn't exclude `package-lock.json`
+
+**Impact**:
+- Confusion about which package manager to use
+- Potential dependency conflicts
+- Wasted repository space (45KB unnecessary file)
+- npm users might accidentally use wrong lockfile
+
+**Recommendation**:
+```bash
+# Remove npm lockfile
+rm package-lock.json
+
+# Add to .gitignore
+echo "" >> .gitignore
+echo "# Package manager lockfiles (we use pnpm)" >> .gitignore
+echo "package-lock.json" >> .gitignore
+echo "yarn.lock" >> .gitignore
+```
+
+**Also Add to README.md**:
+```markdown
+## Package Manager
+
+This project uses **pnpm** exclusively. Do not use npm or yarn.
+
+- Install pnpm: `npm install -g pnpm`
+- Install dependencies: `pnpm install`
+```
+
+---
+
+### 5. Incomplete `.gitignore`
+
+**Problem**:
+Current `.gitignore` is missing several patterns that would prevent issues like #1-#4.
+
+**Current Content** (27 lines):
+```gitignore
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Generated by Paraglide
+src/paraglide/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+.claude/settings.local.json
+```
+
+**Missing Patterns**:
+- `nul` (Windows null device mishap)
+- `package-lock.json` (wrong package manager)
+- `yarn.lock` (wrong package manager)
+- Temporary planning documents pattern
+- Build artifacts from examples
+
+**Recommendation**:
+```gitignore
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.svelte-kit/
+.next/
+
+# Generated by Paraglide
+src/paraglide/
+**/messages/compiled/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Windows null device mishaps
+nul
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Package manager lockfiles (we use pnpm only)
+package-lock.json
+yarn.lock
+
+# Temporary files
+*.tmp
+*.temp
+
+.claude/settings.local.json
+```
+
+---
+
+## Recommended File Structure (After Cleanup)
+
+```
+paraglide-browser-addon/
+├── .claude/                           # Claude Code configuration
+├── .git/
+├── .gitignore                         # Updated with new patterns
+├── CLAUDE.md                          # Project instructions (contains OpenSpec pointer)
+├── README.md                          # Project documentation
+├── package.json                       # Root package config
+├── pnpm-lock.yaml                     # pnpm lockfile (ONLY this one)
+├── pnpm-workspace.yaml                # Workspace configuration
+│
+├── docs/                              # NEW: Documentation directory
+│   ├── plans/                         # Active planning documents
+│   │   └── CONFLICT_DETECTION_PLAN.md
+│   └── completed-work/                # Historical documentation
+│       ├── REFACTORING_PLAN.md
+│       ├── REFACTORING_SUMMARY.md
+│       ├── RENDERER_IMPLEMENTATION_SUMMARY.md
+│       └── VARIANT_SUPPORT_PLAN.md
+│
+├── openspec/                          # OpenSpec system (unchanged)
+│   ├── AGENTS.md                      # Authoritative OpenSpec guide
+│   ├── project.md
+│   ├── changes/
+│   └── specs/
+│
+├── examples/                          # Example projects
+│   ├── vanilla/
+│   ├── react-router/
+│   └── sveltekit/
+│
+└── packages/                          # Plugin packages
+    └── vite-plugin-paraglide-debug/
+```
+
+---
+
+## Cleanup Script
+
+Here's a complete cleanup script to execute all recommendations:
+
+```bash
+#!/bin/bash
+# cleanup-repository.sh
+
+echo "🧹 Cleaning up repository structure..."
+
+# 1. Remove stray files
+echo "📝 Removing stray nul file..."
+rm -f nul
+
+# 2. Remove duplicate AGENTS.md
+echo "📝 Removing duplicate AGENTS.md..."
+rm -f AGENTS.md
+
+# 3. Archive completed planning documents
+echo "📁 Creating docs directory structure..."
+mkdir -p docs/completed-work
+mkdir -p docs/plans
+
+echo "📝 Moving completed planning documents..."
+mv REFACTORING_PLAN.md docs/completed-work/ 2>/dev/null || true
+mv REFACTORING_SUMMARY.md docs/completed-work/ 2>/dev/null || true
+mv RENDERER_IMPLEMENTATION_SUMMARY.md docs/completed-work/ 2>/dev/null || true
+mv VARIANT_SUPPORT_PLAN.md docs/completed-work/ 2>/dev/null || true
+
+echo "📝 Moving active planning documents..."
+mv CONFLICT_DETECTION_PLAN.md docs/plans/ 2>/dev/null || true
+
+# 4. Remove wrong package manager lockfile
+echo "📝 Removing npm lockfile..."
+rm -f package-lock.json
+
+# 5. Update .gitignore
+echo "📝 Updating .gitignore..."
+cat >> .gitignore << 'EOF'
+
+# Windows null device mishaps
+nul
+
+# Package manager lockfiles (we use pnpm only)
+package-lock.json
+yarn.lock
+
+# Build artifacts from examples
+.svelte-kit/
+.next/
+**/messages/compiled/
+
+# Temporary files
+*.tmp
+*.temp
+EOF
+
+echo "✅ Cleanup complete!"
+echo ""
+echo "📊 Summary:"
+echo "  - Removed: nul, AGENTS.md, package-lock.json"
+echo "  - Archived: 4 completed planning documents → docs/completed-work/"
+echo "  - Moved: 1 active plan → docs/plans/"
+echo "  - Updated: .gitignore with new patterns"
+echo ""
+echo "🔍 Run 'git status' to review changes"
+```
+
+---
+
+## Implementation Steps
+
+### Step 1: Review and Approve
+Review this document and decide which option to take for each issue.
+
+### Step 2: Create Backup (Optional)
+```bash
+git stash push -m "Backup before cleanup"
+# Or create a branch
+git checkout -b cleanup/repository-structure
+```
+
+### Step 3: Execute Cleanup
+```bash
+# Run the cleanup script
+chmod +x cleanup-repository.sh
+./cleanup-repository.sh
+```
+
+### Step 4: Verify Changes
+```bash
+# Check what changed
+git status
+
+# Review .gitignore changes
+git diff .gitignore
+
+# Verify file structure
+tree -L 2 -I 'node_modules'
+```
+
+### Step 5: Commit
+```bash
+git add .
+git commit -m "Clean up repository structure
+
+- Remove stray files (nul, duplicate AGENTS.md)
+- Archive completed planning documents to docs/completed-work/
+- Move active plans to docs/plans/
+- Remove package-lock.json (project uses pnpm)
+- Update .gitignore to prevent future issues
+"
+```
+
+---
+
+## Benefits of Cleanup
+
+### Improved Organization
+- Clear separation between active and historical documentation
+- Root directory contains only essential files
+- Easier to find important documentation
+
+### Better Developer Experience
+- Clear which package manager to use (pnpm only)
+- No confusion about duplicate files
+- Cleaner git status output
+
+### Easier Maintenance
+- Single source of truth for each concept
+- Historical documentation preserved but not cluttering root
+- Proper .gitignore prevents future mistakes
+
+### Professional Appearance
+- Clean, organized repository
+- Follows common open-source conventions
+- Easier for new contributors to understand structure
+
+---
+
+## Questions or Concerns?
+
+If you have questions about any of these recommendations:
+
+1. Review the rationale sections above
+2. Check if files are needed for active development
+3. Remember: git history preserves all deleted files
+4. You can always create a backup branch first
+
+---
+
+**Estimated Impact**:
+- Files removed: 6
+- Files moved: 5
+- Files updated: 1 (.gitignore)
+- Lines of cleanup: ~1,100 lines moved out of root
+- Time to execute: < 5 minutes

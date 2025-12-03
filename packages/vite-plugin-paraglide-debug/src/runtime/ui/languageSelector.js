@@ -1,25 +1,23 @@
 /**
- * Language selector component for the modal
+ * Language Selector UI Component
+ *
+ * Purpose: Provide UI for selecting which languages to edit in the translation editor.
+ *
+ * Responsibilities:
+ * - Render language checkboxes in the modal
+ * - Handle language selection state
+ * - Update selected languages display
+ * - Provide locale switching functionality
+ *
+ * This module does NOT:
+ * - Contain helper functions (see helpers.js)
+ * - Manage translations or data (see dataStore.js)
+ * - Handle rendering logic (see renderer.js)
  */
 
 import { getCurrentLocale } from '../languageDetection.js';
 import { getServerTranslations } from '../dataStore.js';
-
-/**
- * Get selected languages from localStorage
- */
-function getSelectedLanguages() {
-  const stored = localStorage.getItem('pg-selected-languages');
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch (e) {
-      console.warn('[paraglide-debug] Failed to parse selected languages', e);
-    }
-  }
-  // Default to current locale
-  return [getCurrentLocale()];
-}
+import { getSelectedLanguages } from '../helpers.js';
 
 /**
  * Save selected languages to localStorage

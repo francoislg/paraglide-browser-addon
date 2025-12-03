@@ -1,5 +1,19 @@
 /**
- * Language detection and change event system
+ * Language Detection and Change Event System
+ *
+ * Purpose: Detect current locale and handle language switching.
+ *
+ * Responsibilities:
+ * - Detect current locale from localStorage, cookies, and HTML lang attribute
+ * - Watch for locale changes via multiple mechanisms
+ * - Fire language change events
+ * - Re-render all translations when language changes
+ * - Maintain current locale state
+ *
+ * This module does NOT:
+ * - Store translations (see dataStore.js)
+ * - Provide UI for language selection (see ui/languageSelector.js)
+ * - Manage element registry (see registry.js)
  */
 
 import { getDisplayTranslation } from './dataStore.js';

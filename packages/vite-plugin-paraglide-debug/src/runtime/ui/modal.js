@@ -1,5 +1,19 @@
 /**
- * Main translation editor modal component
+ * Main Translation Editor Modal UI Component
+ *
+ * Purpose: Provide the main modal interface for the translation editor.
+ *
+ * Responsibilities:
+ * - Render modal with all editor sections
+ * - Coordinate sub-components (language selector, conflict list)
+ * - Handle modal open/close interactions
+ * - Display translation statistics
+ * - Provide access to export and sync functionality
+ *
+ * This module does NOT:
+ * - Contain business logic (see helpers.js)
+ * - Edit individual translations (see popup.js)
+ * - Manage data storage (see db.js, dataStore.js)
  */
 
 import { exportEdits } from '../export.js';

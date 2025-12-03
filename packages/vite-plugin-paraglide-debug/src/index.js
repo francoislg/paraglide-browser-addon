@@ -8,10 +8,56 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Custom Vite plugin for ParaglideJS debug metadata injection
- * @param {Object} options - Plugin options
- * @param {string} options.outdir - Output directory where Paraglide generates files
- * @returns {import('vite').Plugin}
+ * Vite plugin for ParaglideJS debug metadata injection
+ *
+ * This plugin intercepts Paraglide-generated message functions and wraps them
+ * to track translation usage in the browser. It enables runtime debugging tools
+ * and browser extensions to identify which translation keys are used on a page.
+ *
+ * **How it works:**
+ * 1. Detects `VITE_PARAGLIDE_BROWSER_DEBUG=true` environment variable
+ * 2. Intercepts `messages/_index.js` transform and wraps message functions
+ * 3. Injects runtime script via HTML transformation
+ * 4. Serves translation JSON at `/@paraglide-debug/langs.json` endpoint
+ * 5. Provides virtual modules under `/@paraglide-debug/*` prefix
+ *
+ * **When debug mode is enabled:**
+ * - Message functions store text→metadata mapping in `window.__paraglideBrowserDebug.registry`
+ * - Runtime script scans DOM and adds `data-paraglide-key` attributes
+ * - MutationObserver keeps tracking up-to-date as DOM changes
+ *
+ * **When debug mode is disabled:**
+ * - Plugin becomes a no-op (no transformation, no runtime injection)
+ * - Zero overhead in production builds
+ *
+ * @param {Object} [options={}] - Plugin configuration options
+ * @param {string} [options.outdir='./src/paraglide'] - Output directory where Paraglide generates files (should match paraglide plugin config)
+ * @returns {import('vite').Plugin} Vite plugin object
+ *
+ * @example
+ * ```js
+ * // vite.config.js
+ * import { paraglide } from '@inlang/paraglide-vite';
+ * import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug';
+ *
+ * export default defineConfig({
+ *   plugins: [
+ *     paraglide({
+ *       project: './project.inlang',
+ *       outdir: './src/paraglide'
+ *     }),
+ *     paraglideBrowserDebugPlugin({
+ *       outdir: './src/paraglide' // Must match paraglide plugin
+ *     })
+ *   ]
+ * });
+ * ```
+ *
+ * @example
+ * ```bash
+ * # Enable debug mode in .env
+ * VITE_PARAGLIDE_BROWSER_DEBUG=true
+ * ```
  */
 export function paraglideBrowserDebugPlugin(options = {}) {
   const { outdir = "./src/paraglide" } = options;

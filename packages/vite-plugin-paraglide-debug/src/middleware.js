@@ -8,8 +8,34 @@ const __dirname = path.dirname(__filename);
 
 /**
  * Creates middleware for serving Paraglide debug endpoints
- * @param {Object} viteConfig - Resolved Vite configuration
- * @returns {Function} Express-style middleware function
+ *
+ * This middleware handles the following endpoints:
+ * - `/@paraglide-debug/langs.json` - Serves raw translation JSON files for all configured locales
+ *
+ * The middleware reads the project.inlang/settings.json to discover:
+ * - Available locales
+ * - Path pattern for message files
+ *
+ * Then loads and serves all translation files as a single JSON object:
+ * ```json
+ * {
+ *   "en": { "welcome": "Welcome!", ... },
+ *   "es": { "welcome": "¡Bienvenido!", ... },
+ *   "fr": { "welcome": "Bienvenue!", ... }
+ * }
+ * ```
+ *
+ * @param {Object} viteConfig - Resolved Vite configuration object
+ * @param {string} viteConfig.root - Project root directory path
+ * @returns {Function} Express-style middleware function (req, res, next)
+ *
+ * @example
+ * ```js
+ * // In Vite plugin configureServer hook
+ * configureServer(server) {
+ *   server.middlewares.use(createDebugMiddleware(viteConfig));
+ * }
+ * ```
  */
 export function createDebugMiddleware(viteConfig) {
   return (req, res, next) => {

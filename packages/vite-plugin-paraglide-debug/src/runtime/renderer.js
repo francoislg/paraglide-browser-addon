@@ -1,14 +1,27 @@
 /**
  * Unified Translation Rendering System
  *
- * This module provides two rendering paths:
- * 1. Server translations: Uses original Paraglide functions (100% compatible)
- * 2. Edited translations: Simple parameter substitution for user's custom templates
+ * Purpose: Render translation strings from server or edited templates.
+ *
+ * Responsibilities:
+ * - Render server translations using original Paraglide functions (100% compatible)
+ * - Render edited translations with parameter substitution
+ * - Handle variant/plural translations via variants.js
+ * - Provide consistent rendering interface for both source types
+ *
+ * Rendering Paths:
+ * 1. Server translations: Uses original Paraglide message functions
+ * 2. Edited translations: Simple parameter substitution with variant support
  *
  * Used by:
- * - overlay.js (applying edits)
- * - popup.js (showing previews)
+ * - overlay.js (applying edits and refreshing elements)
+ * - popup.js (showing translation previews)
  * - languageDetection.js (re-rendering on language change)
+ *
+ * This module does NOT:
+ * - Store translations (see dataStore.js)
+ * - Manage element registry (see registry.js)
+ * - Handle UI (see ui/)
  */
 
 import { renderVariant } from './variants.js';

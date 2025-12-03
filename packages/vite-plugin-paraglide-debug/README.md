@@ -4,7 +4,7 @@ Vite plugin that injects debug metadata into ParaglideJS translation strings for
 
 ## Features
 
-- 🔍 **Runtime Element Tracking**: Automatically tracks DOM elements containing translations
+- 🔍 **Runtime Element Tracking**: Automatically tracks DOM elements containing translations with `data-paraglide-key` attributes
 - 🎯 **Zero Developer Friction**: Just use `m.message_key()` normally - no special syntax required
 - 🌐 **Framework Agnostic**: Works with React, SvelteKit, Svelte, Vue, and vanilla JS
 - 🔧 **TypeScript Support**: Full type definitions for the browser API

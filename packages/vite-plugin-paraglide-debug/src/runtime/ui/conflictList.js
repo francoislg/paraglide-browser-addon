@@ -1,6 +1,18 @@
 /**
- * Conflict list viewer component
- * Shows all translations with conflicts and allows resolution
+ * Conflict List UI Component
+ *
+ * Purpose: Display and resolve translation conflicts.
+ *
+ * Responsibilities:
+ * - Display list of translations with conflicts
+ * - Show conflict resolution dialog
+ * - Handle conflict resolution actions (keep local, keep server, merge)
+ * - Update conflict count in modal
+ *
+ * This module does NOT:
+ * - Detect conflicts (see db.js syncTranslations)
+ * - Store conflict data (see db.js)
+ * - Provide main editor interface (see modal.js)
  */
 
 import { getConflicts, resolveConflict } from '../db.js';

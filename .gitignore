@@ -24,5 +24,17 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+pnpm-debug.log*
+
+# Windows null device mishaps
+nul
+
+# Package manager lockfiles (we use pnpm only)
+package-lock.json
+yarn.lock
+
+# Temporary files
+*.tmp
+*.temp
 
 .claude/settings.local.json

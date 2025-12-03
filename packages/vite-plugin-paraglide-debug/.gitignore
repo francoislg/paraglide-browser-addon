@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output (if build step added in future)
+dist/
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Temp files
+*.tmp
+*.temp

@@ -1,12 +1,25 @@
 /**
  * Master Initialization Coordinator
  *
- * Ensures all debug components load in the correct order:
- * 1. Database
+ * Purpose: Orchestrate startup of all debug subsystems in correct order.
+ *
+ * Responsibilities:
+ * - Initialize database connection
+ * - Load data store (server translations + local edits)
+ * - Wait for Paraglide registry to be populated
+ * - Emit __paraglideDebugInitialized event when ready
+ * - Ensure proper initialization sequence
+ *
+ * Initialization Order:
+ * 1. Database (IndexedDB)
  * 2. Data Store (loads server translations + local edits ONCE)
  * 3. Wait for Paraglide registry (__paraglideInitialized event)
- * 4. Build element registry
- * 5. Emit __paraglideDebugInitialized
+ * 4. Emit __paraglideDebugInitialized
+ *
+ * This module does NOT:
+ * - Build element registry (see registry.js)
+ * - Initialize UI components (see runtime.js)
+ * - Handle events after initialization (see runtime.js)
  */
 
 import { initDB } from './db.js';

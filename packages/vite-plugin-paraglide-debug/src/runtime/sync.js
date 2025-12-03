@@ -1,5 +1,20 @@
 /**
- * Sync functionality for fetching server translations and detecting conflicts
+ * Server Sync Functionality
+ *
+ * Purpose: Synchronize local edits with server translations and detect conflicts.
+ *
+ * Responsibilities:
+ * - Fetch latest translations from server
+ * - Compare server translations with local edits
+ * - Detect conflicts when both server and local have changed
+ * - Auto-resolve conflicts when edits match server changes
+ * - Refresh data store after sync
+ * - Update UI with sync results
+ *
+ * This module does NOT:
+ * - Resolve conflicts manually (see ui/conflictList.js)
+ * - Store data directly (see db.js)
+ * - Provide UI (see ui/modal.js)
  */
 
 import { syncTranslations } from './db.js';

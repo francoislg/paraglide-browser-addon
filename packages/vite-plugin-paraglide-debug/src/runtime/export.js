@@ -1,5 +1,18 @@
 /**
- * Export functionality for translation edits
+ * Export Functionality
+ *
+ * Purpose: Export translation edits as downloadable JSON files.
+ *
+ * Responsibilities:
+ * - Merge server translations with local edits
+ * - Generate complete translation JSON files per locale
+ * - Trigger browser downloads for each locale
+ * - Handle plural/variant serialization
+ *
+ * This module does NOT:
+ * - Modify stored data (see db.js, dataStore.js)
+ * - Provide UI (see ui/modal.js)
+ * - Render translations (see renderer.js)
  */
 
 import { getEditedTranslations } from './db.js';

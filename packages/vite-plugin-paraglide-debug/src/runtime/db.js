@@ -1,5 +1,19 @@
 /**
- * IndexedDB storage for translation edits
+ * IndexedDB Storage Layer
+ *
+ * Purpose: Persist translation edits locally in the browser.
+ *
+ * Responsibilities:
+ * - Initialize IndexedDB database and schema
+ * - Save/delete translation edits
+ * - Query edited translations by locale
+ * - Sync server translations and detect conflicts
+ * - Resolve conflicts between local and server versions
+ *
+ * This module does NOT:
+ * - Provide in-memory caching (see dataStore.js)
+ * - Render translations (see renderer.js)
+ * - Handle UI interactions (see ui/)
  */
 
 const DB_NAME = 'paraglide-translations';

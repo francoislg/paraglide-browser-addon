@@ -1,5 +1,24 @@
 /**
- * Style utilities for element visual states
+ * Visual Styling for Translation Elements
+ *
+ * Purpose: Manage visual indicators (outlines) for translation elements.
+ *
+ * Responsibilities:
+ * - Apply outline styles based on element state
+ * - Support multiple states: edited, conflict, hoverable, none
+ * - Provide consistent visual feedback across the application
+ * - Single point of entry for all element styling
+ *
+ * Visual States:
+ * - edited: Green outline (2px solid) - translation has been edited locally
+ * - conflict: Red outline (2px solid) - conflict between local and server
+ * - hoverable: Yellow dashed outline (1px) - overlay mode active
+ * - none: No outline - default state
+ *
+ * This module does NOT:
+ * - Manage element registry (see registry.js)
+ * - Render translations (see renderer.js)
+ * - Handle UI components (see ui/)
  */
 
 /**
