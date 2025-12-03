@@ -6,7 +6,7 @@
   "description": "Vanilla JS example for vite-plugin-paraglide-debug",
   "scripts": {
     "dev": "vite",
-    "build": "VITE_PARAGLIDE_BROWSER_DEBUG=true vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {

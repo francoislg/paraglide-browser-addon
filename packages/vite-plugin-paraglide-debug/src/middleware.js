@@ -13,24 +13,6 @@ const __dirname = path.dirname(__filename);
  */
 export function createDebugMiddleware(viteConfig) {
   return (req, res, next) => {
-    // Serve runtime client script
-    if (req.url === '/@paraglide-debug/client.js') {
-      const runtimePath = path.join(__dirname, '../runtime.js');
-
-      try {
-        const runtimeCode = fs.readFileSync(runtimePath, 'utf-8');
-        res.setHeader('Content-Type', 'application/javascript');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.end(runtimeCode);
-        console.log('[paraglide-debug] ✓ Served client runtime');
-      } catch (err) {
-        console.error('[paraglide-debug] Error serving client:', err);
-        res.statusCode = 500;
-        res.end(`console.error('Failed to load Paraglide debug client: ${err.message}');`);
-      }
-      return;
-    }
-
     // Serve raw JSON translations for debugging
     if (req.url === '/@paraglide-debug/langs.json') {
       const rootPath = viteConfig.root || process.cwd();

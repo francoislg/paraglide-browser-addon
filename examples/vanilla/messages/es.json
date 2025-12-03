@@ -15,5 +15,46 @@
       "countPlural=one": "Tienes {count} elemento en tu carrito.",
       "countPlural=other": "Tienes {count} elementos en tu carrito."
     }
-  }]
+  }],
+  "finish_position": [{
+    "declarations": [
+      "input position",
+      "local ordinal = position: plural type=ordinal"
+    ],
+    "selectors": ["ordinal"],
+    "match": {
+      "ordinal=one": "¡Terminaste en {position}er lugar!",
+      "ordinal=two": "¡Terminaste en {position}do lugar!",
+      "ordinal=few": "¡Terminaste en {position}er lugar!",
+      "ordinal=*": "¡Terminaste en {position}º lugar!"
+    }
+  }],
+  "platform_message": [{
+    "match": {
+      "platform=android": "Estás usando Android",
+      "platform=ios": "Estás usando iOS",
+      "platform=web": "Estás usando un navegador web",
+      "platform=*": "Plataforma desconocida"
+    }
+  }],
+  "user_activity": [{
+    "declarations": [
+      "input count",
+      "input gender",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural", "gender"],
+    "match": {
+      "countPlural=one, gender=male": "Él publicó {count} foto",
+      "countPlural=one, gender=female": "Ella publicó {count} foto",
+      "countPlural=one, gender=*": "Publicó {count} foto",
+      "countPlural=other, gender=male": "Él publicó {count} fotos",
+      "countPlural=other, gender=female": "Ella publicó {count} fotos",
+      "countPlural=*, gender=*": "Publicó {count} fotos"
+    }
+  }],
+  "variants_demo": "Demostración de Variantes",
+  "ordinal_demo": "Demostración Ordinal",
+  "matching_demo": "Demostración de Coincidencia Directa",
+  "multi_selector_demo": "Demostración Multi-Selector"
 }

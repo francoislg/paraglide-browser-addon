@@ -23,5 +23,46 @@
       "countPlural=one": "Vous avez {count} produit dans votre catalogue.",
       "countPlural=other": "Vous avez {count} produits dans votre catalogue."
     }
-  }]
+  }],
+  "finish_position": [{
+    "declarations": [
+      "input position",
+      "local ordinal = position: plural type=ordinal"
+    ],
+    "selectors": ["ordinal"],
+    "match": {
+      "ordinal=one": "Vous avez terminé {position}ère place!",
+      "ordinal=two": "Vous avez terminé {position}ème place!",
+      "ordinal=few": "Vous avez terminé {position}ème place!",
+      "ordinal=*": "Vous avez terminé {position}ème place!"
+    }
+  }],
+  "platform_message": [{
+    "match": {
+      "platform=android": "Vous utilisez Android",
+      "platform=ios": "Vous utilisez iOS",
+      "platform=web": "Vous utilisez un navigateur web",
+      "platform=*": "Plateforme inconnue"
+    }
+  }],
+  "user_activity": [{
+    "declarations": [
+      "input count",
+      "input gender",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural", "gender"],
+    "match": {
+      "countPlural=one, gender=male": "Il a publié {count} photo",
+      "countPlural=one, gender=female": "Elle a publié {count} photo",
+      "countPlural=one, gender=*": "Ils ont publié {count} photo",
+      "countPlural=other, gender=male": "Il a publié {count} photos",
+      "countPlural=other, gender=female": "Elle a publié {count} photos",
+      "countPlural=*, gender=*": "Ils ont publié {count} photos"
+    }
+  }],
+  "variants_demo": "Démonstration de Variantes",
+  "ordinal_demo": "Démonstration Ordinale",
+  "matching_demo": "Démonstration de Correspondance Directe",
+  "multi_selector_demo": "Démonstration Multi-Sélecteur"
 }

@@ -1,7 +1,7 @@
-import { createDebugMiddleware } from './middleware.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { createDebugMiddleware } from "./middleware.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -14,83 +14,120 @@ const __dirname = path.dirname(__filename);
  * @returns {import('vite').Plugin}
  */
 export function paraglideBrowserDebugPlugin(options = {}) {
-  const {
-    outdir = './src/paraglide'
-  } = options;
+  const { outdir = "./src/paraglide" } = options;
 
   let viteConfig;
   let isDebugMode = false;
 
   return {
-    name: 'paraglide-browser-debug',
-    enforce: 'post', // Run after the official Paraglide plugin
+    name: "paraglide-browser-debug",
+    enforce: "post", // Run after the official Paraglide plugin
 
     configResolved(config) {
       viteConfig = config;
       // Check environment variable from Vite's loaded .env files
-      isDebugMode = config.env.VITE_PARAGLIDE_BROWSER_DEBUG === 'true';
-      console.log('[paraglide-debug] Plugin configured');
-      console.log('[paraglide-debug] Debug mode:', isDebugMode);
-      console.log('[paraglide-debug] Environment check:', config.env.VITE_PARAGLIDE_BROWSER_DEBUG);
+      isDebugMode = config.env.VITE_PARAGLIDE_BROWSER_DEBUG === "true";
+      console.log("[paraglide-debug] Plugin configured");
+      console.log("[paraglide-debug] Debug mode:", isDebugMode);
+      console.log(
+        "[paraglide-debug] Environment check:",
+        config.env.VITE_PARAGLIDE_BROWSER_DEBUG
+      );
     },
 
     // Resolve virtual module IDs
-    resolveId(id) {
-      if (id === '/@paraglide-debug/client.js') {
-        return id; // Always mark as resolved
+    resolveId(id, importer) {
+      // Handle direct virtual module references
+      if (id.startsWith("/@paraglide-debug/")) {
+        return id;
       }
+
+      // Handle relative imports from virtual modules
+      if (importer && importer.startsWith("/@paraglide-debug/")) {
+        if (id.startsWith("./") || id.startsWith("../")) {
+          // Resolve relative path against importer
+          // e.g., importer: /@paraglide-debug/runtime.js, id: ./runtime/db.js
+          // → /@paraglide-debug/runtime/db.js
+          const importerDir = path.dirname(importer);
+          const resolved = path.join(importerDir, id).replace(/\\/g, "/");
+          return resolved;
+        }
+      }
+
       return null;
     },
 
     // Load virtual module content
     load(id) {
-      // Serve virtual module
-      if (id === '/@paraglide-debug/client.js') {
-        // If debug mode is off, return empty script
-        if (!isDebugMode) {
-          return '// Paraglide debug mode is disabled';
+      if (!isDebugMode) {
+        if (id === "/@paraglide-debug/runtime.js") {
+          return "// Paraglide debug mode is disabled";
         }
+        return null;
+      }
 
-        const runtimePath = path.join(__dirname, '../runtime.js');
+      // Serve virtual modules under /@paraglide-debug/
+      if (id.startsWith("/@paraglide-debug/")) {
+        // Strip the virtual prefix to get the file path
+        // /@paraglide-debug/runtime.js → runtime.js
+        // /@paraglide-debug/runtime/db.js → runtime/db.js
+        const relativePath = id.replace("/@paraglide-debug/", "");
+        const filePath = path.join(__dirname, relativePath);
 
         try {
-          const code = fs.readFileSync(runtimePath, 'utf-8');
-          console.log('[paraglide-debug] ✓ Loaded client runtime');
+          const code = fs.readFileSync(filePath, "utf-8");
+          console.log(`[paraglide-debug] ✓ Loaded virtual module: ${relativePath}`);
           return code;
         } catch (err) {
-          console.error('[paraglide-debug] Error loading client:', err);
-          return 'console.error("Failed to load Paraglide debug client");';
+          console.error(`[paraglide-debug] Error loading ${relativePath}:`, err);
+          return `console.error("Failed to load Paraglide debug module: ${relativePath}");`;
         }
       }
 
       return null;
     },
 
-    // Serve debug endpoints
+    // Serve debug endpoints in development
     configureServer(server) {
       if (!isDebugMode) return;
 
       server.middlewares.use(createDebugMiddleware(viteConfig));
 
-      console.log('[paraglide-debug] ✓ Serving translations at /@paraglide-debug/langs.json');
-      console.log('[paraglide-debug] Note: For SvelteKit, add script tag to app.html conditioned on env variable');
+      console.log(
+        "[paraglide-debug] ✓ Serving translations at /@paraglide-debug/langs.json"
+      );
+      console.log(
+        "[paraglide-debug] Note: For SvelteKit, add script tag to app.html conditioned on env variable"
+      );
+    },
+
+    // Serve debug endpoints in preview
+    configurePreviewServer(server) {
+      if (!isDebugMode) return;
+
+      server.middlewares.use(createDebugMiddleware(viteConfig));
+
+      console.log(
+        "[paraglide-debug] ✓ Serving translations at /@paraglide-debug/langs.json (preview)"
+      );
     },
 
     // Transform _index.js to wrap with debug metadata
     transform(code, id) {
-      const normalizedId = id.replace(/\\/g, '/');
+      const normalizedId = id.replace(/\\/g, "/");
 
       // Check if this is a request for the original (unwrapped) code
-      const isOriginalQuery = normalizedId.includes('_index.js?original');
-      const isIndexFile = normalizedId.includes('/paraglide/messages/') &&
-                          normalizedId.includes('_index.js') &&
-                          !isOriginalQuery;
+      const isOriginalQuery = normalizedId.includes("_index.js?original");
+      const isIndexFile =
+        normalizedId.includes("/paraglide/messages/") &&
+        normalizedId.includes("_index.js") &&
+        !isOriginalQuery;
 
       // Return stored original code when requested with ?original
       if (isOriginalQuery) {
         return {
           code: this.originalIndexCode,
-          map: null
+          map: null,
         };
       }
 
@@ -98,27 +135,50 @@ export function paraglideBrowserDebugPlugin(options = {}) {
         return null;
       }
 
-      console.log('[paraglide-debug] ✓ Intercepting _index.js');
+      console.log("[paraglide-debug] ✓ Intercepting _index.js");
 
       // Store the original code
       this.originalIndexCode = code;
       this.originalIndexId = id;
 
-      // Extract function names from exports
-      const functionNames = [];
-      const exportMatches = code.matchAll(/export const (\w+) = /g);
-      for (const match of exportMatches) {
-        functionNames.push(match[1]);
-      }
+      // Check if this file uses re-exports (export * from)
+      const hasReExports = code.includes('export * from');
 
-      console.log('[paraglide-debug] Found message functions:', functionNames.join(', '));
+      // Extract module names from re-exports or function names from direct exports
+      let wrapperCode;
 
-      // Generate wrapper that imports original via ?original query
-      const wrapperCode = `
-// Debug wrapper for Paraglide messages
+      if (hasReExports) {
+        // Handle re-export statements
+        const reExportMatches = code.matchAll(/export \* from ['"]\.\/(\w+)\.js['"]/g);
+        const moduleNames = [];
+        for (const match of reExportMatches) {
+          moduleNames.push(match[1]);
+        }
+
+        if (moduleNames.length === 0) {
+          console.log("[paraglide-debug] No re-exports found, passing through");
+          return null;
+        }
+
+        console.log(
+          "[paraglide-debug] Found re-exported modules:",
+          moduleNames.join(", ")
+        );
+
+        // Generate wrapper that imports each module and wraps its exports
+        wrapperCode = `
+// Debug wrapper for Paraglide messages (re-export handling)
 // Generated by vite-plugin-paraglide-debug
 
-import * as _original from './_index.js?original';
+${moduleNames.map(name => `import * as _${name} from './${name}.js';`).join('\n')}
+
+// Expose original message functions for re-rendering
+if (typeof window !== 'undefined') {
+  window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
+  window.__paraglideBrowserDebug.messageFunctions = {
+${moduleNames.map(name => `    ${name}: _${name}.${name}`).join(',\n')}
+  };
+}
 
 // Debug wrapper function - stores text mapping in global registry
 function __debugWrap(text, key, params) {
@@ -127,12 +187,28 @@ function __debugWrap(text, key, params) {
   // Store mapping in global registry
   if (typeof window !== 'undefined') {
     window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
+    const wasEmpty = !window.__paraglideBrowserDebug.registry;
     window.__paraglideBrowserDebug.registry = window.__paraglideBrowserDebug.registry || new Map();
     window.__paraglideBrowserDebug.registry.set(text, {
       key: key,
       params: params || {},
       timestamp: Date.now()
     });
+
+    // Dispatch initialization event after registry is fully populated
+    // Use requestAnimationFrame to defer until after all synchronous message calls
+    if (wasEmpty) {
+      requestAnimationFrame(() => {
+        const event = new CustomEvent('__paraglideInitialized', {
+          detail: {
+            timestamp: Date.now(),
+            registrySize: window.__paraglideBrowserDebug.registry.size
+          }
+        });
+        window.dispatchEvent(event);
+        console.log('[paraglide-debug] Registry initialized with ' + window.__paraglideBrowserDebug.registry.size + ' entries, dispatched __paraglideInitialized event');
+      });
+    }
   }
 
   // Return plain text (no HTML manipulation)
@@ -140,30 +216,112 @@ function __debugWrap(text, key, params) {
 }
 
 // Export wrapped versions of all message functions
-${functionNames.map(name => `export const ${name} = (inputs, options) => {
+${moduleNames
+  .map(
+    (name) => `export const ${name} = (inputs, options) => {
+  const result = _${name}.${name}(inputs, options);
+  return __debugWrap(result, "${name}", inputs);
+};`
+  )
+  .join("\n")}
+`;
+      } else {
+        // Handle direct exports
+        const functionNames = [];
+        const exportMatches = code.matchAll(/export const (\w+) = /g);
+        for (const match of exportMatches) {
+          functionNames.push(match[1]);
+        }
+
+        if (functionNames.length === 0) {
+          console.log("[paraglide-debug] No function exports found, passing through");
+          return null;
+        }
+
+        console.log(
+          "[paraglide-debug] Found message functions:",
+          functionNames.join(", ")
+        );
+
+        // Generate wrapper that imports original via ?original query
+        wrapperCode = `
+// Debug wrapper for Paraglide messages
+// Generated by vite-plugin-paraglide-debug
+
+import * as _original from './_index.js?original';
+
+// Expose original message functions for re-rendering
+if (typeof window !== 'undefined') {
+  window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
+  window.__paraglideBrowserDebug.messageFunctions = _original;
+}
+
+// Debug wrapper function - stores text mapping in global registry
+function __debugWrap(text, key, params) {
+  if (typeof text !== 'string') return text;
+
+  // Store mapping in global registry
+  if (typeof window !== 'undefined') {
+    window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
+    const wasEmpty = !window.__paraglideBrowserDebug.registry;
+    window.__paraglideBrowserDebug.registry = window.__paraglideBrowserDebug.registry || new Map();
+    window.__paraglideBrowserDebug.registry.set(text, {
+      key: key,
+      params: params || {},
+      timestamp: Date.now()
+    });
+
+    // Dispatch initialization event after registry is fully populated
+    // Use requestAnimationFrame to defer until after all synchronous message calls
+    if (wasEmpty) {
+      requestAnimationFrame(() => {
+        const event = new CustomEvent('__paraglideInitialized', {
+          detail: {
+            timestamp: Date.now(),
+            registrySize: window.__paraglideBrowserDebug.registry.size
+          }
+        });
+        window.dispatchEvent(event);
+        console.log('[paraglide-debug] Registry initialized with ' + window.__paraglideBrowserDebug.registry.size + ' entries, dispatched __paraglideInitialized event');
+      });
+    }
+  }
+
+  // Return plain text (no HTML manipulation)
+  return text;
+}
+
+// Export wrapped versions of all message functions
+${functionNames
+  .map(
+    (name) => `export const ${name} = (inputs, options) => {
   const result = _original.${name}(inputs, options);
   return __debugWrap(result, "${name}", inputs);
-};`).join('\n')}
+};`
+  )
+  .join("\n")}
 `;
+      }
 
       return {
         code: wrapperCode,
-        map: null
+        map: null,
       };
     },
 
     // Inject runtime script to build element registry (for standard Vite apps)
     transformIndexHtml: {
-      order: 'pre',
+      order: "pre",
       handler(html) {
         if (!isDebugMode) return html;
 
         // Inject script tag that loads from the served endpoint
-        const scriptTag = '<script type="module" src="/@paraglide-debug/client.js"></script>';
+        const scriptTag =
+          '<script type="module" src="/@paraglide-debug/runtime.js"></script>';
 
         // Inject before closing </body> tag
-        return html.replace('</body>', scriptTag + '\n</body>');
-      }
+        return html.replace("</body>", scriptTag + "\n</body>");
+      },
     },
 
     // SvelteKit-specific hook for HTML transformation
@@ -171,10 +329,11 @@ ${functionNames.map(name => `export const ${name} = (inputs, options) => {
       if (!isDebugMode || !done) return null;
 
       // Inject script tag that loads from the served endpoint
-      const scriptTag = '<script type="module" src="/@paraglide-debug/client.js"></script>';
+      const scriptTag =
+        '<script type="module" src="/@paraglide-debug/runtime.js"></script>';
 
       // Inject before closing </body> tag
-      return html.replace('</body>', scriptTag + '\n</body>');
-    }
+      return html.replace("</body>", scriptTag + "\n</body>");
+    },
   };
 }

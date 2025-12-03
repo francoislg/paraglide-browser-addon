@@ -15,5 +15,46 @@
       "countPlural=one": "You have {count} item in your cart.",
       "countPlural=other": "You have {count} items in your cart."
     }
-  }]
+  }],
+  "finish_position": [{
+    "declarations": [
+      "input position",
+      "local ordinal = position: plural type=ordinal"
+    ],
+    "selectors": ["ordinal"],
+    "match": {
+      "ordinal=one": "You finished {position}st place!",
+      "ordinal=two": "You finished {position}nd place!",
+      "ordinal=few": "You finished {position}rd place!",
+      "ordinal=*": "You finished {position}th place!"
+    }
+  }],
+  "platform_message": [{
+    "match": {
+      "platform=android": "You're using Android",
+      "platform=ios": "You're using iOS",
+      "platform=web": "You're using a web browser",
+      "platform=*": "Unknown platform"
+    }
+  }],
+  "user_activity": [{
+    "declarations": [
+      "input count",
+      "input gender",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural", "gender"],
+    "match": {
+      "countPlural=one, gender=male": "He posted {count} photo",
+      "countPlural=one, gender=female": "She posted {count} photo",
+      "countPlural=one, gender=*": "They posted {count} photo",
+      "countPlural=other, gender=male": "He posted {count} photos",
+      "countPlural=other, gender=female": "She posted {count} photos",
+      "countPlural=*, gender=*": "They posted {count} photos"
+    }
+  }],
+  "variants_demo": "Variants Demo",
+  "ordinal_demo": "Ordinal Demo",
+  "matching_demo": "Direct Matching Demo",
+  "multi_selector_demo": "Multi-Selector Demo"
 }

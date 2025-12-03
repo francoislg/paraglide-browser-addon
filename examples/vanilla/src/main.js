@@ -8,10 +8,19 @@ function updateUI() {
   document.getElementById('greeting').innerHTML = m.greeting({ name: 'Developer' });
   document.getElementById('description').innerHTML = m.description();
   document.getElementById('current-language').innerHTML = m.current_language();
-  document.getElementById('pluralization-demo').innerHTML = m.pluralization_demo();
 
-  // Update plural demo with different counts
+  // Update all variant demos
+  document.getElementById('pluralization-demo').innerHTML = m.pluralization_demo();
   updatePluralDemo();
+
+  document.getElementById('ordinal-demo').innerHTML = m.ordinal_demo();
+  updateOrdinalDemo();
+
+  document.getElementById('matching-demo').innerHTML = m.matching_demo();
+  updateMatchingDemo();
+
+  document.getElementById('multi-selector-demo').innerHTML = m.multi_selector_demo();
+  updateMultiSelectorDemo();
 }
 
 function updatePluralDemo() {
@@ -21,6 +30,40 @@ function updatePluralDemo() {
     .join('');
 
   document.getElementById('plural-list').innerHTML = listHtml;
+}
+
+function updateOrdinalDemo() {
+  const positions = [1, 2, 3, 4, 11, 21, 22, 23];
+  const listHtml = positions
+    .map(position => `<li>${m.finish_position({ position })}</li>`)
+    .join('');
+
+  document.getElementById('ordinal-list').innerHTML = listHtml;
+}
+
+function updateMatchingDemo() {
+  const platforms = ['android', 'ios', 'web', 'desktop'];
+  const listHtml = platforms
+    .map(platform => `<li>${m.platform_message({ platform })}</li>`)
+    .join('');
+
+  document.getElementById('matching-list').innerHTML = listHtml;
+}
+
+function updateMultiSelectorDemo() {
+  const activities = [
+    { count: 1, gender: 'male' },
+    { count: 1, gender: 'female' },
+    { count: 1, gender: 'other' },
+    { count: 5, gender: 'male' },
+    { count: 5, gender: 'female' },
+    { count: 5, gender: 'other' }
+  ];
+  const listHtml = activities
+    .map(activity => `<li>${m.user_activity(activity)}</li>`)
+    .join('');
+
+  document.getElementById('multi-selector-list').innerHTML = listHtml;
 }
 
 window.switchLanguage = (lang) => {
