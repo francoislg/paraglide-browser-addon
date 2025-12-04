@@ -20,9 +20,6 @@ import { getCurrentLocale } from '../languageDetection.js';
 import { refreshDataStore } from '../dataStore.js';
 import { refreshElementsByKey } from '../overlay.js';
 
-/**
- * Initialize and display the conflict list in the modal
- */
 export async function initConflictList() {
   try {
     const currentLocale = getCurrentLocale();
@@ -30,21 +27,18 @@ export async function initConflictList() {
 
     console.log(`[paraglide-debug] Found ${conflicts.length} conflicts for locale ${currentLocale}`);
 
-    // Update conflict count in UI
     const conflictCount = document.getElementById('pg-conflict-count');
     if (conflictCount) {
       conflictCount.textContent = conflicts.length;
       conflictCount.style.color = conflicts.length > 0 ? '#e53e3e' : '#48bb78';
     }
 
-    // Get or create conflict list container
     let listContainer = document.getElementById('pg-conflict-list');
     if (!listContainer) {
       console.warn('[paraglide-debug] Conflict list container not found');
       return;
     }
 
-    // Clear existing content
     listContainer.innerHTML = '';
 
     if (conflicts.length === 0) {
@@ -52,7 +46,6 @@ export async function initConflictList() {
       return;
     }
 
-    // Create conflict items
     conflicts.forEach(conflict => {
       const item = createConflictItem(conflict);
       listContainer.appendChild(item);
@@ -63,9 +56,6 @@ export async function initConflictList() {
   }
 }
 
-/**
- * Create a single conflict list item
- */
 function createConflictItem(conflict) {
   const item = document.createElement('div');
   item.className = 'pg-conflict-item';
@@ -79,7 +69,6 @@ function createConflictItem(conflict) {
     transition: all 0.2s;
   `;
 
-  // Create header with key name
   const header = document.createElement('div');
   header.style.cssText = `
     display: flex;
@@ -113,7 +102,6 @@ function createConflictItem(conflict) {
   header.appendChild(keyName);
   header.appendChild(viewButton);
 
-  // Create preview of values
   const preview = document.createElement('div');
   preview.style.cssText = `
     font-size: 12px;
@@ -121,7 +109,6 @@ function createConflictItem(conflict) {
     line-height: 1.4;
   `;
 
-  // Get display values (handle plural translations)
   const localValue = getDisplayValue(conflict.editedValue);
   const serverValue = getDisplayValue(conflict.originalValue);
 
@@ -137,13 +124,11 @@ function createConflictItem(conflict) {
   item.appendChild(header);
   item.appendChild(preview);
 
-  // Click handler to show resolution UI
   viewButton.addEventListener('click', (e) => {
     e.stopPropagation();
     showConflictResolution(conflict);
   });
 
-  // Hover effect
   item.addEventListener('mouseenter', () => {
     item.style.background = 'rgba(255, 255, 255, 0.1)';
   });
@@ -154,11 +139,7 @@ function createConflictItem(conflict) {
   return item;
 }
 
-/**
- * Show conflict resolution dialog
- */
 async function showConflictResolution(conflict) {
-  // Remove existing resolution dialog if any
   const existing = document.getElementById('pg-conflict-resolution');
   if (existing) {
     existing.remove();
@@ -166,6 +147,7 @@ async function showConflictResolution(conflict) {
 
   const dialog = document.createElement('div');
   dialog.id = 'pg-conflict-resolution';
+  dialog.classList.add('pg-ignore-detection');
   dialog.style.cssText = `
     position: fixed;
     top: 0;
@@ -315,7 +297,6 @@ async function showConflictResolution(conflict) {
 
   document.body.appendChild(dialog);
 
-  // Button handlers
   const keepLocalBtn = dialog.querySelector('#pg-keep-local');
   const keepServerBtn = dialog.querySelector('#pg-keep-server');
   const mergeCustomBtn = dialog.querySelector('#pg-merge-custom');
@@ -346,7 +327,6 @@ async function showConflictResolution(conflict) {
     dialog.remove();
   });
 
-  // ESC key closes dialog
   const handleEsc = (e) => {
     if (e.key === 'Escape') {
       dialog.remove();
@@ -355,7 +335,6 @@ async function showConflictResolution(conflict) {
   };
   document.addEventListener('keydown', handleEsc);
 
-  // Backdrop click closes dialog
   dialog.addEventListener('click', (e) => {
     if (e.target === dialog) {
       dialog.remove();
@@ -364,26 +343,19 @@ async function showConflictResolution(conflict) {
   });
 }
 
-/**
- * Handle conflict resolution
- */
 async function handleResolution(conflict, resolution) {
   try {
     await resolveConflict(conflict.locale, conflict.key, resolution);
     console.log(`[paraglide-debug] Resolved conflict for ${conflict.key}: ${resolution}`);
 
-    // Refresh data store to update in-memory cache
     await refreshDataStore();
     console.log('[paraglide-debug] Data store refreshed after conflict resolution');
 
-    // Refresh all elements with this key on the page to reflect resolution
     const updatedCount = refreshElementsByKey(conflict.key, conflict.locale);
     console.log(`[paraglide-debug] Updated ${updatedCount} elements on page for key: ${conflict.key}`);
 
-    // Refresh conflict list UI
     await initConflictList();
 
-    // Show success message
     alert('Conflict resolved successfully!');
   } catch (error) {
     console.error('[paraglide-debug] Failed to resolve conflict:', error);
@@ -391,54 +363,38 @@ async function handleResolution(conflict, resolution) {
   }
 }
 
-/**
- * Get display value from translation (handle plurals)
- */
 function getDisplayValue(value) {
-  // Handle array (plural forms from server)
   if (Array.isArray(value) && value[0]?.match) {
     return Object.entries(value[0].match)
       .map(([form, text]) => `${form}: ${text}`)
       .join('\n');
   }
 
-  // Handle string (might be JSON from DB)
   if (typeof value === 'string') {
-    // Try to parse as plural translation
     try {
       const parsed = JSON.parse(value);
       if (Array.isArray(parsed) && parsed[0]?.match) {
-        // Return all plural forms
         return Object.entries(parsed[0].match)
           .map(([form, text]) => `${form}: ${text}`)
           .join('\n');
       }
     } catch {
-      // Not JSON, return as-is
     }
     return value;
   }
 
-  // Handle other objects - stringify them
   if (typeof value === 'object' && value !== null) {
     return JSON.stringify(value, null, 2);
   }
 
-  // Fallback - convert to string
   return String(value || '');
 }
 
-/**
- * Truncate text for preview
- */
 function truncate(text, maxLength) {
   if (text.length <= maxLength) return escapeHtml(text);
   return escapeHtml(text.substring(0, maxLength)) + '...';
 }
 
-/**
- * Escape HTML to prevent XSS
- */
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;

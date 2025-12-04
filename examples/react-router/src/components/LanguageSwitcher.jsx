@@ -1,13 +1,8 @@
-import { useState, useEffect } from 'react';
-import { setLocale, getLocale } from '../paraglide/runtime.js';
-import * as m from '../paraglide/messages.js';
+import { setLocale } from '../paraglide/runtime.js';
 
 function LanguageSwitcher() {
-  const [currentLocale, setCurrentLocale] = useState(getLocale());
-
   const switchLanguage = (lang) => {
     setLocale(lang, { reload: false });
-    setCurrentLocale(lang);
   };
 
   return (

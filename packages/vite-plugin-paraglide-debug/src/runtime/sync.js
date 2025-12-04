@@ -24,7 +24,6 @@ export async function syncWithServer() {
   try {
     console.log('[paraglide-debug] Fetching translations from server...');
 
-    // Fetch translations from the debug endpoint
     const response = await fetch('/@paraglide-debug/langs.json');
 
     if (!response.ok) {
@@ -35,21 +34,17 @@ export async function syncWithServer() {
 
     console.log('[paraglide-debug] Server translations fetched:', Object.keys(serverTranslations));
 
-    // Sync with database
     const stats = await syncTranslations(serverTranslations);
 
     console.log('[paraglide-debug] Sync complete:', stats);
 
-    // Refresh data store (reload server translations + local edits)
     await refreshDataStore();
     console.log('[paraglide-debug] Data store refreshed after sync');
 
-    // Re-apply saved edits to update UI
     if (window.__paraglideBrowserDebug?.applySavedEdits) {
       window.__paraglideBrowserDebug.applySavedEdits();
     }
 
-    // Show results to user
     const messages = [];
     if (stats.newKeys > 0) messages.push(`${stats.newKeys} new keys`);
     if (stats.updated > 0) messages.push(`${stats.updated} updated`);
@@ -59,18 +54,11 @@ export async function syncWithServer() {
 
     const summary = messages.length > 0 ? messages.join(', ') : 'No changes';
 
-    // Refresh conflict list if it exists
     if (window.__paraglideBrowserDebug?.refreshConflictList) {
       await window.__paraglideBrowserDebug.refreshConflictList();
     }
 
-    if (stats.conflicts > 0) {
-      alert(`Sync complete: ${summary}\n\nYou have ${stats.conflicts} conflict(s) that need resolution.`);
-    } else if (stats.autoResolved > 0) {
-      alert(`Sync complete: ${summary}\n\n✓ Your edits matched the server changes and were auto-accepted.`);
-    } else {
-      alert(`Sync complete: ${summary}`);
-    }
+    console.log(`[paraglide-debug] Sync complete: ${summary}`);
 
     return stats;
   } catch (error) {

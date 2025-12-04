@@ -49,7 +49,6 @@ export function setupVariantSync(popup, languageInputs, globalSelector) {
         if (!input.pluralData) input.pluralData = { match: {} };
         input.pluralData.match[selectedVariant] = singleTextarea.value;
 
-        // Also update the expanded variant textarea if visible
         const allVariantsContainer = popup.querySelector(`.pg-all-variants[data-lang-index="${index}"]`);
         if (allVariantsContainer && allVariantsContainer.style.display !== 'none') {
           const variantTextarea = allVariantsContainer.querySelector(`textarea[data-variant="${selectedVariant}"]`);
@@ -79,12 +78,10 @@ export function setupExpandCollapse(popup, languageInputs, globalSelector, globa
     const collapseText = globalExpandBtn.querySelector('.collapse-text');
 
     if (isExpanded) {
-      // Collapse - hide all expanded variants, show single textareas
       languageInputs.forEach((input, index) => {
         const singleTextarea = popup.querySelector(`.pg-variant-single[data-lang-index="${index}"]`);
         const allVariantsContainer = popup.querySelector(`.pg-all-variants[data-lang-index="${index}"]`);
 
-        // Sync all variants back to pluralData
         const variantTextareas = allVariantsContainer.querySelectorAll('.pg-variant-textarea');
         variantTextareas.forEach(ta => {
           const variant = ta.dataset.variant;
@@ -92,7 +89,6 @@ export function setupExpandCollapse(popup, languageInputs, globalSelector, globa
           input.pluralData.match[variant] = ta.value;
         });
 
-        // Update single textarea with currently selected variant
         const selectedVariant = globalSelector.value;
         if (input.pluralData.match[selectedVariant]) {
           singleTextarea.value = input.pluralData.match[selectedVariant];
@@ -107,18 +103,15 @@ export function setupExpandCollapse(popup, languageInputs, globalSelector, globa
       collapseText.style.display = 'none';
       isExpanded = false;
     } else {
-      // Expand - show all variants, hide single textareas
       const selectedVariant = globalSelector.value;
 
       languageInputs.forEach((input, index) => {
         const singleTextarea = popup.querySelector(`.pg-variant-single[data-lang-index="${index}"]`);
         const allVariantsContainer = popup.querySelector(`.pg-all-variants[data-lang-index="${index}"]`);
 
-        // Sync current single textarea value to pluralData
         if (!input.pluralData) input.pluralData = { match: {} };
         input.pluralData.match[selectedVariant] = singleTextarea.value;
 
-        // Update the expanded textarea for current variant
         const variantTextarea = allVariantsContainer.querySelector(`textarea[data-variant="${selectedVariant}"]`);
         if (variantTextarea) {
           variantTextarea.value = singleTextarea.value;
@@ -127,7 +120,6 @@ export function setupExpandCollapse(popup, languageInputs, globalSelector, globa
         allVariantsContainer.style.display = 'flex';
         singleTextarea.style.display = 'none';
 
-        // Add input listeners to expanded textareas
         const variantTextareas = allVariantsContainer.querySelectorAll('.pg-variant-textarea');
         variantTextareas.forEach(ta => {
           ta.addEventListener('input', () => {
@@ -198,7 +190,6 @@ export function setupSaveHandler(popup, languageInputs, key, isPlural, close) {
         let valueToSave;
 
         if (isPlural) {
-          // For plural forms, serialize the entire plural structure
           const pluralStructure = [{
             declarations: input.pluralData.declarations || [],
             selectors: input.pluralData.selectors || [],
@@ -206,12 +197,10 @@ export function setupSaveHandler(popup, languageInputs, key, isPlural, close) {
           }];
           valueToSave = JSON.stringify(pluralStructure);
         } else {
-          // For simple translations, get the textarea value
           const textarea = popup.querySelector(`textarea[data-locale="${locale}"][data-lang-index="${i}"]`);
           valueToSave = textarea ? textarea.value : '';
         }
 
-        // Check if value differs from server translation
         const serverValue = input.serverValue;
         const serverValueString = typeof serverValue === 'object'
           ? JSON.stringify(serverValue)
@@ -220,13 +209,11 @@ export function setupSaveHandler(popup, languageInputs, key, isPlural, close) {
         const isReverted = valueToSave === serverValueString;
 
         if (isReverted) {
-          // Value matches server - delete the edit (revert to server value)
           console.log(`[paraglide-debug] Reverting ${key} (${locale}) - same as server, deleting edit`);
           await deleteTranslationEdit(locale, key);
           updateLocalCache(locale, key, serverValue, false, false);
           skippedCount++;
         } else {
-          // Value differs - save the edit
           await saveTranslationEdit(locale, key, valueToSave);
           console.log(`[paraglide-debug] ✓ Saved edit for ${key} (${locale})`);
           updateLocalCache(locale, key, valueToSave, true, false);
@@ -236,10 +223,8 @@ export function setupSaveHandler(popup, languageInputs, key, isPlural, close) {
 
       console.log(`[paraglide-debug] Save summary: ${savedCount} saved, ${skippedCount} skipped (unchanged)`);
 
-      // Refresh all elements with this key on the page to show updated translations
       refreshElementsByKey(key);
 
-      // Close popup
       close();
     } catch (error) {
       console.error('[paraglide-debug] Failed to save edits:', error);

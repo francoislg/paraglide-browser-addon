@@ -51,7 +51,6 @@ export async function initialize() {
     }
   }
 
-  // Everything ready - emit event
   const event = new CustomEvent('__paraglideDebugInitialized', {
     detail: {
       timestamp: Date.now(),
@@ -78,14 +77,12 @@ export async function initialize() {
  */
 async function waitForRegistry() {
   return new Promise((resolve) => {
-    // Check if registry already exists (runtime loaded after app)
     if (window.__paraglideBrowserDebug?.registry?.size > 0) {
       console.log('[paraglide-debug] Registry already populated:', window.__paraglideBrowserDebug.registry.size);
       resolve();
       return;
     }
 
-    // Otherwise wait for the __paraglideInitialized event
     console.log('[paraglide-debug] Waiting for __paraglideInitialized event...');
     const handler = (e) => {
       console.log('[paraglide-debug] Registry populated via event:', e.detail.registrySize);

@@ -54,8 +54,6 @@ export function renderTranslation(key, params = {}, locale) {
   }
 
   try {
-    // Call the original Paraglide function with parameters and locale option
-    // This ensures 100% compatibility with Paraglide's logic
     return messageFunction(params, { locale });
   } catch (error) {
     console.error(`[paraglide-debug] Error rendering translation ${key}:`, error);
@@ -85,7 +83,6 @@ export function renderEditedTemplate(template, params = {}, locale = 'en') {
     return '';
   }
 
-  // Check if this is a variant (JSON string starting with '[{')
   if (typeof template === 'string' && template.trim().startsWith('[{')) {
     try {
       const parsed = JSON.parse(template);
@@ -93,33 +90,19 @@ export function renderEditedTemplate(template, params = {}, locale = 'en') {
         return renderVariant(parsed[0], params, locale);
       }
     } catch (e) {
-      // Not valid JSON, fall through to simple substitution
       console.warn('[paraglide-debug] Failed to parse variant:', e);
     }
   }
 
-  // Check if this is already a parsed variant object
   if (typeof template === 'object' && template.match) {
     return renderVariant(template, params, locale);
   }
 
-  // Simple string template
   if (typeof template !== 'string') {
     return '';
   }
 
-  // Simple parameter substitution: {name} → actual value
   return template.replace(/\{(\w+)\}/g, (match, key) => {
     return params[key] !== undefined ? params[key] : match;
   });
-}
-
-/**
- * Check if message functions are available
- * Useful for waiting until initialization is complete
- *
- * @returns {boolean} True if message functions are available
- */
-export function areMessageFunctionsAvailable() {
-  return !!(window.__paraglideBrowserDebug?.messageFunctions);
 }

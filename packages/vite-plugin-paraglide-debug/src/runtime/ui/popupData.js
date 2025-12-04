@@ -23,13 +23,10 @@ export function buildLanguageInputData(key, selectedLanguages) {
   const currentLocale = getCurrentLocale();
 
   for (const locale of selectedLanguages) {
-    // Get both server and edited versions from unified dataStore (synchronous!)
     const versions = getTranslationVersions(locale, key);
 
-    // Use current (edited if exists, otherwise server) for display
     const displayValue = versions.current;
 
-    // Parse variant/plural structure using shared utility
     let pluralData = parseVariantStructure(displayValue);
 
     // Deep clone if it came from an array to avoid mutations
@@ -66,14 +63,12 @@ export function detectVariantInfo(languageInputs, params, currentLocale) {
   let variantForms = [];
   let activeVariantKey = null;
 
-  // Check if any language has plural data
   const firstPluralInput = languageInputs.find(input => input.pluralData);
 
   if (firstPluralInput) {
     isPlural = true;
     variantForms = Object.keys(firstPluralInput.pluralData.match || {});
 
-    // Detect active variant if params are provided
     if (variantForms.length > 0 && params && Object.keys(params).length > 0) {
       activeVariantKey = detectActiveVariant(
         firstPluralInput.pluralData,
@@ -97,7 +92,6 @@ export function detectVariantInfo(languageInputs, params, currentLocale) {
 export async function preparePopupData(key, params) {
   const currentLocale = getCurrentLocale();
 
-  // Get selected languages and sort with current language first
   let selectedLanguages = getSelectedLanguages();
   selectedLanguages = selectedLanguages.sort((a, b) => {
     if (a === currentLocale) return -1;
@@ -105,10 +99,8 @@ export async function preparePopupData(key, params) {
     return a.localeCompare(b);
   });
 
-  // Build language input data
   const languageInputs = buildLanguageInputData(key, selectedLanguages);
 
-  // Detect variant information
   const variantInfo = detectVariantInfo(languageInputs, params, currentLocale);
 
   return {

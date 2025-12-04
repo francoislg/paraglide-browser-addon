@@ -33,7 +33,6 @@ export async function buildElementRegistry() {
     NodeFilter.SHOW_TEXT,
     {
       acceptNode: (node) => {
-        // Skip script/style tags
         const parent = node.parentElement?.tagName;
         if (parent === "SCRIPT" || parent === "STYLE") {
           return NodeFilter.FILTER_REJECT;
@@ -52,18 +51,13 @@ export async function buildElementRegistry() {
     if (metadata) {
       const element = textNode.parentElement;
 
-      // Add data attributes to element so we can re-find it after framework re-renders
-      // IMPORTANT: Skip elements inside the edit popup to prevent interference
       if (element && !element.dataset.paraglideKey) {
-        // Check if element is inside the popup
-        const isInsidePopup = element.closest('#pg-edit-anchor, #pg-edit-popup');
+        const isInsidePopup = element.closest('.pg-ignore-detection');
         if (!isInsidePopup) {
           element.dataset.paraglideKey = metadata.key;
           if (metadata.params && Object.keys(metadata.params).length > 0) {
             element.dataset.paraglideParams = JSON.stringify(metadata.params);
           }
-
-          // Don't add outline here - only add outline for edited translations or when overlay mode is enabled
         }
       }
 
@@ -82,7 +76,6 @@ export async function buildElementRegistry() {
     `[paraglide-debug] Found ${registry.length} translated elements`
   );
 
-  // Log details for debugging
   if (registry.length > 0) {
     console.debug("[paraglide-debug] Sample elements:", registry.slice(0, 3));
   }

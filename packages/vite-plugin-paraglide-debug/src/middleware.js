@@ -39,13 +39,11 @@ const __dirname = path.dirname(__filename);
  */
 export function createDebugMiddleware(viteConfig) {
   return (req, res, next) => {
-    // Serve raw JSON translations for debugging
     if (req.url === '/@paraglide-debug/langs.json') {
       const rootPath = viteConfig.root || process.cwd();
       const projectPath = path.join(rootPath, 'project.inlang');
 
       try {
-        // Read settings to get the pathPattern
         const settingsPath = path.join(projectPath, 'settings.json');
         if (!fs.existsSync(settingsPath)) {
           res.statusCode = 404;

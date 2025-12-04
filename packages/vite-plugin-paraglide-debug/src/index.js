@@ -30,10 +30,6 @@ const __dirname = path.dirname(__filename);
  * - Plugin becomes a no-op (no transformation, no runtime injection)
  * - Zero overhead in production builds
  *
- * @param {Object} [options={}] - Plugin configuration options
- * @param {string} [options.outdir='./src/paraglide'] - Output directory where Paraglide generates files (should match paraglide plugin config)
- * @returns {import('vite').Plugin} Vite plugin object
- *
  * @example
  * ```js
  * // vite.config.js
@@ -46,9 +42,7 @@ const __dirname = path.dirname(__filename);
  *       project: './project.inlang',
  *       outdir: './src/paraglide'
  *     }),
- *     paraglideBrowserDebugPlugin({
- *       outdir: './src/paraglide' // Must match paraglide plugin
- *     })
+ *     paraglideBrowserDebugPlugin()
  *   ]
  * });
  * ```
@@ -59,15 +53,20 @@ const __dirname = path.dirname(__filename);
  * VITE_PARAGLIDE_BROWSER_DEBUG=true
  * ```
  */
-export function paraglideBrowserDebugPlugin(options = {}) {
-  const { outdir = "./src/paraglide" } = options;
+export function paraglideBrowserDebugPlugin() {
 
   let viteConfig;
   let isDebugMode = false;
 
+  /** @type {"post"} */
+  const enforce = "post";
+
+  /** @type {"pre"} */
+  const htmlTransformOrder = "pre";
+
   return {
     name: "paraglide-browser-debug",
-    enforce: "post", // Run after the official Paraglide plugin
+    enforce, // Run after the official Paraglide plugin
 
     configResolved(config) {
       viteConfig = config;
@@ -112,7 +111,6 @@ export function paraglideBrowserDebugPlugin(options = {}) {
         return null;
       }
 
-      // Serve virtual modules under /@paraglide-debug/
       if (id.startsWith("/@paraglide-debug/")) {
         // Strip the virtual prefix to get the file path
         // /@paraglide-debug/runtime.js → runtime.js
@@ -169,7 +167,6 @@ export function paraglideBrowserDebugPlugin(options = {}) {
         normalizedId.includes("_index.js") &&
         !isOriginalQuery;
 
-      // Return stored original code when requested with ?original
       if (isOriginalQuery) {
         return {
           code: this.originalIndexCode,
@@ -183,18 +180,15 @@ export function paraglideBrowserDebugPlugin(options = {}) {
 
       console.log("[paraglide-debug] ✓ Intercepting _index.js");
 
-      // Store the original code
       this.originalIndexCode = code;
       this.originalIndexId = id;
 
-      // Check if this file uses re-exports (export * from)
       const hasReExports = code.includes('export * from');
 
       // Extract module names from re-exports or function names from direct exports
       let wrapperCode;
 
       if (hasReExports) {
-        // Handle re-export statements
         const reExportMatches = code.matchAll(/export \* from ['"]\.\/(\w+)\.js['"]/g);
         const moduleNames = [];
         for (const match of reExportMatches) {
@@ -272,21 +266,50 @@ ${moduleNames
   .join("\n")}
 `;
       } else {
-        // Handle direct exports
-        const functionNames = [];
-        const exportMatches = code.matchAll(/export const (\w+) = /g);
-        for (const match of exportMatches) {
-          functionNames.push(match[1]);
+        // Extract both direct exports and aliased exports
+        const exports = [];
+
+        // Match: export const functionName =
+        const directExportMatches = code.matchAll(/export const (\w+) = /g);
+        for (const match of directExportMatches) {
+          exports.push({
+            internalName: match[1],
+            exportedName: match[1]
+          });
         }
 
-        if (functionNames.length === 0) {
+        // Match: export { internalName as "exportedName" } or export { internalName as exportedName }
+        const aliasedExportMatches = code.matchAll(/export\s*\{\s*(\w+)\s+as\s+["']?(\w+)["']?\s*\}/g);
+        for (const match of aliasedExportMatches) {
+          exports.push({
+            internalName: match[1],
+            exportedName: match[2]
+          });
+        }
+
+        // Match: export { functionName } (no alias)
+        const simpleExportMatches = code.matchAll(/export\s*\{\s*(\w+)\s*\}/g);
+        for (const match of simpleExportMatches) {
+          // Only add if not already added as aliased export
+          const alreadyExists = exports.some(e => e.internalName === match[1]);
+          if (!alreadyExists) {
+            exports.push({
+              internalName: match[1],
+              exportedName: match[1]
+            });
+          }
+        }
+
+        if (exports.length === 0) {
           console.log("[paraglide-debug] No function exports found, passing through");
           return null;
         }
 
         console.log(
           "[paraglide-debug] Found message functions:",
-          functionNames.join(", ")
+          exports.map(e => e.internalName !== e.exportedName
+            ? `${e.internalName} as ${e.exportedName}`
+            : e.exportedName).join(", ")
         );
 
         // Generate wrapper that imports original via ?original query
@@ -338,11 +361,11 @@ function __debugWrap(text, key, params) {
 }
 
 // Export wrapped versions of all message functions
-${functionNames
+${exports
   .map(
-    (name) => `export const ${name} = (inputs, options) => {
-  const result = _original.${name}(inputs, options);
-  return __debugWrap(result, "${name}", inputs);
+    ({ exportedName }) => `export const ${exportedName} = (inputs, options) => {
+  const result = _original.${exportedName}(inputs, options);
+  return __debugWrap(result, "${exportedName}", inputs);
 };`
   )
   .join("\n")}
@@ -357,7 +380,7 @@ ${functionNames
 
     // Inject runtime script to build element registry (for standard Vite apps)
     transformIndexHtml: {
-      order: "pre",
+      order: htmlTransformOrder,
       handler(html) {
         if (!isDebugMode) return html;
 

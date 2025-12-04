@@ -22,7 +22,6 @@ import { initLanguageSelector } from './languageSelector.js';
 import { initConflictList } from './conflictList.js';
 
 export function showEditorModal() {
-  // Remove existing modal if any
   const existing = document.getElementById('pg-editor-modal');
   if (existing) {
     existing.remove();
@@ -30,6 +29,7 @@ export function showEditorModal() {
 
   const modal = document.createElement('div');
   modal.id = 'pg-editor-modal';
+  modal.classList.add('pg-ignore-detection');
   modal.innerHTML = `
     <style>
       #pg-editor-modal {
@@ -215,7 +215,6 @@ export function showEditorModal() {
     </div>
   `;
 
-  // Close on ESC key
   const handleEscKey = (e) => {
     if (e.key === 'Escape') {
       modal.remove();
@@ -224,7 +223,6 @@ export function showEditorModal() {
   };
   document.addEventListener('keydown', handleEscKey);
 
-  // Close on backdrop click
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
       modal.remove();
@@ -232,7 +230,6 @@ export function showEditorModal() {
     }
   });
 
-  // Prevent clicks inside modal content from closing the modal
   const modalContent = modal.querySelector('#pg-editor-modal-content');
   if (modalContent) {
     modalContent.addEventListener('click', (e) => {
@@ -242,11 +239,9 @@ export function showEditorModal() {
 
   document.body.appendChild(modal);
 
-  // Update translation count
   const elements = window.__paraglideBrowserDebug.getElements();
   document.getElementById('pg-translation-count').textContent = elements.length;
 
-  // Setup overlay toggle button
   const overlayToggleBtn = modal.querySelector('#pg-overlay-toggle-btn');
   if (overlayToggleBtn && window.__paraglideBrowserDebug.isOverlayEnabled) {
     const isEnabled = window.__paraglideBrowserDebug.isOverlayEnabled();
@@ -260,27 +255,21 @@ export function showEditorModal() {
     });
   }
 
-  // Initialize language selector
   initLanguageSelector();
 
-  // Initialize conflict list
   initConflictList();
 
-  // Listen for language changes and update the modal
   const handleLanguageChange = (e) => {
     console.log('[paraglide-debug] Modal detected language change:', e.detail);
     const currentLocaleEl = document.getElementById('pg-current-locale');
     if (currentLocaleEl) {
       currentLocaleEl.textContent = e.detail.newLocale.toUpperCase();
     }
-    // Re-initialize language selector to update checkboxes
     initLanguageSelector();
   };
 
-  // Add event listener
   window.addEventListener('__paraglideDebugLanguageChange', handleLanguageChange);
 
-  // Remove listener when modal is closed
   const originalHandleEscKey = handleEscKey;
   const handleEscKeyWithCleanup = (e) => {
     if (e.key === 'Escape') {
@@ -289,18 +278,15 @@ export function showEditorModal() {
     }
   };
 
-  // Replace the ESC handler
   document.removeEventListener('keydown', handleEscKey);
   document.addEventListener('keydown', handleEscKeyWithCleanup);
 
-  // Also cleanup when modal closes via backdrop or close button
   modal.addEventListener('click', (originalE) => {
     if (originalE.target === modal) {
       window.removeEventListener('__paraglideDebugLanguageChange', handleLanguageChange);
     }
   });
 
-  // Update close button to also cleanup language change listener
   const closeBtnWithCleanup = modal.querySelector('#pg-close-modal-x');
   if (closeBtnWithCleanup) {
     closeBtnWithCleanup.addEventListener('click', () => {
@@ -311,7 +297,6 @@ export function showEditorModal() {
   }
 }
 
-// Expose functions to window for modal buttons
 if (typeof window !== 'undefined') {
   window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
   window.__paraglideBrowserDebug.exportEdits = exportEdits;

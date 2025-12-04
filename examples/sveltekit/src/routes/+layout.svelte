@@ -1,15 +1,10 @@
 <script>
   import * as m from "$lib/paraglide/messages.js";
   import { setLocale, getLocale } from "$lib/paraglide/runtime.js";
-  import { onMount } from "svelte";
 
   let { children } = $props();
 
   let currentLocale = $state(getLocale());
-
-  onMount(() => {
-    console.log("[Paraglide] App initialized with language:", getLocale());
-  });
 
   function switchLanguage(lang) {
     setLocale(lang, { reload: false });

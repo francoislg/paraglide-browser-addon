@@ -84,7 +84,7 @@
   <div class="plural-demo">
     <h3>{m.multi_selector_demo()}</h3>
     <ul class="plural-list">
-      {#each activities as activity, idx}
+      {#each activities as activity}
         <li>{m.user_activity(activity)}</li>
       {/each}
     </ul>

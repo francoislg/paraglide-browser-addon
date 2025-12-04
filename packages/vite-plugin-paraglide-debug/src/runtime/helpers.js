@@ -17,9 +17,6 @@
 import { getCurrentLocale } from './languageDetection.js';
 import { getServerTranslations } from './dataStore.js';
 
-/**
- * Get selected languages from localStorage
- */
 export function getSelectedLanguages() {
   const stored = localStorage.getItem('pg-selected-languages');
   if (stored) {
@@ -32,12 +29,8 @@ export function getSelectedLanguages() {
   return [getCurrentLocale()];
 }
 
-/**
- * Get translations for a specific key from cached data (no network call)
- */
 export async function fetchTranslationsForKey(key) {
   try {
-    // Use cached server translations - no network call!
     const allTranslations = getServerTranslations();
 
     if (!allTranslations) {
@@ -45,7 +38,6 @@ export async function fetchTranslationsForKey(key) {
       return {};
     }
 
-    // Extract the specific key from all locales
     const keyTranslations = {};
     for (const [locale, translations] of Object.entries(allTranslations)) {
       if (translations[key]) {

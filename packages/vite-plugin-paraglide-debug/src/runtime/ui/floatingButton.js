@@ -17,6 +17,7 @@
 export function createFloatingButton(onOpenModal) {
   const button = document.createElement('div');
   button.id = 'pg-editor-floating-btn';
+  button.classList.add('pg-ignore-detection');
   button.innerHTML = `
     <style>
       #pg-editor-floating-btn {

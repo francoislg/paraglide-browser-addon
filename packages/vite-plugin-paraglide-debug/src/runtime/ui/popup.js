@@ -41,9 +41,6 @@ import {
 export async function createEditPopup(element, key, params, currentText) {
   console.log('[paraglide-debug] Creating edit popup for:', { key, params, currentText });
 
-  // ============================================================================
-  // Step 1: Prepare Data
-  // ============================================================================
   const popupData = await preparePopupData(key, params);
   const { languageInputs, isPlural, variantForms, activeVariantKey } = popupData;
 
@@ -53,21 +50,14 @@ export async function createEditPopup(element, key, params, currentText) {
     variantCount: variantForms.length
   });
 
-  // ============================================================================
-  // Step 2: Create DOM Structure
-  // ============================================================================
-
-  // Create anchor element (positioned near clicked element)
   const anchor = createOrReplaceElement('div', 'pg-edit-anchor');
+  anchor.classList.add('pg-ignore-detection');
 
-  // Create popup inside anchor
   const popup = document.createElement('div');
   popup.id = 'pg-edit-popup';
+  popup.classList.add('pg-ignore-detection');
   anchor.appendChild(popup);
 
-  // ============================================================================
-  // Step 3: Generate and Render HTML
-  // ============================================================================
   popup.innerHTML = generatePopupHTML({
     languageInputs,
     key,
@@ -77,47 +67,29 @@ export async function createEditPopup(element, key, params, currentText) {
     activeVariantKey
   });
 
-  // ============================================================================
-  // Step 4: Position Popup
-  // ============================================================================
-
-  // Setup anchor position
   setupAnchor(anchor, element);
 
-  // Wait for next frame to get accurate dimensions, then position popup
   requestAnimationFrame(() => {
     const position = positionPopup(popup, anchor, element);
     Object.assign(popup.style, position);
   });
 
-  // ============================================================================
-  // Step 5: Setup Event Handlers
-  // ============================================================================
-
-  // Cleanup function to remove popup and event listeners
   const close = () => {
     anchor.remove();
     cleanup();
   };
 
-  // Setup close handlers (ESC, click outside)
   const cleanupEsc = setupEscapeKey(close);
   const cleanupClickOutside = setupClickOutside(anchor, close);
   const cleanup = createCleanup(cleanupEsc, cleanupClickOutside);
 
-  // Setup cancel button
   const cancelBtn = popup.querySelector('#pg-cancel-btn');
   cancelBtn.addEventListener('click', close);
 
-  // Setup variant controls (if plural)
   setupVariantControls(popup, languageInputs, isPlural);
 
-  // Setup save handler
   setupSaveHandler(popup, languageInputs, key, isPlural, close);
 
-  // ============================================================================
-  // Step 6: Final Touch - Focus First Input
-  // ============================================================================
   focusFirstInput(popup, '.pg-edit-textarea');
 
   console.log('[paraglide-debug] ✓ Edit popup created and ready');

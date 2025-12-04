@@ -4,19 +4,11 @@
   "description": "Vite plugin that injects debug metadata into ParaglideJS translation strings",
   "type": "module",
   "main": "./src/index.js",
-  "types": "./client.d.ts",
   "exports": {
-    ".": {
-      "types": "./client.d.ts",
-      "default": "./src/index.js"
-    },
-    "./client": {
-      "types": "./client.d.ts"
-    }
+    ".": "./src/index.js"
   },
   "files": [
     "src",
-    "client.d.ts",
     "LICENSE",
     "CHANGELOG.md"
   ],
@@ -51,6 +43,6 @@
   },
   "peerDependencies": {
     "@inlang/paraglide-js": "^2.0.0",
-    "vite": "^5.0.0 || ^6.0.0"
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
   }
 }

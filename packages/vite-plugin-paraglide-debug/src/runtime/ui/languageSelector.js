@@ -19,17 +19,11 @@ import { getCurrentLocale } from '../languageDetection.js';
 import { getServerTranslations } from '../dataStore.js';
 import { getSelectedLanguages } from '../helpers.js';
 
-/**
- * Save selected languages to localStorage
- */
 function saveSelectedLanguages(languages) {
   localStorage.setItem('pg-selected-languages', JSON.stringify(languages));
   updateSelectedLanguagesDisplay(languages);
 }
 
-/**
- * Update the "Selected languages" display
- */
 function updateSelectedLanguagesDisplay(languages) {
   const display = document.getElementById('pg-selected-locales');
   if (display) {
@@ -43,20 +37,15 @@ function updateSelectedLanguagesDisplay(languages) {
   }
 }
 
-/**
- * Initialize the language selector with checkboxes
- */
 export async function initLanguageSelector() {
   try {
-    // Get and display current locale immediately
     const currentLocale = getCurrentLocale();
     const currentLocaleEl = document.getElementById('pg-current-locale');
     if (currentLocaleEl) {
       currentLocaleEl.textContent = currentLocale.toUpperCase();
     }
 
-    // Get available locales from cached data (no network call)
-    let locales = [currentLocale]; // Default fallback
+    let locales = [currentLocale];
     try {
       const translations = getServerTranslations();
       if (translations && Object.keys(translations).length > 0) {
@@ -75,16 +64,13 @@ export async function initLanguageSelector() {
       }
     }
 
-    // Get selected languages (or default to current locale)
     let selectedLanguages = getSelectedLanguages();
 
-    // Ensure current locale is in selected languages
     if (!selectedLanguages.includes(currentLocale)) {
       selectedLanguages.push(currentLocale);
       saveSelectedLanguages(selectedLanguages);
     }
 
-    // Create locale checkboxes
     const checkboxContainer = document.getElementById('pg-locale-checkboxes');
     if (!checkboxContainer) {
       console.error('[paraglide-debug] Checkbox container #pg-locale-checkboxes not found!');
@@ -114,12 +100,10 @@ export async function initLanguageSelector() {
       labelText.style.fontSize = '13px';
       labelText.style.fontWeight = '500';
 
-      // Highlight current locale
       if (locale === currentLocale) {
         labelText.style.color = '#667eea';
       }
 
-      // Handle checkbox change
       checkbox.addEventListener('change', (e) => {
         let selected = getSelectedLanguages();
 
@@ -143,7 +127,6 @@ export async function initLanguageSelector() {
 
     console.log(`[paraglide-debug] Checkbox container now has ${checkboxContainer.children.length} children`);
 
-    // Update selected languages display
     updateSelectedLanguagesDisplay(selectedLanguages);
 
     console.log(`[paraglide-debug] Language selector initialized with ${locales.length} locales`);
@@ -153,33 +136,24 @@ export async function initLanguageSelector() {
   }
 }
 
-/**
- * Switch to a different locale
- */
 export function switchLocale(newLocale) {
   console.log(`[paraglide-debug] Switching locale to: ${newLocale}`);
 
-  // Try app's switchLanguage function first (if it exists)
   if (typeof window.switchLanguage === 'function') {
     window.switchLanguage(newLocale);
-    // Trigger language change detection
     if (window.__paraglideBrowserDebug.updateCurrentLocale) {
       window.__paraglideBrowserDebug.updateCurrentLocale();
     }
-    // Close modal
     document.getElementById('pg-editor-modal')?.remove();
     return;
   }
 
-  // Fallback: Store locale and reload page
   localStorage.setItem('PARAGLIDE_LOCALE', newLocale);
   document.cookie = `PARAGLIDE_LOCALE=${newLocale}; path=/; max-age=34560000`;
 
-  // Trigger language change detection before reload
   if (window.__paraglideBrowserDebug.updateCurrentLocale) {
     window.__paraglideBrowserDebug.updateCurrentLocale();
   }
 
-  // Reload the page to apply new locale
   window.location.reload();
 }

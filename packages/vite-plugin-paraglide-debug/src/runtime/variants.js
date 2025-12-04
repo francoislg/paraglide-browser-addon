@@ -41,7 +41,6 @@
  */
 function parseDeclarations(declarations = []) {
   return declarations.filter(decl => decl && typeof decl === 'string').map(decl => {
-    // Input parameter: "input count"
     if (decl.startsWith('input ')) {
       return {
         type: 'input',
@@ -49,13 +48,8 @@ function parseDeclarations(declarations = []) {
       };
     }
 
-    // Local transformation: "local countPlural = count: plural"
-    // or "local ordinal = position: plural type=ordinal"
     if (decl.startsWith('local ')) {
       const rest = decl.substring(6).trim();
-
-      // Find the first = to split name from the rest
-      // This handles spaces around = correctly
       const equalsPos = rest.indexOf('=');
       if (equalsPos === -1) {
         console.warn('[paraglide-debug] Invalid local declaration (missing =):', decl);
@@ -64,9 +58,6 @@ function parseDeclarations(declarations = []) {
 
       const name = rest.substring(0, equalsPos).trim();
       const afterEquals = rest.substring(equalsPos + 1).trim();
-
-      // Find the colon position to split source from transform+options
-      // Format: "count: plural" or "position: plural type=ordinal"
       const colonPos = afterEquals.indexOf(':');
       if (colonPos === -1) {
         console.warn('[paraglide-debug] Invalid local declaration (missing :):', decl);
@@ -75,11 +66,8 @@ function parseDeclarations(declarations = []) {
 
       const source = afterEquals.substring(0, colonPos).trim();
       const afterColon = afterEquals.substring(colonPos + 1).trim();
-
-      // Split afterColon by space to get transform and options
       const [transform, ...optionsParts] = afterColon.split(' ').map(s => s.trim());
 
-      // Parse options like "type=ordinal"
       const options = {};
       for (const part of optionsParts) {
         if (!part || !part.includes('=')) continue;
@@ -132,13 +120,10 @@ function evaluateSelector(declaration, params, locale) {
   const sourceValue = params[declaration.source];
 
   if (declaration.transform === 'plural') {
-    // Use Intl.PluralRules (same as Paraglide's registry.plural)
     const options = declaration.options || {};
     const pluralRules = new Intl.PluralRules(locale, options);
     return pluralRules.select(Number(sourceValue));
   }
-
-  // Add more transformations here if needed (number, datetime, etc.)
 
   return String(sourceValue);
 }
@@ -241,34 +226,25 @@ function inferSelectorsFromMatchKeys(match) {
  * ) → {platform: "ios"}
  */
 function evaluateAllSelectors(variant, params = {}, locale = 'en') {
-  // Parse declarations to understand transformations
   const declarations = parseDeclarations(variant.declarations || []);
 
-  // Get selectors list - either provided or inferred from match keys
   let selectors = variant.selectors || [];
   if (selectors.length === 0 && variant.match) {
-    // No selectors field - this is a direct matching variant
-    // Infer selector names from match keys
     selectors = inferSelectorsFromMatchKeys(variant.match);
   }
 
-  // Evaluate each selector
   const selectorValues = {};
   for (const selectorName of selectors) {
     const declaration = declarations.find(d => d.name === selectorName);
     if (declaration) {
       if (declaration.type === 'local') {
-        // Local variable with transformation (e.g., plural, ordinal)
         selectorValues[selectorName] = evaluateSelector(declaration, params, locale);
       } else if (declaration.type === 'input') {
-        // Input parameter - pass through directly (no transformation)
         selectorValues[selectorName] = params[declaration.name];
       } else {
-        // Unknown type - try params directly as fallback
         selectorValues[selectorName] = params[selectorName];
       }
     } else {
-      // No declaration found - direct input parameter (e.g., platform in direct matching)
       selectorValues[selectorName] = params[selectorName];
     }
   }
@@ -301,24 +277,17 @@ function evaluateAllSelectors(variant, params = {}, locale = 'en') {
  * ) → {matchKey: "countPlural=one, gender=female", template: "She has 1"}
  */
 function findBestMatch(match, selectorValues) {
-  // Paraglide generates conditions in order, so we process match entries in order
-  // More specific matches (fewer wildcards) come first in Paraglide's output
-
   for (const [matchKey, template] of Object.entries(match)) {
-    // Parse match key: "countPlural=one, gender=male" → {countPlural: "one", gender: "male"}
     const conditions = parseMatchKey(matchKey);
 
-    // Check if all conditions match
     let matches = true;
     for (const [selectorName, expectedValue] of Object.entries(conditions)) {
       const actualValue = selectorValues[selectorName];
 
-      // Wildcard always matches
       if (expectedValue === '*') {
         continue;
       }
 
-      // Check for exact match
       if (String(actualValue) !== String(expectedValue)) {
         matches = false;
         break;
@@ -371,12 +340,10 @@ function renderSimpleTemplate(template, params = {}) {
 export function parseVariantStructure(value) {
   if (!value) return null;
 
-  // Already an array with variant structure
   if (Array.isArray(value) && value[0]?.match) {
     return value[0];
   }
 
-  // JSON string
   if (typeof value === 'string' && value.trim().startsWith('[{')) {
     try {
       const parsed = JSON.parse(value);
@@ -384,7 +351,6 @@ export function parseVariantStructure(value) {
         return parsed[0];
       }
     } catch (err) {
-      // Not valid JSON, not a variant
       return null;
     }
   }
@@ -456,20 +422,16 @@ export function renderVariant(variant, params = {}, locale = 'en') {
     return '';
   }
 
-  // Evaluate all selectors using shared logic
   const selectorValues = evaluateAllSelectors(variant, params, locale);
 
-  // Find the best matching template using shared logic
   const result = findBestMatch(variant.match, selectorValues);
 
   if (!result.template) {
     console.warn('[paraglide-debug] No matching template found in variant');
-    // Fallback to first template
     const firstTemplate = Object.values(variant.match)[0];
     return firstTemplate ? renderSimpleTemplate(firstTemplate, params) : '';
   }
 
-  // Substitute parameters in the selected template
   return renderSimpleTemplate(result.template, params);
 }
 
@@ -520,12 +482,9 @@ export function detectActiveVariant(variantStructure, params = {}, locale = 'en'
     return null;
   }
 
-  // Evaluate all selectors using shared logic
   const selectorValues = evaluateAllSelectors(variantStructure, params, locale);
 
-  // Find the best matching variant using shared logic
   const result = findBestMatch(variantStructure.match, selectorValues);
 
-  // Return the matchKey (or first key as fallback)
   return result.matchKey || Object.keys(variantStructure.match)[0] || null;
 }

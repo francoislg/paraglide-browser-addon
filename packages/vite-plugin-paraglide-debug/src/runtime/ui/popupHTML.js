@@ -58,7 +58,6 @@ export function generateSimpleInput(input, index) {
     value = '';
   }
 
-  // Show edit indicator if this translation has been edited
   const editIndicator = input.isEdited
     ? '<span style="color: #48bb78; font-size: 11px; margin-left: 4px;">✓ Edited</span>'
     : '';
@@ -87,7 +86,6 @@ export function generateSimpleInput(input, index) {
  * @returns {string} HTML string
  */
 export function generatePluralInput(input, index, variantForms, activeVariantKey) {
-  // Generate all variants (expanded view)
   const allVariantsHTML = variantForms.map(variant => {
     const value = escapeHtml(input.pluralData?.match?.[variant] || '');
     const displayName = variant.replace(/countPlural=|ordinal=/, '');
@@ -106,7 +104,6 @@ export function generatePluralInput(input, index, variantForms, activeVariantKey
     `;
   }).join('');
 
-  // Use active variant if detected, otherwise first variant
   const initialVariant = activeVariantKey || variantForms[0];
   const initialValue = escapeHtml(input.pluralData?.match?.[initialVariant] || '');
 

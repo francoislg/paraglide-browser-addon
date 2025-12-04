@@ -27,7 +27,6 @@ export async function exportEdits() {
       return;
     }
 
-    // Get server translations from cache (no network call)
     console.log('[paraglide-debug] Getting server translations from cache...');
     const serverTranslations = getServerTranslations();
 
@@ -37,48 +36,39 @@ export async function exportEdits() {
 
     console.log('[paraglide-debug] Server translations loaded from cache:', Object.keys(serverTranslations));
 
-    // Group edits by locale
     const editsByLocale = {};
     edits.forEach(edit => {
       if (!editsByLocale[edit.locale]) {
         editsByLocale[edit.locale] = {};
       }
 
-      // Parse JSON values (for plural forms) back to objects
       let value = edit.editedValue;
       try {
         const parsed = JSON.parse(value);
-        // If it's a valid JSON array/object, use it
         if (typeof parsed === 'object') {
           value = parsed;
         }
       } catch {
-        // Keep as string
       }
 
       editsByLocale[edit.locale][edit.key] = value;
     });
 
-    // Merge server translations with edits for each locale
     const mergedTranslations = {};
     for (const locale of Object.keys(serverTranslations)) {
-      // Start with server translations
       mergedTranslations[locale] = { ...serverTranslations[locale] };
 
-      // Override with edited values
       if (editsByLocale[locale]) {
         Object.assign(mergedTranslations[locale], editsByLocale[locale]);
       }
     }
 
-    // Also include any locales that only have edits (not in server)
     for (const locale of Object.keys(editsByLocale)) {
       if (!mergedTranslations[locale]) {
         mergedTranslations[locale] = editsByLocale[locale];
       }
     }
 
-    // Create and download JSON files
     const locales = Object.keys(mergedTranslations);
     for (const locale of locales) {
       const json = JSON.stringify(mergedTranslations[locale], null, 2);
