@@ -16,12 +16,13 @@
  * - Handle UI components (see ui/)
  */
 
-import { getDisplayTranslation } from './dataStore.js';
+import { getDisplayTranslation, getTranslationVersions } from './dataStore.js';
 import { getAllEditedTranslations } from './db.js';
 import { renderTranslation, renderEditedTemplate } from './renderer.js';
 import { getCurrentLocale } from './languageDetection.js';
 import { createEditPopup } from './ui/popup.js';
 import { setElementOutline } from './styles.js';
+import { detectActiveVariant, parseVariantStructure } from './variants.js';
 
 /**
  * Refresh a single element's visual state and content
@@ -43,24 +44,23 @@ export function refreshElement(element, locale = null) {
     ? JSON.parse(element.dataset.paraglideParams)
     : {};
 
-  // Get translation from unified data store (synchronous!)
-  const translation = getDisplayTranslation(currentLocale, key);
+  // Get both versions from data store for comparison (synchronous!)
+  const versions = getTranslationVersions(currentLocale, key);
 
-  if (translation.isEdited) {
+  if (versions.isEdited) {
     // Render the edited translation
     let rendered;
     if (Object.keys(params).length > 0) {
       // Has parameters - use template substitution with locale for plural evaluation
-      rendered = renderEditedTemplate(translation.value, params, currentLocale);
+      rendered = renderEditedTemplate(versions.current, params, currentLocale);
     } else {
-      // No parameters - check if it's a plural form that needs evaluation
-      // (some plural forms might have parameters baked in from when they were saved)
-      if (typeof translation.value === 'string' && translation.value.trim().startsWith('[{')) {
-        // This is a plural form - render it
-        rendered = renderEditedTemplate(translation.value, {}, currentLocale);
+      // No parameters - check if it's a variant form that needs evaluation
+      if (typeof versions.current === 'string' && versions.current.trim().startsWith('[{')) {
+        // This is a variant form - render it
+        rendered = renderEditedTemplate(versions.current, {}, currentLocale);
       } else {
         // Simple string - use as-is
-        rendered = translation.value;
+        rendered = versions.current;
       }
     }
 
@@ -73,21 +73,79 @@ export function refreshElement(element, locale = null) {
     // Mark as edited with visual indicator
     element.dataset.paraglideEdited = 'true';
 
-    // Show conflict indicator if needed
-    const outlineState = translation.hasConflict ? 'conflict' : 'edited';
+    // Determine outline state - variant-aware for plurals/variants
+    let outlineState = 'edited';
+
+    if (versions.hasConflict) {
+      outlineState = 'conflict';
+    } else if (Object.keys(params).length > 0) {
+      // Has params - might be a variant, check if THIS specific variant differs
+      const editedVariant = parseVariantStructure(versions.edited);
+      const serverVariant = parseVariantStructure(versions.server);
+
+      if (editedVariant && serverVariant) {
+        // Both are variants - compare only the active variant
+        const activeVariantKey = detectActiveVariant(editedVariant, params, currentLocale);
+        if (activeVariantKey) {
+          const editedText = editedVariant.match[activeVariantKey];
+          const serverText = serverVariant.match[activeVariantKey];
+
+          // If this specific variant matches server, show as hoverable
+          if (editedText === serverText) {
+            outlineState = 'hoverable';
+          }
+        }
+      }
+    }
+
     setElementOutline(element, outlineState);
 
     return wasUpdated;
   } else {
-    // No edit - clear edited state if it exists
+    // No edit - render server translation
+    const rendered = renderTranslation(key, params, currentLocale);
+
+    // Only update if different
+    const wasUpdated = element.textContent !== rendered;
+    if (wasUpdated) {
+      element.textContent = rendered;
+    }
+
+    // Clear edited state if exists
     if (element.dataset.paraglideEdited) {
       delete element.dataset.paraglideEdited;
-      // Apply appropriate outline based on overlay mode state
-      const outlineState = window.__paraglideBrowserDebug.isOverlayEnabled?.() ? 'hoverable' : 'none';
-      setElementOutline(element, outlineState);
     }
-    return false;
+
+    // Apply appropriate outline based on overlay mode state
+    const outlineState = window.__paraglideBrowserDebug.isOverlayEnabled?.() ? 'hoverable' : 'none';
+    setElementOutline(element, outlineState);
+
+    return wasUpdated;
   }
+}
+
+/**
+ * Refresh all elements with a specific translation key
+ * Used after saving edits to update all instances of a translation on the page
+ *
+ * @param {string} key - Translation key to refresh
+ * @param {string} locale - Optional locale (defaults to current locale)
+ * @returns {number} - Number of elements updated
+ */
+export function refreshElementsByKey(key, locale = null) {
+  const currentLocale = locale || getCurrentLocale();
+  const selector = `[data-paraglide-key="${key}"]`;
+  const elements = document.querySelectorAll(selector);
+
+  let updatedCount = 0;
+  elements.forEach(element => {
+    if (refreshElement(element, currentLocale)) {
+      updatedCount++;
+    }
+  });
+
+  console.log(`[paraglide-debug] Refreshed ${updatedCount}/${elements.length} elements with key: ${key}`);
+  return updatedCount;
 }
 
 /**

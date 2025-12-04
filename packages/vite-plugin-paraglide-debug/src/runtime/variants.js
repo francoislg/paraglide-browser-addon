@@ -357,6 +357,42 @@ function renderSimpleTemplate(template, params = {}) {
 }
 
 /**
+ * Parse variant structure from various storage formats
+ * Extracts the variant object from array or JSON string format
+ *
+ * @param {any} value - The value to parse (array, JSON string, or null)
+ * @returns {object|null} - Variant structure object {declarations, selectors, match} or null
+ *
+ * @example
+ * parseVariantStructure([{match: {...}}]) → {match: {...}}
+ * parseVariantStructure('[{match: {...}}]') → {match: {...}}
+ * parseVariantStructure('simple string') → null
+ */
+export function parseVariantStructure(value) {
+  if (!value) return null;
+
+  // Already an array with variant structure
+  if (Array.isArray(value) && value[0]?.match) {
+    return value[0];
+  }
+
+  // JSON string
+  if (typeof value === 'string' && value.trim().startsWith('[{')) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed) && parsed[0]?.match) {
+        return parsed[0];
+      }
+    } catch (err) {
+      // Not valid JSON, not a variant
+      return null;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Render a variant with proper selector evaluation
  *
  * This is the main entry point for rendering variant translations.
