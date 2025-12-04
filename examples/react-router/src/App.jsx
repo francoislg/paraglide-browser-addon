@@ -1,8 +1,8 @@
 import { Routes, Route, Link } from 'react-router-dom';
 import * as m from './paraglide/messages.js';
-import Home from './pages/Home';
-import About from './pages/About';
-import Products from './pages/Products';
+import Simple from './pages/Simple';
+import Parameters from './pages/Parameters';
+import Variants from './pages/Variants';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import './App.css';
 
@@ -12,20 +12,21 @@ function App() {
       <header className="header">
         <h1>{m.welcome()}</h1>
         <nav className="nav">
-          <Link to="/">{m.nav_home()}</Link>
-          <Link to="/about">{m.nav_about()}</Link>
-          <Link to="/products">{m.nav_products()}</Link>
+          <Link to="/">{m.nav_simple()}</Link>
+          <Link to="/parameters">{m.nav_parameters()}</Link>
+          <Link to="/variants">{m.nav_variants()}</Link>
         </nav>
-        <LanguageSwitcher />
       </header>
 
       <main className="main">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/products" element={<Products />} />
+          <Route path="/" element={<Simple />} />
+          <Route path="/parameters" element={<Parameters />} />
+          <Route path="/variants" element={<Variants />} />
         </Routes>
       </main>
+
+      <LanguageSwitcher />
     </div>
   );
 }

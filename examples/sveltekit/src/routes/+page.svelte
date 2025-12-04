@@ -18,8 +18,9 @@
 </style>
 
 <div class="page">
-  <h2>{m.home_title()}</h2>
-  <p>{m.greeting({ name: 'Developer' })}</p>
-  <p>{m.home_content()}</p>
-  <p>{m.description()}</p>
+  <h2>{m.simple_title()}</h2>
+  <p>{m.simple_content()}</p>
+  <p>{m.simple_example_1()}</p>
+  <p>{m.simple_example_2()}</p>
+  <p>{m.simple_example_3()}</p>
 </div>

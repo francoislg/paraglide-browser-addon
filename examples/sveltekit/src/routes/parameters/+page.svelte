@@ -18,6 +18,10 @@
 </style>
 
 <div class="page">
-  <h2>{m.about_title()}</h2>
-  <p>{m.about_content()}</p>
+  <h2>{m.parameters_title()}</h2>
+  <p>{m.parameters_content()}</p>
+  <p>{m.greeting({ name: 'Alice' })}</p>
+  <p>{m.greeting({ name: 'Bob' })}</p>
+  <p>{m.greeting({ name: 'Charlie' })}</p>
+  <p>{m.description()}</p>
 </div>

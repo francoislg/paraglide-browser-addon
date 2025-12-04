@@ -18,10 +18,14 @@
 
 // Import modular components
 import { initialize } from "./runtime/initialize.js";
-import { initDB } from "./runtime/db.js";
 import { createFloatingButton, showEditorModal } from "./runtime/ui.js";
-import { initOverlayMode, refreshElement, applySavedEditsFromDB } from "./runtime/overlay.js";
-import { initLanguageDetection, getCurrentLocale } from "./runtime/languageDetection.js";
+import {
+  initOverlayMode,
+  refreshElement,
+  applySavedEditsFromDB,
+  applyOutlinesToAllElements,
+} from "./runtime/overlay.js";
+import { initLanguageDetection } from "./runtime/languageDetection.js";
 import { setElementOutline } from "./runtime/styles.js";
 import { buildElementRegistry, getElements } from "./runtime/registry.js";
 
@@ -40,9 +44,11 @@ import { buildElementRegistry, getElements } from "./runtime/registry.js";
 
   // Listen for debug initialization complete event
   // This fires after DB, data store, and registry are all ready
-  window.addEventListener('__paraglideDebugInitialized', async (e) => {
-    console.log('[paraglide-debug] Received __paraglideDebugInitialized event, data fully loaded');
-    console.log('[paraglide-debug] Initialization details:', e.detail);
+  window.addEventListener("__paraglideDebugInitialized", async (e) => {
+    console.log(
+      "[paraglide-debug] Received __paraglideDebugInitialized event, data fully loaded"
+    );
+    console.log("[paraglide-debug] Initialization details:", e.detail);
 
     // Build element registry (from registry.js)
     await buildElementRegistry();
@@ -52,12 +58,14 @@ import { buildElementRegistry, getElements } from "./runtime/registry.js";
 
     // Initialize overlay mode AFTER registry is built and elements have data attributes
     initOverlayMode();
-    console.log('[paraglide-debug] ✓ Overlay mode initialized after element registry');
+    console.log(
+      "[paraglide-debug] ✓ Overlay mode initialized after element registry"
+    );
   });
 
   // Listen for language change events and re-apply saved edits
-  window.addEventListener('__paraglideDebugLanguageChange', async (e) => {
-    console.log('[paraglide-debug] Handling language change event:', e.detail);
+  window.addEventListener("__paraglideDebugLanguageChange", async (e) => {
+    console.log("[paraglide-debug] Handling language change event:", e.detail);
     await applySavedEditsFromDB();
   });
 
@@ -65,7 +73,12 @@ import { buildElementRegistry, getElements } from "./runtime/registry.js";
   let scanTimeout;
   const observer = new MutationObserver(() => {
     clearTimeout(scanTimeout);
-    scanTimeout = setTimeout(buildElementRegistry, 100);
+    scanTimeout = setTimeout(async () => {
+      // Rebuild element registry to detect new elements
+      await buildElementRegistry();
+      // Apply outlines to newly detected elements based on current overlay state
+      applyOutlinesToAllElements();
+    }, 100);
   });
 
   // Start initialization on page load

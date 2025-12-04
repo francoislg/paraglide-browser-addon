@@ -65,6 +65,32 @@
       border-radius: 8px;
       font-size: 1.1em;
     }
+    .language-switcher {
+      position: fixed;
+      bottom: 15px;
+      left: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 6px 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 4px;
+      z-index: 1000;
+      font-size: 13px;
+    }
+    .language-switcher button {
+      margin: 0;
+      padding: 4px 8px;
+      font-size: 13px;
+      min-width: auto;
+    }
+    .language-switcher .separator {
+      color: rgba(255, 255, 255, 0.5);
+      margin: 0 2px;
+    }
   </style>
 </head>
 <body>
@@ -95,13 +121,16 @@
       <h3 id="multi-selector-demo"></h3>
       <ul class="plural-list" id="multi-selector-list"></ul>
     </div>
-
-    <div>
-      <button onclick="switchLanguage('en')">English</button>
-      <button onclick="switchLanguage('es')">Español</button>
-      <button onclick="switchLanguage('fr')">Français</button>
-    </div>
   </div>
+
+  <div class="language-switcher">
+    <button onclick="switchLanguage('en')">en</button>
+    <span class="separator">/</span>
+    <button onclick="switchLanguage('es')">es</button>
+    <span class="separator">/</span>
+    <button onclick="switchLanguage('fr')">fr</button>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

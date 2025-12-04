@@ -22,25 +22,23 @@
     <header class="header">
       <h1>{m.welcome()}</h1>
       <nav class="nav">
-        <a href="/">{m.nav_home()}</a>
-        <a href="/about">{m.nav_about()}</a>
-        <a href="/products">{m.nav_products()}</a>
+        <a href="/">{m.nav_simple()}</a>
+        <a href="/parameters">{m.nav_parameters()}</a>
+        <a href="/variants">{m.nav_variants()}</a>
       </nav>
-
-      <div class="language-switcher">
-        <h3>{m.language_switcher()}</h3>
-        <div>
-          <button onclick={() => switchLanguage("en")}>English</button>
-          <button onclick={() => switchLanguage("es")}>Español</button>
-          <button onclick={() => switchLanguage("fr")}>Français</button>
-        </div>
-        <div class="current">{m.current_language()}</div>
-      </div>
     </header>
 
     <main class="main">
       {@render children()}
     </main>
+
+    <div class="language-switcher">
+      <button onclick={() => switchLanguage("en")}>en</button>
+      <span class="separator">/</span>
+      <button onclick={() => switchLanguage("es")}>es</button>
+      <span class="separator">/</span>
+      <button onclick={() => switchLanguage("fr")}>fr</button>
+    </div>
   {/key}
 </div>
 
@@ -99,36 +97,44 @@
   }
 
   .language-switcher {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 2px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .language-switcher h3 {
-    margin: 0 0 15px 0;
-    font-size: 1.2em;
+    position: fixed;
+    bottom: 15px;
+    left: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 6px 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    z-index: 1000;
+    font-size: 13px;
   }
 
   button {
     background: white;
     color: #667eea;
     border: none;
-    padding: 12px 24px;
-    margin: 5px;
-    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 0;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 600;
     transition: transform 0.2s;
+    min-width: auto;
   }
 
   button:hover {
     transform: translateY(-2px);
   }
 
-  .current {
-    margin-top: 15px;
-    font-size: 1.1em;
+  .separator {
+    color: white;
+    margin: 0 2px;
+    opacity: 0.5;
   }
 
   .main {

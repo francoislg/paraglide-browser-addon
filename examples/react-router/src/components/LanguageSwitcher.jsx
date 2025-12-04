@@ -12,13 +12,11 @@ function LanguageSwitcher() {
 
   return (
     <div className="language-switcher">
-      <h3>{m.language_switcher()}</h3>
-      <div>
-        <button onClick={() => switchLanguage('en')}>English</button>
-        <button onClick={() => switchLanguage('es')}>Español</button>
-        <button onClick={() => switchLanguage('fr')}>Français</button>
-      </div>
-      <div className="current">{m.current_language()}</div>
+      <button onClick={() => switchLanguage('en')}>en</button>
+      <span className="separator">/</span>
+      <button onClick={() => switchLanguage('es')}>es</button>
+      <span className="separator">/</span>
+      <button onClick={() => switchLanguage('fr')}>fr</button>
     </div>
   );
 }

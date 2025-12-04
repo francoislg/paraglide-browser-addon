@@ -17,6 +17,8 @@
 
 import { getConflicts, resolveConflict } from '../db.js';
 import { getCurrentLocale } from '../languageDetection.js';
+import { refreshDataStore } from '../dataStore.js';
+import { refreshElementsByKey } from '../overlay.js';
 
 /**
  * Initialize and display the conflict list in the modal
@@ -370,7 +372,15 @@ async function handleResolution(conflict, resolution) {
     await resolveConflict(conflict.locale, conflict.key, resolution);
     console.log(`[paraglide-debug] Resolved conflict for ${conflict.key}: ${resolution}`);
 
-    // Refresh conflict list
+    // Refresh data store to update in-memory cache
+    await refreshDataStore();
+    console.log('[paraglide-debug] Data store refreshed after conflict resolution');
+
+    // Refresh all elements with this key on the page to reflect resolution
+    const updatedCount = refreshElementsByKey(conflict.key, conflict.locale);
+    console.log(`[paraglide-debug] Updated ${updatedCount} elements on page for key: ${conflict.key}`);
+
+    // Refresh conflict list UI
     await initConflictList();
 
     // Show success message
