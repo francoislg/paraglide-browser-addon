@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
-import { paraglideBrowserDebugPlugin } from "vite-plugin-paraglide-debug";
+import { paraglideEditorPlugin } from "vite-plugin-paraglide-editor";
 
 export default defineConfig({
   plugins: [
@@ -9,8 +9,8 @@ export default defineConfig({
       project: "./project.inlang",
       outdir: "./src/paraglide",
     }),
-    // Debug plugin - injects HTML comment metadata in development
-    paraglideBrowserDebugPlugin({
+    // Editor plugin - enables in-browser translation editing
+    paraglideEditorPlugin({
       outdir: "./src/paraglide",
     }),
   ],

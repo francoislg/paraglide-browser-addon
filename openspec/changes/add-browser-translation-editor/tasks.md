@@ -23,11 +23,11 @@
 - **Helper Utilities:** Shared functions for language selection and fetching (`runtime/helpers.js`)
 - **Full File Export:** Download complete merged translation files (`runtime/export.js`)
 - **Vite Plugin:** Virtual module serving with relative import resolution (`index.js`)
-- **Conditional Loading (Task 2.0):** ✅ Zero footprint when debug disabled
-  - Plugin checks `VITE_PARAGLIDE_BROWSER_DEBUG` env variable
+- **Conditional Loading (Task 2.0):** ✅ Zero footprint when editor disabled
+  - Plugin checks `VITE_PARAGLIDE_EDITOR` env variable
   - Debug=false: 4.7 KB bundle (NO editor code)
   - Debug=true: 39.79 KB bundle (~35 KB editor overhead)
-  - Virtual modules only served when debug enabled
+  - Virtual modules only served when editor enabled
 - **Conflict List UI (Task 4.1):** ✅ View and resolve conflicts
   - Conflict list component displays all conflicts (`runtime/ui/conflictList.js`)
   - Shows conflict count in modal
@@ -48,7 +48,7 @@
 
 **Session 2025-12-02 PM:**
 5. **Sync with Server Broken** - Fixed incorrect endpoint URL
-   - Changed from `/paraglide-debug-langs.json` to `/@paraglide-debug/langs.json` (`sync.js:12`)
+   - Changed from `/paraglide-editor-langs.json` to `/@paraglide-editor/langs.json` (`sync.js:12`)
 6. **Export Only Saving Changes** - Updated to export full merged files
    - Now fetches server translations and merges with edits (`export.js:17-66`)
    - Exports complete `{locale}.json` files instead of `{locale}-edits.json`
@@ -69,10 +69,10 @@
    - Result: Runtime error "(void 0) is not a function" when importing messages
    - Initial fix: Pass through re-exports without transformation
    - Final fix: Properly wrap re-export statements by importing each module individually (`index.js:139-192`)
-   - Verified: Build works correctly with both debug=true and debug=false
+   - Verified: Build works correctly with both editor=true and editor=false
 9. **Preview Mode Not Serving Translations** - Added configurePreviewServer hook
    - `configureServer` only runs in dev mode, not preview mode
-   - Fetch to `/@paraglide-debug/langs.json` failed in preview
+   - Fetch to `/@paraglide-editor/langs.json` failed in preview
    - Fix: Added `configurePreviewServer` hook to serve middleware in preview (`index.js:105-113`)
    - Result: Translation endpoint now available in both dev and preview modes
 10. **Parameterized Translations Auto-Apply Issue** - Plural items all showing same text
@@ -147,16 +147,16 @@
 
 #### Task 2.0: Set Up Conditional Loading ✅ COMPLETED
 - [x] Implemented via Vite plugin's virtual module system
-- [x] Plugin checks `VITE_PARAGLIDE_BROWSER_DEBUG` environment variable
-- [x] Virtual modules (`/@paraglide-debug/runtime.js`) only served when debug=true
+- [x] Plugin checks `VITE_PARAGLIDE_EDITOR` environment variable
+- [x] Virtual modules (`/@paraglide-editor/runtime.js`) only served when editor=true
 - [x] **Validation Results:**
-  - Build with `VITE_PARAGLIDE_BROWSER_DEBUG=false` → 4.7 KB bundle (NO editor code) ✅
-  - Build with `VITE_PARAGLIDE_BROWSER_DEBUG=true` → 39.79 KB bundle (~35 KB editor) ✅
+  - Build with `VITE_PARAGLIDE_EDITOR=false` → 4.7 KB bundle (NO editor code) ✅
+  - Build with `VITE_PARAGLIDE_EDITOR=true` → 39.79 KB bundle (~35 KB editor) ✅
   - Verified zero footprint in production builds
 - **Deliverable:** Zero-footprint conditional loading ✅
 - **Implementation:** Plugin approach (virtual modules) instead of dynamic import in app code
   - Benefits: Works across all frameworks (vanilla, React, SvelteKit) without app code changes
-  - Plugin serves empty comment when debug=false, full runtime when debug=true
+  - Plugin serves empty comment when editor=false, full runtime when editor=true
 
 #### Task 2.1: Create Base Component System ⚠️ SKIPPED
 - [ ] Create `src/editor/Component.js` - Simple base class for components
@@ -186,7 +186,7 @@
 
 #### Task 2.4: Add Language Selector ✅ COMPLETED
 - [x] Create `src/editor/LanguageSelector.js` (implemented in ui.js:212-279)
-- [x] Fetch available locales from Paraglide runtime (fetches from /paraglide-debug-langs.json)
+- [x] Fetch available locales from Paraglide runtime (fetches from /paraglide-editor-langs.json)
 - [x] Display current locale with highlight
 - [x] Implement locale switching
 - [x] Integrate with Paraglide's `setLocale()` (fallback to page reload)
@@ -499,7 +499,7 @@ Task 5.1 (JSON Gen) ─> Task 5.2 (Validation) ─> Task 5.3 (Download) ─> Tas
 
 - **Unit tests:** For each module (database, key extraction, JSON generation)
 - **Integration tests:** For workflows (edit, sync, export)
-- **Bundle size tests:** Verify 0 KB editor code when debug disabled
+- **Bundle size tests:** Verify 0 KB editor code when editor disabled
 - **Manual testing:** For UX and edge cases
 - **Accessibility testing:** With screen readers and keyboard only
 - **Performance testing:** With 1000+ translations
@@ -510,15 +510,15 @@ Task 5.1 (JSON Gen) ─> Task 5.2 (Validation) ─> Task 5.3 (Download) ─> Tas
 **Bundle Size Verification:**
 ```bash
 # Test 1: Production build without debug
-VITE_PARAGLIDE_BROWSER_DEBUG=false npm run build
+VITE_PARAGLIDE_EDITOR=false npm run build
 npm run analyze-bundle  # Should show 0 KB editor modules
 
 # Test 2: Production build with debug
-VITE_PARAGLIDE_BROWSER_DEBUG=true npm run build
+VITE_PARAGLIDE_EDITOR=true npm run build
 npm run analyze-bundle  # Should show ~50-100 KB editor modules
 
 # Test 3: Development mode
-npm run dev  # Editor should load if .env has debug=true
+npm run dev  # Editor should load if .env has editor=true
 ```
 
 ## Rollout Plan

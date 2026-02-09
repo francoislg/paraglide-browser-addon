@@ -158,7 +158,7 @@ Variants appear in different formats across our codebase:
 
 ### 1. Server Translations (dataStore)
 
-From `/@paraglide-debug/langs.json`:
+From `/@paraglide-editor/langs.json`:
 ```javascript
 {
   "items_count": [{  // Native JavaScript array

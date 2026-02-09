@@ -1,12 +1,12 @@
-# Paraglide Browser Debug
+# Paraglide Editor
 
-A Vite plugin that injects debug metadata into ParaglideJS translation strings and provides an in-browser translation editor with click-to-edit overlay, conflict detection, and local persistence via IndexedDB.
+A Vite plugin that provides an in-browser translation editor for ParaglideJS with click-to-edit overlay, conflict detection, and local persistence via IndexedDB.
 
 ## Packages
 
-### [`vite-plugin-paraglide-debug`](./packages/vite-plugin-paraglide-debug)
+### [`vite-plugin-paraglide-editor`](./packages/vite-plugin-paraglide-editor)
 
-The core Vite plugin that transforms Paraglide-generated message functions to include debug metadata when `VITE_PARAGLIDE_BROWSER_DEBUG=true`.
+The core Vite plugin that transforms Paraglide-generated message functions to enable in-browser editing when `VITE_PARAGLIDE_EDITOR=true`.
 
 **Features:**
 - Wraps message functions to track translation key usage in the browser
@@ -15,7 +15,7 @@ The core Vite plugin that transforms Paraglide-generated message functions to in
 - Multi-language editing with language selector
 - Export edited translations as JSON
 - Support for Paraglide variants (plurals, ordinals, multi-selectors)
-- Zero runtime overhead when debug mode is disabled
+- Zero runtime overhead when editor mode is disabled
 - Framework agnostic (Vite 5/6/7)
 
 ## Examples
@@ -73,10 +73,10 @@ pnpm dev:vanilla
 
 ## How It Works
 
-When `VITE_PARAGLIDE_BROWSER_DEBUG=true` is set:
+When `VITE_PARAGLIDE_EDITOR=true` is set:
 
 1. The Paraglide plugin generates message functions
-2. The debug plugin intercepts `messages/_index.js` and wraps each function to register text-to-key mappings in `window.__paraglideBrowserDebug.registry`
+2. The editor plugin intercepts `messages/_index.js` and wraps each function to register text-to-key mappings in `window.__paraglideEditor.registry`
 3. A runtime script scans the DOM and adds `data-paraglide-key` attributes to matching elements
 4. A MutationObserver keeps tracking up-to-date as the DOM changes
 5. The overlay mode enables click-to-edit on any tracked element
@@ -92,10 +92,10 @@ When `VITE_PARAGLIDE_BROWSER_DEBUG=true` is set:
 ```
 paraglide-browser-addon/
 ├── packages/
-│   └── vite-plugin-paraglide-debug/
+│   └── vite-plugin-paraglide-editor/
 │       └── src/
 │           ├── index.js              # Vite plugin (transform + virtual modules)
-│           ├── middleware.js          # Debug endpoint middleware
+│           ├── middleware.js          # Editor endpoint middleware
 │           ├── runtime.js            # Runtime entry point
 │           ├── export.js             # Translation export
 │           └── runtime/
@@ -132,7 +132,7 @@ Since the plugin lives in a monorepo subdirectory, you need to use the full path
 // vite.config.js
 import { defineConfig } from 'vite';
 import { paraglide } from '@inlang/paraglide-js';
-import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug/packages/vite-plugin-paraglide-debug/src/index.js';
+import { paraglideEditorPlugin } from 'vite-plugin-paraglide-editor/packages/vite-plugin-paraglide-editor/src/index.js';
 
 export default defineConfig({
   plugins: [
@@ -140,18 +140,18 @@ export default defineConfig({
       project: './project.inlang',
       outdir: './src/paraglide'
     }),
-    // Debug tools activate automatically (default)
-    paraglideBrowserDebugPlugin()
+    // Editor tools activate automatically (default)
+    paraglideEditorPlugin()
 
     // Or require explicit browser opt-in via localStorage:
-    // paraglideBrowserDebugPlugin({ requireOptIn: true })
+    // paraglideEditorPlugin({ requireOptIn: true })
   ]
 });
 ```
 
 ```bash
 # .env
-VITE_PARAGLIDE_BROWSER_DEBUG=true
+VITE_PARAGLIDE_EDITOR=true
 ```
 
 ## License

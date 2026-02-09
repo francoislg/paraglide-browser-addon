@@ -7,17 +7,17 @@
 
 ### Requirement: Conditional Loading
 
-The editor SHALL NOT be included in production builds when debug mode is disabled.
+The editor SHALL NOT be included in production builds when editor mode is disabled.
 
-#### Scenario: Debug mode disabled excludes editor
-**Given** the environment variable `VITE_PARAGLIDE_BROWSER_DEBUG` is not set to 'true'
+#### Scenario: Editor mode disabled excludes editor
+**Given** the environment variable `VITE_PARAGLIDE_EDITOR` is not set to 'true'
 **When** the application is built for production
 **Then** the editor code SHALL NOT be included in the bundle
 **And** the bundle size SHALL show 0 KB for editor modules
 **And** no editor-related code SHALL execute
 
-#### Scenario: Debug mode enabled includes editor
-**Given** the environment variable `VITE_PARAGLIDE_BROWSER_DEBUG` is 'true'
+#### Scenario: Editor mode enabled includes editor
+**Given** the environment variable `VITE_PARAGLIDE_EDITOR` is 'true'
 **When** the application is built or run in development
 **Then** the editor code SHALL be dynamically imported
 **And** the editor SHALL initialize
@@ -26,16 +26,16 @@ The editor SHALL NOT be included in production builds when debug mode is disable
 #### Scenario: Environment check at runtime
 **Given** the application is running
 **When** the main entry point executes
-**Then** the system SHALL check `import.meta.env.VITE_PARAGLIDE_BROWSER_DEBUG`
+**Then** the system SHALL check `import.meta.env.VITE_PARAGLIDE_EDITOR`
 **And** SHALL only import editor if the value is 'true'
 **And** no editor code SHALL be evaluated if the check fails
 
 ### Requirement: Floating Button Visibility
 
-The system SHALL provide a floating button for accessing the translation editor when debug mode is enabled.
+The system SHALL provide a floating button for accessing the translation editor when editor mode is enabled.
 
 #### Scenario: Button appears in bottom-right corner
-**Given** the page has loaded with debug mode enabled
+**Given** the page has loaded with editor mode enabled
 **When** the application initializes
 **Then** a floating button SHALL be visible in the bottom-right corner
 **And** the button SHALL have a fixed position at `bottom: 20px` and `right: 20px`
@@ -106,7 +106,7 @@ The system SHALL provide a button to synchronize translations from the server.
 #### Scenario: Sync button triggers synchronization
 **Given** the modal is open
 **When** the user clicks the "Sync" button
-**Then** the system SHALL fetch translations from `/paraglide-debug-langs.json`
+**Then** the system SHALL fetch translations from `/paraglide-editor-langs.json`
 **And** the system SHALL update the local database
 **And** the sync button SHALL display "Syncing..." during the operation
 

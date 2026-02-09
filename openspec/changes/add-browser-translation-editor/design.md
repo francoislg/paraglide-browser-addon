@@ -149,7 +149,7 @@ class OverlayManager {
 ```
 
 **Click Detection Strategy:**
-Uses the HTML comments injected by the debug plugin:
+Uses the HTML comments injected by the editor plugin:
 ```html
 <!-- paraglide:welcome -->Welcome!<!-- /paraglide:welcome -->
 ```
@@ -234,7 +234,7 @@ Extends existing `db.js` with additional fields:
 ### Sync Operation
 ```
 1. User clicks "Sync"
-2. Fetch /paraglide-debug-langs.json
+2. Fetch /paraglide-editor-langs.json
 3. For each translation:
    a. Check if exists in DB
    b. If new: Add with originalValue = serverValue
@@ -395,11 +395,11 @@ function getCommentsForElement(element) {
 
 ### Alternative Approach: Data Attributes
 
-If comment parsing becomes unreliable, we could modify the debug plugin to also add data attributes:
+If comment parsing becomes unreliable, we could modify the editor plugin to also add data attributes:
 
 ```javascript
-// In debug plugin wrapper:
-function __debugWrap(text, key, params) {
+// In editor plugin wrapper:
+function __editorWrap(text, key, params) {
   // Instead of just returning HTML comment + text
   // Return a span with data attribute
   return `<span data-paraglide-key="${key}" data-paraglide-params="${JSON.stringify(params)}">${text}</span>`;
@@ -466,13 +466,13 @@ Use system preference detection:
 ## Performance Considerations
 
 ### Conditional Loading (Critical)
-The editor SHALL NOT be included in builds when debug mode is disabled.
+The editor SHALL NOT be included in builds when editor mode is disabled.
 
 **Implementation Strategy:**
 ```javascript
 // In main.js or app entry point
-if (import.meta.env.VITE_PARAGLIDE_BROWSER_DEBUG === 'true') {
-  // Dynamically import editor only in debug mode
+if (import.meta.env.VITE_PARAGLIDE_EDITOR === 'true') {
+  // Dynamically import editor only in editor mode
   import('./editor/index.js').then(({ initEditor }) => {
     initEditor();
   });
@@ -482,21 +482,21 @@ if (import.meta.env.VITE_PARAGLIDE_BROWSER_DEBUG === 'true') {
 **Vite Tree-Shaking:**
 - Use dynamic imports with `import()` syntax
 - Vite will tree-shake the entire editor module in production builds
-- When `VITE_PARAGLIDE_BROWSER_DEBUG` is not 'true', the import is never executed
+- When `VITE_PARAGLIDE_EDITOR` is not 'true', the import is never executed
 - Dead code elimination removes the editor from the bundle
 
 **Bundle Analysis:**
-- Production bundle (debug=false): 0 KB editor code
-- Development bundle (debug=true): ~50-100 KB editor code (lazy loaded)
+- Production bundle (editor=false): 0 KB editor code
+- Development bundle (editor=true): ~50-100 KB editor code (lazy loaded)
 
 **Verification:**
 ```bash
 # Production build without debug
-VITE_PARAGLIDE_BROWSER_DEBUG=false npm run build
+VITE_PARAGLIDE_EDITOR=false npm run build
 # Check bundle - should NOT contain editor code
 
 # Production build with debug
-VITE_PARAGLIDE_BROWSER_DEBUG=true npm run build
+VITE_PARAGLIDE_EDITOR=true npm run build
 # Check bundle - should contain editor code
 ```
 
@@ -620,12 +620,12 @@ New schema adds:
 | Use HTML comments for key detection | Already implemented, non-invasive | 2025-12-02 |
 | Vanilla JS for UI | Minimize dependencies, match existing code | 2025-12-02 |
 | IndexedDB for storage | Already implemented, good for offline | 2025-12-02 |
-| Comment-based click detection | Leverages existing debug plugin output | 2025-12-02 |
+| Comment-based click detection | Leverages existing editor plugin output | 2025-12-02 |
 | Show all plural variants when editing | Allows editing each condition independently | 2025-12-02 |
 | Preserve and validate parameters | Ensures translations remain functional | 2025-12-02 |
 | No nested translation support | Paraglide uses flat structure with prefixes | 2025-12-02 |
 | Defer undo/redo to future | Keep initial scope focused | 2025-12-02 |
-| Dynamic import with env check | Zero code in production when debug disabled | 2025-12-02 |
+| Dynamic import with env check | Zero code in production when editor disabled | 2025-12-02 |
 | Framework-agnostic design | Works with React Router, SvelteKit, vanilla | 2025-12-02 |
 | MutationObserver for routing | Detects DOM changes from client-side routing | 2025-12-02 |
 

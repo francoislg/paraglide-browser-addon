@@ -23,7 +23,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ## Project Overview
 
-This is a Paraglide Browser Addon demonstrating a Vite plugin for ParaglideJS internationalization with debug metadata injection capabilities.
+This is a Paraglide Browser Addon demonstrating a Vite plugin for ParaglideJS internationalization with an in-browser translation editor.
 
 ## Example Projects
 
@@ -53,18 +53,18 @@ Use the `/run` slash command to start example projects:
 
 ## Architecture
 
-### Debug Plugin System
-The project includes a debug Vite plugin (`packages/vite-plugin-paraglide-debug/`) that injects HTML comment metadata:
+### Editor Plugin System
+The project includes an editor Vite plugin (`packages/vite-plugin-paraglide-editor/`) that injects HTML comment metadata:
 
 **Key Implementation Details:**
 - Uses Vite's `transform` hook to intercept `_index.js` with query parameter pattern (`?original`) to avoid circular imports
 - In-memory transformation - no source file modification
-- Controlled by `VITE_PARAGLIDE_BROWSER_DEBUG=true` environment variable
+- Controlled by `VITE_PARAGLIDE_EDITOR=true` environment variable
 - Output format: `<!-- paraglide:{key} params:{...} -->text<!-- /paraglide:{key} -->`
-- Custom endpoint `/paraglide-debug-langs.json` serves raw translation JSON when debug mode is enabled
+- Custom endpoint `/paraglide-editor-langs.json` serves raw translation JSON when editor mode is enabled
 - Works in both development and production builds
 
-**Plugin Location:** `packages/vite-plugin-paraglide-debug/src/index.js`
+**Plugin Location:** `packages/vite-plugin-paraglide-editor/src/index.js`
 
 ### Translation Format
 - ParaglideJS supports pluralization using a structured JSON format with `declarations`, `selectors`, and `match` blocks
@@ -83,13 +83,13 @@ The project includes a debug Vite plugin (`packages/vite-plugin-paraglide-debug/
 
 ## Key Files
 
-### Debug Plugin
-- `packages/vite-plugin-paraglide-debug/src/index.js` - Debug plugin implementation
+### Editor Plugin
+- `packages/vite-plugin-paraglide-editor/src/index.js` - Editor plugin implementation
 
 ### Example Projects (each follows the same structure)
 - `examples/{project}/messages/{locale}.json` - Translation source files
 - `examples/{project}/project.inlang/settings.json` - Inlang configuration
-- `examples/{project}/.env` - Contains `VITE_PARAGLIDE_BROWSER_DEBUG=true`
+- `examples/{project}/.env` - Contains `VITE_PARAGLIDE_EDITOR=true`
 - `examples/{project}/vite.config.js` - Vite configuration with static port
 
 ### Vanilla Example

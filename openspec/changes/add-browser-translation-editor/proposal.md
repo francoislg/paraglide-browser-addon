@@ -31,7 +31,7 @@ Create a browser-based translation editor with:
 ### 2. Translation Management Modal
 Contains:
 - **Language selector** - Switch between available locales
-- **Sync button** - Pull latest translations from `/paraglide-debug-langs.json`
+- **Sync button** - Pull latest translations from `/paraglide-editor-langs.json`
 - **Overlay toggle** - Enable/disable edit mode
 - **Download button** - Export modified translations as JSON files
 
@@ -54,12 +54,12 @@ Contains:
 Already implemented:
 - ✅ Debug plugin that injects HTML comments with translation keys
 - ✅ IndexedDB database for storing translations
-- ✅ Sync functionality to fetch from `/paraglide-debug-langs.json`
+- ✅ Sync functionality to fetch from `/paraglide-editor-langs.json`
 - ✅ Detection of new/updated keys
 
 ## User Workflow
 
-1. Developer enables debug mode (`VITE_PARAGLIDE_BROWSER_DEBUG=true`)
+1. Developer enables editor mode (`VITE_PARAGLIDE_EDITOR=true`)
 2. Opens page with translations
 3. Clicks floating editor button
 4. Clicks "Sync" to load current translations
@@ -81,7 +81,7 @@ Already implemented:
 ## Technical Considerations
 
 ### Dependencies
-- Existing debug plugin infrastructure
+- Existing editor plugin infrastructure
 - IndexedDB database (already implemented)
 - Click event interception
 - UI component library or custom components

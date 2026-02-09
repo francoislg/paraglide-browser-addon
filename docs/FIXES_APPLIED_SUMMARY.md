@@ -5,7 +5,7 @@
 
 ## Overview
 
-This document summarizes all fixes applied to the repository structure and the `vite-plugin-paraglide-debug` package to prepare for npm publishing.
+This document summarizes all fixes applied to the repository structure and the `vite-plugin-paraglide-editor` package to prepare for npm publishing.
 
 ---
 
@@ -44,13 +44,13 @@ Created `docs/` directory structure:
 
 ## Part 2: Plugin Package Fixes
 
-### Package: `packages/vite-plugin-paraglide-debug`
+### Package: `packages/vite-plugin-paraglide-editor`
 
 All 12 identified issues have been fixed:
 
 ### ✅ Issue 1: Missing LICENSE File
 **Fixed**: Created `LICENSE` file with MIT license
-- Copyright: "Paraglide Browser Debug Contributors"
+- Copyright: "Paraglide Editor Contributors"
 - Year: 2025
 - Standard MIT license text
 
@@ -80,7 +80,7 @@ All 12 identified issues have been fixed:
 **Fixed**: Added complete metadata to `package.json`
 
 **Added**:
-- `"author": "Paraglide Browser Debug Contributors"`
+- `"author": "Paraglide Editor Contributors"`
 - `"repository"` object with git URL and directory
 - `"homepage"` URL
 - `"bugs"` URL
@@ -129,7 +129,7 @@ All 12 identified issues have been fixed:
 1. **`src/index.js`** - Main plugin function
    - Added 47-line JSDoc comment
    - Explains how the plugin works (5-step process)
-   - Documents behavior when debug mode is on/off
+   - Documents behavior when editor mode is on/off
    - Includes 2 complete usage examples
    - Documents all parameters and return types
 
@@ -163,7 +163,7 @@ All 12 identified issues have been fixed:
 ```json
 "scripts": {
   "test": "echo \"No tests yet. Run examples to verify.\" && exit 0",
-  "prepublishOnly": "echo \"⚠️  Publishing vite-plugin-paraglide-debug@$npm_package_version\" && sleep 2"
+  "prepublishOnly": "echo \"⚠️  Publishing vite-plugin-paraglide-editor@$npm_package_version\" && sleep 2"
 }
 ```
 
@@ -193,8 +193,8 @@ All 12 identified issues have been fixed:
 ```
 
 **Rationale**: Allows both patterns:
-- `import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug'`
-- `import type { ParaglideBrowserDebug } from 'vite-plugin-paraglide-debug/client'`
+- `import { paraglideEditorPlugin } from 'vite-plugin-paraglide-editor'`
+- `import type { ParaglideEditor } from 'vite-plugin-paraglide-editor/client'`
 
 ### ✅ Issue 12: No Publishing Checklist
 **Fixed**: Created comprehensive `PUBLISHING.md`
@@ -233,19 +233,19 @@ All 12 identified issues have been fixed:
 ### Files Created: 8
 1. `REPOSITORY_CLEANUP_RECOMMENDATIONS.md` (root)
 2. `docs/PLUGIN_PACKAGE_IMPROVEMENTS.md`
-3. `packages/vite-plugin-paraglide-debug/LICENSE`
-4. `packages/vite-plugin-paraglide-debug/.gitignore`
-5. `packages/vite-plugin-paraglide-debug/CHANGELOG.md`
-6. `packages/vite-plugin-paraglide-debug/PUBLISHING.md`
+3. `packages/vite-plugin-paraglide-editor/LICENSE`
+4. `packages/vite-plugin-paraglide-editor/.gitignore`
+5. `packages/vite-plugin-paraglide-editor/CHANGELOG.md`
+6. `packages/vite-plugin-paraglide-editor/PUBLISHING.md`
 7. `docs/completed-work/` (directory with 4 files)
 8. `docs/plans/` (directory with 1 file)
 
 ### Files Modified: 4
 1. `.gitignore` (root) - Added global patterns
-2. `packages/vite-plugin-paraglide-debug/package.json` - Fixed metadata
-3. `packages/vite-plugin-paraglide-debug/README.md` - Updated attributes
-4. `packages/vite-plugin-paraglide-debug/src/index.js` - Added JSDoc
-5. `packages/vite-plugin-paraglide-debug/src/middleware.js` - Added JSDoc
+2. `packages/vite-plugin-paraglide-editor/package.json` - Fixed metadata
+3. `packages/vite-plugin-paraglide-editor/README.md` - Updated attributes
+4. `packages/vite-plugin-paraglide-editor/src/index.js` - Added JSDoc
+5. `packages/vite-plugin-paraglide-editor/src/middleware.js` - Added JSDoc
 
 ### Files Deleted: 3
 1. `nul` (stray file)
@@ -284,7 +284,7 @@ All 12 identified issues have been fixed:
 When you run `npm pack --dry-run`, the package will include:
 
 ```
-vite-plugin-paraglide-debug-0.1.0.tgz
+vite-plugin-paraglide-editor-0.1.0.tgz
 
 Contents:
 ├── package.json          ← Metadata
@@ -319,13 +319,13 @@ Contents:
 
 2. **Test package**:
    ```bash
-   cd packages/vite-plugin-paraglide-debug
+   cd packages/vite-plugin-paraglide-editor
    npm pack --dry-run
    ```
 
 3. **Test examples**:
    - Run all three examples (vanilla, react-router, sveltekit)
-   - Test with debug mode ON and OFF
+   - Test with editor mode ON and OFF
    - Verify production builds work
 
 4. **Final review**:
@@ -337,7 +337,7 @@ Contents:
 When ready to publish:
 
 ```bash
-cd packages/vite-plugin-paraglide-debug
+cd packages/vite-plugin-paraglide-editor
 
 # Dry run
 npm pack --dry-run
@@ -383,7 +383,7 @@ paraglide-browser-addon/
 │   └── sveltekit/
 │
 └── packages/
-    └── vite-plugin-paraglide-debug/    ← Fixed ✓
+    └── vite-plugin-paraglide-editor/    ← Fixed ✓
         ├── .gitignore                  ← New ✓
         ├── CHANGELOG.md                ← New ✓
         ├── LICENSE                     ← New ✓

@@ -12,10 +12,10 @@ This document tracks the current implementation status of the browser translatio
 ### Current File Organization
 
 ```
-packages/vite-plugin-paraglide-debug/
+packages/vite-plugin-paraglide-editor/
 ├── src/
 │   ├── index.js           # Vite plugin (implements virtual module serving)
-│   ├── middleware.js       # Debug middleware for /paraglide-debug endpoints
+│   ├── middleware.js       # Debug middleware for /paraglide-editor endpoints
 │   ├── runtime.js          # Main runtime entry point with element tracking
 │   └── runtime/
 │       ├── db.js           # IndexedDB storage layer
@@ -33,7 +33,7 @@ runtime.js (entry)
           └─> runtime/db.js
 
 index.js (vite plugin)
-  ├─> middleware.js (debug endpoints)
+  ├─> middleware.js (editor endpoints)
   └─> runtime.js (served as virtual module)
 ```
 
@@ -50,8 +50,8 @@ index.js (vite plugin)
 - **Lines 89-94:** MutationObserver with debouncing (100ms)
 - **Lines 96-114:** Initialization lifecycle
 - **Lines 116-137:** Public API methods:
-  - `window.__paraglideBrowserDebug.refresh()`
-  - `window.__paraglideBrowserDebug.getElements()`
+  - `window.__paraglideEditor.refresh()`
+  - `window.__paraglideEditor.getElements()`
 
 #### 2. Basic IndexedDB Storage (`runtime/db.js`)
 - **Lines 11-42:** `initDB()` with schema versioning
@@ -93,14 +93,14 @@ index.js (vite plugin)
 
 #### 6. Vite Plugin Integration (`index.js`)
 - **Lines 38-58:** `resolveId(id, importer)` hook
-  - Handles virtual module IDs (`/@paraglide-debug/*`)
+  - Handles virtual module IDs (`/@paraglide-editor/*`)
   - Resolves relative imports from virtual modules
 - **Lines 60-88:** `load(id)` hook
   - Serves virtual module content from filesystem
-  - Maps `/@paraglide-debug/runtime.js` → `src/runtime.js`
-  - Maps `/@paraglide-debug/runtime/db.js` → `src/runtime/db.js`
+  - Maps `/@paraglide-editor/runtime.js` → `src/runtime.js`
+  - Maps `/@paraglide-editor/runtime/db.js` → `src/runtime/db.js`
 - **Lines 175-200:** HTML transformation hooks
-  - Injects runtime script tag when debug mode enabled
+  - Injects runtime script tag when editor mode enabled
   - Works with both standard Vite and SvelteKit
 
 ### ⚠️ Partially Implemented Features
@@ -141,7 +141,7 @@ index.js (vite plugin)
 
 #### Phase 2: UI Components
 - [ ] Task 2.0: Conditional loading architecture
-  - Currently runtime is always loaded when debug=true
+  - Currently runtime is always loaded when editor=true
   - No dynamic import pattern
   - No build size verification
 - [ ] Task 2.1: Base component system
@@ -189,10 +189,10 @@ index.js (vite plugin)
 1. **Virtual Module System (Fixed):**
    - Previously had import resolution bug with relative paths
    - Now correctly resolves `./runtime/db.js` imports via `resolveId` importer parameter
-   - Plugin serves all `/@paraglide-debug/*` paths from `src/` directory
+   - Plugin serves all `/@paraglide-editor/*` paths from `src/` directory
 
 2. **Element Tracking Approach:**
-   - Uses `window.__paraglideBrowserDebug.registry` Map populated by transform hook
+   - Uses `window.__paraglideEditor.registry` Map populated by transform hook
    - Matches text content to translation keys
    - Adds `data-*` attributes for persistence across re-renders
    - Visual outline helps developers see detected translations
@@ -201,7 +201,7 @@ index.js (vite plugin)
    - UI injected directly into DOM via `createElement`
    - Inline styles in template literals (no separate CSS files)
    - Click handlers use `onclick` attributes pointing to global namespace
-   - Export function exposed via `window.__paraglideBrowserDebug.exportEdits`
+   - Export function exposed via `window.__paraglideEditor.exportEdits`
 
 ### Design Decisions
 
@@ -269,7 +269,7 @@ index.js (vite plugin)
 ### Architecture Improvements
 
 1. **Conditional Loading (Task 2.0):**
-   - Current approach always loads runtime when debug=true
+   - Current approach always loads runtime when editor=true
    - Consider dynamic import for editor components
    - Would reduce initial bundle size
 

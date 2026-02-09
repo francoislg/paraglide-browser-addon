@@ -1,12 +1,12 @@
 # Plugin Package Improvements
 
 **Date**: 2025-12-03
-**Package**: `packages/vite-plugin-paraglide-debug`
+**Package**: `packages/vite-plugin-paraglide-editor`
 **Status**: Recommendations for improving package structure and publishability
 
 ## Executive Summary
 
-The `vite-plugin-paraglide-debug` package has a solid foundation but needs several improvements before being published to npm. This document outlines 12 key issues and provides actionable recommendations.
+The `vite-plugin-paraglide-editor` package has a solid foundation but needs several improvements before being published to npm. This document outlines 12 key issues and provides actionable recommendations.
 
 ## Issues Identified
 
@@ -26,7 +26,7 @@ The `vite-plugin-paraglide-debug` package has a solid foundation but needs sever
 **Recommendation**:
 ```bash
 # Create LICENSE file
-cat > packages/vite-plugin-paraglide-debug/LICENSE << 'EOF'
+cat > packages/vite-plugin-paraglide-editor/LICENSE << 'EOF'
 MIT License
 
 Copyright (c) 2025 [Your Name/Organization]
@@ -109,7 +109,7 @@ The `src` directory already contains `src/runtime.js`, so it's included.
 **Current**:
 ```json
 {
-  "name": "vite-plugin-paraglide-debug",
+  "name": "vite-plugin-paraglide-editor",
   "author": "",
   "license": "MIT"
 }
@@ -124,15 +124,15 @@ The `src` directory already contains `src/runtime.js`, so it's included.
 **Recommendation**:
 ```json
 {
-  "name": "vite-plugin-paraglide-debug",
+  "name": "vite-plugin-paraglide-editor",
   "version": "0.1.0",
-  "description": "Vite plugin that injects debug metadata into ParaglideJS translation strings",
+  "description": "Vite plugin that injects editor metadata into ParaglideJS translation strings",
   "author": "Your Name <your.email@example.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/paraglide-browser-addon.git",
-    "directory": "packages/vite-plugin-paraglide-debug"
+    "directory": "packages/vite-plugin-paraglide-editor"
   },
   "homepage": "https://github.com/yourusername/paraglide-browser-addon#readme",
   "bugs": {
@@ -173,7 +173,7 @@ The `src` directory already contains `src/runtime.js`, so it's included.
 
 **Recommendation**:
 ```bash
-cat > packages/vite-plugin-paraglide-debug/.gitignore << 'EOF'
+cat > packages/vite-plugin-paraglide-editor/.gitignore << 'EOF'
 # Dependencies
 node_modules/
 
@@ -216,7 +216,7 @@ EOF
 
 **Recommendation**:
 ```bash
-cat > packages/vite-plugin-paraglide-debug/CHANGELOG.md << 'EOF'
+cat > packages/vite-plugin-paraglide-editor/CHANGELOG.md << 'EOF'
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -227,7 +227,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial implementation of debug metadata injection
+- Initial implementation of editor metadata injection
 - Runtime DOM element tracking
 - TypeScript type definitions
 - Browser extension API support
@@ -240,7 +240,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial release
-- Basic Vite plugin for Paraglide debug metadata
+- Basic Vite plugin for Paraglide editor metadata
 - Virtual module system for runtime code
 - Debug middleware for serving translations
 - HTML transformation hooks
@@ -276,7 +276,7 @@ Add to `package.json` files:
 
 **Option A: Add Vitest** (Recommended - fast, Vite-native)
 ```bash
-cd packages/vite-plugin-paraglide-debug
+cd packages/vite-plugin-paraglide-editor
 pnpm add -D vitest
 ```
 
@@ -296,29 +296,29 @@ pnpm add -D vitest
 Create `tests/plugin.test.js`:
 ```javascript
 import { describe, it, expect } from 'vitest';
-import { paraglideBrowserDebugPlugin } from '../src/index.js';
+import { paraglideEditorPlugin } from '../src/index.js';
 
-describe('paraglideBrowserDebugPlugin', () => {
+describe('paraglideEditorPlugin', () => {
   it('should return a valid Vite plugin', () => {
-    const plugin = paraglideBrowserDebugPlugin();
+    const plugin = paraglideEditorPlugin();
 
-    expect(plugin).toHaveProperty('name', 'paraglide-browser-debug');
+    expect(plugin).toHaveProperty('name', 'paraglide-editor');
     expect(plugin).toHaveProperty('enforce', 'post');
     expect(plugin).toHaveProperty('configResolved');
     expect(plugin).toHaveProperty('transform');
   });
 
-  it('should respect debug mode flag', () => {
-    const plugin = paraglideBrowserDebugPlugin();
+  it('should respect editor mode flag', () => {
+    const plugin = paraglideEditorPlugin();
 
     // Mock config
     const config = {
-      env: { VITE_PARAGLIDE_BROWSER_DEBUG: 'false' }
+      env: { VITE_PARAGLIDE_EDITOR: 'false' }
     };
 
     plugin.configResolved(config);
 
-    // Transform should return null when debug mode is off
+    // Transform should return null when editor mode is off
     const result = plugin.transform('export const test = "value"', 'file.js');
     expect(result).toBeNull();
   });
@@ -351,7 +351,7 @@ To verify functionality, run the example projects:
 
 **Example** - `src/middleware.js:14`:
 ```javascript
-export function createDebugMiddleware(viteConfig) {
+export function createEditorMiddleware(viteConfig) {
   // Missing JSDoc
   return (req, res, next) => {
     // ...
@@ -368,10 +368,10 @@ Add comprehensive JSDoc to all exported functions:
 
 ```javascript
 /**
- * Creates middleware for serving Paraglide debug endpoints
+ * Creates middleware for serving Paraglide editor endpoints
  *
  * This middleware handles:
- * - `/@paraglide-debug/langs.json` - Serves raw translation JSON
+ * - `/@paraglide-editor/langs.json` - Serves raw translation JSON
  *
  * @param {Object} viteConfig - Resolved Vite configuration object
  * @param {string} viteConfig.root - Project root directory
@@ -379,10 +379,10 @@ Add comprehensive JSDoc to all exported functions:
  *
  * @example
  * ```js
- * server.middlewares.use(createDebugMiddleware(viteConfig));
+ * server.middlewares.use(createEditorMiddleware(viteConfig));
  * ```
  */
-export function createDebugMiddleware(viteConfig) {
+export function createEditorMiddleware(viteConfig) {
   return (req, res, next) => {
     // ...
   };
@@ -450,7 +450,7 @@ document.querySelector('[data-paraglide-key="welcome"]')
 **Current**:
 ```json
 {
-  "name": "vite-plugin-paraglide-debug",
+  "name": "vite-plugin-paraglide-editor",
   // ... no "scripts" field at all
 }
 ```
@@ -465,7 +465,7 @@ document.querySelector('[data-paraglide-key="welcome"]')
 {
   "scripts": {
     "test": "echo \"No tests yet. Run examples to verify.\" && exit 0",
-    "prepublishOnly": "echo \"⚠️  Publishing vite-plugin-paraglide-debug@$npm_package_version\" && sleep 2",
+    "prepublishOnly": "echo \"⚠️  Publishing vite-plugin-paraglide-editor@$npm_package_version\" && sleep 2",
     "lint": "echo \"No linter configured yet\" && exit 0"
   }
 }
@@ -505,7 +505,7 @@ When tests are added:
 
 **Option B: Add `.npmignore` for more control**
 ```bash
-cat > packages/vite-plugin-paraglide-debug/.npmignore << 'EOF'
+cat > packages/vite-plugin-paraglide-editor/.npmignore << 'EOF'
 # Development files
 .gitignore
 *.test.js
@@ -565,8 +565,8 @@ EOF
 
 Users import as:
 ```typescript
-import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug';
-import type { ParaglideBrowserDebug } from 'vite-plugin-paraglide-debug';
+import { paraglideEditorPlugin } from 'vite-plugin-paraglide-editor';
+import type { ParaglideEditor } from 'vite-plugin-paraglide-editor';
 ```
 
 **Option B: Keep separate client types** (if "/client" import is intentional)
@@ -585,8 +585,8 @@ import type { ParaglideBrowserDebug } from 'vite-plugin-paraglide-debug';
 
 Users import as:
 ```typescript
-import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug';
-import type { ParaglideBrowserDebug } from 'vite-plugin-paraglide-debug/client';
+import { paraglideEditorPlugin } from 'vite-plugin-paraglide-editor';
+import type { ParaglideEditor } from 'vite-plugin-paraglide-editor/client';
 ```
 
 **Recommendation**: Use Option B (keep current structure) - it's clearer for type-only imports.
@@ -606,11 +606,11 @@ import type { ParaglideBrowserDebug } from 'vite-plugin-paraglide-debug/client';
 
 **Recommendation**:
 
-Create `packages/vite-plugin-paraglide-debug/PUBLISHING.md`:
+Create `packages/vite-plugin-paraglide-editor/PUBLISHING.md`:
 ```markdown
 # Publishing Checklist
 
-Before publishing `vite-plugin-paraglide-debug` to npm, complete this checklist:
+Before publishing `vite-plugin-paraglide-editor` to npm, complete this checklist:
 
 ## Pre-Publish Checklist
 
@@ -618,7 +618,7 @@ Before publishing `vite-plugin-paraglide-debug` to npm, complete this checklist:
 - [ ] Update version in `package.json` (follow semver)
 - [ ] Update `CHANGELOG.md` with changes
 - [ ] Commit version bump: `git commit -am "chore: bump version to X.Y.Z"`
-- [ ] Tag release: `git tag vite-plugin-paraglide-debug@X.Y.Z`
+- [ ] Tag release: `git tag vite-plugin-paraglide-editor@X.Y.Z`
 
 ### 2. Package Integrity
 - [ ] Run `npm pack --dry-run` to see what will be published
@@ -632,11 +632,11 @@ Before publishing `vite-plugin-paraglide-debug` to npm, complete this checklist:
   - `pnpm --filter react-router dev` (verify works)
   - `pnpm --filter sveltekit dev` (verify works)
 - [ ] Test production builds:
-  - `VITE_PARAGLIDE_BROWSER_DEBUG=true pnpm --filter vanilla build`
-  - Verify debug mode works in preview
-- [ ] Test with debug mode OFF:
-  - `VITE_PARAGLIDE_BROWSER_DEBUG=false pnpm --filter vanilla build`
-  - Verify no debug code injected
+  - `VITE_PARAGLIDE_EDITOR=true pnpm --filter vanilla build`
+  - Verify editor mode works in preview
+- [ ] Test with editor mode OFF:
+  - `VITE_PARAGLIDE_EDITOR=false pnpm --filter vanilla build`
+  - Verify no editor code injected
 
 ### 4. Documentation
 - [ ] README.md is up to date
@@ -645,7 +645,7 @@ Before publishing `vite-plugin-paraglide-debug` to npm, complete this checklist:
 
 ### 5. Publish
 ```bash
-cd packages/vite-plugin-paraglide-debug
+cd packages/vite-plugin-paraglide-editor
 
 # Dry run first
 npm publish --dry-run
@@ -667,7 +667,7 @@ npm publish --access public
 
 If you need to unpublish within 72 hours:
 ```bash
-npm unpublish vite-plugin-paraglide-debug@X.Y.Z
+npm unpublish vite-plugin-paraglide-editor@X.Y.Z
 ```
 
 Note: npm allows unpublishing only within 72 hours and if no other packages depend on it.
@@ -710,9 +710,9 @@ Here's a script to fix the most critical issues:
 #!/bin/bash
 # fix-plugin-package.sh
 
-cd packages/vite-plugin-paraglide-debug
+cd packages/vite-plugin-paraglide-editor
 
-echo "🔧 Fixing vite-plugin-paraglide-debug package..."
+echo "🔧 Fixing vite-plugin-paraglide-editor package..."
 
 # 1. Add LICENSE
 cat > LICENSE << 'EOF'
@@ -820,7 +820,7 @@ After fixes:
 npm pack --dry-run
 
 # Verify file list
-ls -la packages/vite-plugin-paraglide-debug/
+ls -la packages/vite-plugin-paraglide-editor/
 
 # Test in example
 cd examples/vanilla

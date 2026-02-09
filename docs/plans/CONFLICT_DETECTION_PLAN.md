@@ -65,7 +65,7 @@ editedValue: "Hi there"
 
 ### Step 1: Update `syncTranslations()` in `db.js`
 
-**Location**: `packages/vite-plugin-paraglide-debug/src/runtime/db.js`
+**Location**: `packages/vite-plugin-paraglide-editor/src/runtime/db.js`
 
 **Current logic** (~line 200):
 ```javascript
@@ -104,13 +104,13 @@ if (isEdited && !serverChanged) {
 
 ### Step 2: Update Conflict Resolution Documentation
 
-**Location**: `packages/vite-plugin-paraglide-debug/src/runtime/db.js` (add comments)
+**Location**: `packages/vite-plugin-paraglide-editor/src/runtime/db.js` (add comments)
 
 Add detailed comments explaining the conflict detection logic.
 
 ### Step 3: Update Sync Stats
 
-**Location**: `packages/vite-plugin-paraglide-debug/src/runtime/sync.js`
+**Location**: `packages/vite-plugin-paraglide-editor/src/runtime/sync.js`
 
 Update the sync summary to show:
 - `autoResolved` - Edits that matched new server values (conflict avoided)
@@ -126,10 +126,10 @@ Create test cases for:
 
 ## Files to Modify
 
-1. **`packages/vite-plugin-paraglide-debug/src/runtime/db.js`** (~line 200)
+1. **`packages/vite-plugin-paraglide-editor/src/runtime/db.js`** (~line 200)
    - Update `syncTranslations()` conflict detection logic
 
-2. **`packages/vite-plugin-paraglide-debug/src/runtime/sync.js`**
+2. **`packages/vite-plugin-paraglide-editor/src/runtime/sync.js`**
    - Update sync stats to include auto-resolved count
 
 3. **Documentation** (this file)

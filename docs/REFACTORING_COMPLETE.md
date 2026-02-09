@@ -208,9 +208,9 @@ focusFirstInput(popup, '.pg-edit-textarea');
 
 ```bash
 $ npm run dev
-[paraglide-debug] Plugin configured
-[paraglide-debug] Debug mode: true
-✓ Serving translations at /@paraglide-debug/langs.json
+[paraglide-editor] Plugin configured
+[paraglide-editor] Editor mode: true
+✓ Serving translations at /@paraglide-editor/langs.json
 ✔ [paraglide-js] Compilation complete (locale-modules)
 VITE v6.4.1  ready in 1594 ms
 ➜  Local:   http://localhost:3210/
@@ -233,7 +233,7 @@ VITE v6.4.1  ready in 1594 ms
 ## 📁 File Structure
 
 ```
-packages/vite-plugin-paraglide-debug/src/runtime/ui/
+packages/vite-plugin-paraglide-editor/src/runtime/ui/
 ├── dom.js                    # ← NEW: Common DOM utilities
 ├── sharedStyles.js           # ← NEW: Shared CSS styles
 ├── popup.js                  # ← REFACTORED: Main orchestrator (124 lines)

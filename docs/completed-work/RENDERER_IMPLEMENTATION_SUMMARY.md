@@ -7,7 +7,7 @@ Created a comprehensive `renderVariant()` function that handles all Paraglide va
 
 ### Core Function: `renderVariant(variant, params, locale)`
 
-Located in: `packages/vite-plugin-paraglide-debug/src/runtime/renderer.js`
+Located in: `packages/vite-plugin-paraglide-editor/src/runtime/renderer.js`
 
 This function handles:
 1. **Direct Matching Variants** (no transformations)
@@ -258,7 +258,7 @@ All localization files have been updated with comprehensive variant examples acr
 
 ## Files Modified
 
-1. **`packages/vite-plugin-paraglide-debug/src/runtime/renderer.js`** - Core implementation
+1. **`packages/vite-plugin-paraglide-editor/src/runtime/renderer.js`** - Core implementation
 2. **`examples/vanilla/messages/{en,es,fr}.json`** - Added variant examples
 3. **`examples/react-router/messages/{en,es,fr}.json`** - Added variant examples
 4. **`examples/sveltekit/messages/{en,es,fr}.json`** - Added variant examples

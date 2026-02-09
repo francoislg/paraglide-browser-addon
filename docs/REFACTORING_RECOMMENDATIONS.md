@@ -467,7 +467,7 @@ export function getTranslationMetadata(element) {
     try {
       params = JSON.parse(element.dataset.paraglideParams);
     } catch (e) {
-      console.warn('[paraglide-debug] Failed to parse params:', e);
+      console.warn('[paraglide-editor] Failed to parse params:', e);
     }
   }
 

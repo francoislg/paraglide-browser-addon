@@ -19,7 +19,7 @@ We need to track which DOM elements contain translated text so a browser extensi
 The Vite plugin wraps message functions to return HTML with comments:
 
 ```javascript
-function __debugWrap(text, key, params) {
+function __editorWrap(text, key, params) {
   return `<!-- paraglide:${key} -->${text}<!-- /paraglide:${key} -->`;
 }
 ```
@@ -60,7 +60,7 @@ Instead of embedding metadata in HTML, we use a **runtime registry** that maps t
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. BUILD TIME: Vite Plugin Wraps Message Functions          │
-│    m.key() → __debugWrap(originalFn(), "key", params)       │
+│    m.key() → __editorWrap(originalFn(), "key", params)       │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -84,15 +84,15 @@ Instead of embedding metadata in HTML, we use a **runtime registry** that maps t
 #### 1. Vite Plugin Wrapper Function
 
 ```javascript
-// In packages/vite-plugin-paraglide-debug/src/index.js
-function __debugWrap(text, key, params) {
+// In packages/vite-plugin-paraglide-editor/src/index.js
+function __editorWrap(text, key, params) {
   if (typeof text !== 'string') return text;
 
   // Store mapping in global registry
   if (typeof window !== 'undefined') {
-    window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
-    window.__paraglideBrowserDebug.registry = window.__paraglideBrowserDebug.registry || new Map();
-    window.__paraglideBrowserDebug.registry.set(text, {
+    window.__paraglideEditor = window.__paraglideEditor || {};
+    window.__paraglideEditor.registry = window.__paraglideEditor.registry || new Map();
+    window.__paraglideEditor.registry.set(text, {
       key: key,
       params: params || {},
       timestamp: Date.now()
@@ -110,7 +110,7 @@ Injected via Vite plugin's `transformIndexHtml`:
 
 ```javascript
 function buildElementRegistry() {
-  if (!window.__paraglideBrowserDebug.registry) return;
+  if (!window.__paraglideEditor.registry) return;
 
   const registry = [];
   const walker = document.createTreeWalker(
@@ -133,7 +133,7 @@ function buildElementRegistry() {
     const text = textNode.textContent.trim();
     if (!text) continue;
 
-    const metadata = window.__paraglideBrowserDebug.registry.get(text);
+    const metadata = window.__paraglideEditor.registry.get(text);
     if (metadata) {
       const element = textNode.parentElement;
 
@@ -155,8 +155,8 @@ function buildElementRegistry() {
     }
   }
 
-  window.__paraglideBrowserDebug.elements = registry;
-  console.log(`[paraglide-debug] Found ${registry.length} translated elements`);
+  window.__paraglideEditor.elements = registry;
+  console.log(`[paraglide-editor] Found ${registry.length} translated elements`);
 }
 ```
 
@@ -192,13 +192,13 @@ if (document.readyState === 'loading') {
 
 ## Usage in Browser Extension
 
-The browser extension can access the tracked elements via the `window.__paraglideBrowserDebug` namespace:
+The browser extension can access the tracked elements via the `window.__paraglideEditor` namespace:
 
 ```javascript
 // Content script in browser extension
 
 // Check available API
-console.log(window.__paraglideBrowserDebug);
+console.log(window.__paraglideEditor);
 // {
 //   registry: Map (text → metadata),
 //   elements: Array of tracked elements,
@@ -207,7 +207,7 @@ console.log(window.__paraglideBrowserDebug);
 // }
 
 // Get elements array
-console.log(window.__paraglideBrowserDebug.elements);
+console.log(window.__paraglideEditor.elements);
 // [
 //   {
 //     element: <h3> DOM node,
@@ -220,7 +220,7 @@ console.log(window.__paraglideBrowserDebug.elements);
 // ]
 
 // Or get fresh elements (re-queries DOM)
-const elements = window.__paraglideBrowserDebug.getElements();
+const elements = window.__paraglideEditor.getElements();
 
 // Highlight elements on hover
 elements.forEach(({ element, key }) => {
@@ -263,7 +263,7 @@ window.__paraglideRegistry.set("1 item", { key: "count" })
 // Old mapping still exists but won't match "2 items"
 ```
 
-**Mitigation:** Registry uses latest text, old entries become stale (acceptable for debug mode).
+**Mitigation:** Registry uses latest text, old entries become stale (acceptable for editor mode).
 
 ### 4. Memory Leaks
 Registry grows unbounded as translations are called.
@@ -271,7 +271,7 @@ Registry grows unbounded as translations are called.
 **Mitigation:**
 - Clear old entries periodically
 - Use WeakMap (future optimization)
-- Only runs in debug mode
+- Only runs in editor mode
 
 ## Alternative Approaches Considered
 

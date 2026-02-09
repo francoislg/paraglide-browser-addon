@@ -35,9 +35,9 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.1
-      vite-plugin-paraglide-debug:
+      vite-plugin-paraglide-editor:
         specifier: workspace:*
-        version: link:../../packages/vite-plugin-paraglide-debug
+        version: link:../../packages/vite-plugin-paraglide-editor
 
   examples/sveltekit:
     dependencies:
@@ -60,9 +60,9 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.1
-      vite-plugin-paraglide-debug:
+      vite-plugin-paraglide-editor:
         specifier: workspace:*
-        version: link:../../packages/vite-plugin-paraglide-debug
+        version: link:../../packages/vite-plugin-paraglide-editor
 
   examples/vanilla:
     devDependencies:
@@ -72,17 +72,17 @@ importers:
       vite:
         specifier: ^6.0.0
         version: 6.4.1
-      vite-plugin-paraglide-debug:
+      vite-plugin-paraglide-editor:
         specifier: workspace:*
-        version: link:../../packages/vite-plugin-paraglide-debug
+        version: link:../../packages/vite-plugin-paraglide-editor
 
-  packages/vite-plugin-paraglide-debug:
+  packages/vite-plugin-paraglide-editor:
     dependencies:
       '@inlang/paraglide-js':
         specifier: ^2.0.0
         version: 2.5.0
       vite:
-        specifier: ^5.0.0 || ^6.0.0
+        specifier: ^5.0.0 || ^6.0.0 || ^7.0.0
         version: 6.4.1
 
 packages:

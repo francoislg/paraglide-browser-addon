@@ -1,6 +1,6 @@
 import { sequence } from '@sveltejs/kit/hooks';
 import { paraglideMiddleware } from '$lib/paraglide/server';
-import { paraglideDebugHandle } from 'vite-plugin-paraglide-debug/sveltekit';
+import { paraglideEditorHandle } from 'vite-plugin-paraglide-editor/sveltekit';
 
 /** @type {import('@sveltejs/kit').Handle} */
 const paraglideHandle = ({ event, resolve }) =>
@@ -11,4 +11,4 @@ const paraglideHandle = ({ event, resolve }) =>
     });
   });
 
-export const handle = sequence(paraglideHandle, paraglideDebugHandle);
+export const handle = sequence(paraglideHandle, paraglideEditorHandle);

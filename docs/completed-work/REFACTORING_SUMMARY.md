@@ -18,7 +18,7 @@ Successfully reorganized the runtime codebase into reusable modules with clear, 
 - `buildElementRegistry()` - Build registry by matching text nodes to translation keys
 - `getElements()` - Get current elements with translations
 
-**Location**: `packages/vite-plugin-paraglide-debug/src/runtime/registry.js`
+**Location**: `packages/vite-plugin-paraglide-editor/src/runtime/registry.js`
 
 ### 2. Enhanced `overlay.js`
 **Purpose**: Overlay mode for click-to-edit + single element refresh
@@ -43,7 +43,7 @@ Successfully reorganized the runtime codebase into reusable modules with clear, 
 - Initializing all debug subsystems in correct order
 - Setting up DOM mutation observers
 - Listening for debug events and coordinating responses
-- Exposing public API on `window.__paraglideBrowserDebug`
+- Exposing public API on `window.__paraglideEditor`
 
 ### 4. Fixed UI Module Duplication
 **Issue**: `getSelectedLanguages()` existed in both `helpers.js` and `ui/languageSelector.js`
@@ -191,7 +191,7 @@ Potential future improvements:
 
 1. **Split `ui/popup.js`**: Currently 780 lines - could be split into smaller components
 2. **Add unit tests**: Now that modules are well-separated, add tests for each
-3. **Document public API**: Create API documentation for `window.__paraglideBrowserDebug`
+3. **Document public API**: Create API documentation for `window.__paraglideEditor`
 4. **Consider TypeScript**: Clear module boundaries make TS migration easier
 
 ## Conclusion

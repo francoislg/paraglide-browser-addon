@@ -292,7 +292,7 @@ paraglide-browser-addon/
 │   └── sveltekit/
 │
 └── packages/                          # Plugin packages
-    └── vite-plugin-paraglide-debug/
+    └── vite-plugin-paraglide-editor/
 ```
 
 ---

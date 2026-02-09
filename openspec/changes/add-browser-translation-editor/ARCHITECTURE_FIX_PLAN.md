@@ -118,15 +118,15 @@ let localEdits = null;         // Map<locale:key, {editedValue, isEdited, hasCon
  * Loads both server translations and local edits into memory
  */
 export async function initDataStore() {
-  console.log('[paraglide-debug] Initializing data store...');
+  console.log('[paraglide-editor] Initializing data store...');
 
   // Load server translations from endpoint (called ONCE)
-  const response = await fetch('/@paraglide-debug/langs.json');
+  const response = await fetch('/@paraglide-editor/langs.json');
   if (response.ok) {
     serverTranslations = await response.json();
-    console.log('[paraglide-debug] Loaded server translations:', Object.keys(serverTranslations));
+    console.log('[paraglide-editor] Loaded server translations:', Object.keys(serverTranslations));
   } else {
-    console.error('[paraglide-debug] Failed to load server translations');
+    console.error('[paraglide-editor] Failed to load server translations');
     serverTranslations = {};
   }
 
@@ -143,11 +143,11 @@ export async function initDataStore() {
     });
   }
 
-  console.log('[paraglide-debug] Loaded local edits:', localEdits.size);
+  console.log('[paraglide-editor] Loaded local edits:', localEdits.size);
 
   // Make accessible globally
-  window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
-  window.__paraglideBrowserDebug.dataStore = {
+  window.__paraglideEditor = window.__paraglideEditor || {};
+  window.__paraglideEditor.dataStore = {
     serverTranslations,
     localEdits
   };
@@ -257,7 +257,7 @@ import { buildElementRegistry } from './overlay.js';
  * IMPORTANT: This loads server translations and local edits ONCE
  */
 export async function initialize() {
-  console.log('[paraglide-debug] Starting initialization...');
+  console.log('[paraglide-editor] Starting initialization...');
 
   const initSteps = [
     { name: 'Database', fn: initDB },
@@ -268,28 +268,28 @@ export async function initialize() {
 
   for (const step of initSteps) {
     try {
-      console.log(`[paraglide-debug] Init: ${step.name}...`);
+      console.log(`[paraglide-editor] Init: ${step.name}...`);
       await step.fn();
-      console.log(`[paraglide-debug] Init: ${step.name} ✓`);
+      console.log(`[paraglide-editor] Init: ${step.name} ✓`);
     } catch (error) {
-      console.error(`[paraglide-debug] Init: ${step.name} failed:`, error);
+      console.error(`[paraglide-editor] Init: ${step.name} failed:`, error);
       throw error;
     }
   }
 
   // Everything ready - emit event
-  const event = new CustomEvent('__paraglideDebugInitialized', {
+  const event = new CustomEvent('__paraglideEditorInitialized', {
     detail: {
       timestamp: Date.now(),
-      registrySize: window.__paraglideBrowserDebug.registry?.size || 0,
-      elementsTracked: window.__paraglideBrowserDebug.elements?.length || 0,
-      serverTranslationsLoaded: Object.keys(window.__paraglideBrowserDebug.dataStore?.serverTranslations || {}).length,
-      localEditsLoaded: window.__paraglideBrowserDebug.dataStore?.localEdits?.size || 0
+      registrySize: window.__paraglideEditor.registry?.size || 0,
+      elementsTracked: window.__paraglideEditor.elements?.length || 0,
+      serverTranslationsLoaded: Object.keys(window.__paraglideEditor.dataStore?.serverTranslations || {}).length,
+      localEditsLoaded: window.__paraglideEditor.dataStore?.localEdits?.size || 0
     }
   });
   window.dispatchEvent(event);
-  console.log('[paraglide-debug] Initialization complete, emitted __paraglideDebugInitialized');
-  console.log('[paraglide-debug] Data loaded:', event.detail);
+  console.log('[paraglide-editor] Initialization complete, emitted __paraglideEditorInitialized');
+  console.log('[paraglide-editor] Data loaded:', event.detail);
 }
 
 /**
@@ -298,14 +298,14 @@ export async function initialize() {
  */
 async function waitForRegistry() {
   return new Promise((resolve) => {
-    if (window.__paraglideBrowserDebug.registry?.size > 0) {
-      console.log('[paraglide-debug] Registry already populated:', window.__paraglideBrowserDebug.registry.size);
+    if (window.__paraglideEditor.registry?.size > 0) {
+      console.log('[paraglide-editor] Registry already populated:', window.__paraglideEditor.registry.size);
       resolve();
       return;
     }
 
     const handler = () => {
-      console.log('[paraglide-debug] Registry populated via event:', window.__paraglideBrowserDebug.registry.size);
+      console.log('[paraglide-editor] Registry populated via event:', window.__paraglideEditor.registry.size);
       window.removeEventListener('__paraglideInitialized', handler);
       resolve();
     };
@@ -315,10 +315,10 @@ async function waitForRegistry() {
 ```
 
 **Benefits of Single-Load Approach**:
-1. **Performance**: One fetch to `/@paraglide-debug/langs.json` instead of multiple
+1. **Performance**: One fetch to `/@paraglide-editor/langs.json` instead of multiple
 2. **Simplicity**: Synchronous access via `getDisplayTranslation()` - no await needed
 3. **Consistency**: All components work with same in-memory data
-4. **Predictability**: Everything ready after `__paraglideDebugInitialized` event
+4. **Predictability**: Everything ready after `__paraglideEditorInitialized` event
 
 ### Phase 4: Update Components to Use New System
 
@@ -385,7 +385,7 @@ export function applySavedEditsFromDB() {
     }
   });
 
-  console.log(`[paraglide-debug] Applied ${appliedCount} saved edits`);
+  console.log(`[paraglide-editor] Applied ${appliedCount} saved edits`);
 }
 ```
 
@@ -434,10 +434,10 @@ export function switchLanguage(newLocale) {
     }
   });
 
-  console.log(`[paraglide-debug] Switched to ${newLocale}, re-rendered ${renderedCount} elements`);
+  console.log(`[paraglide-editor] Switched to ${newLocale}, re-rendered ${renderedCount} elements`);
 
   // Emit language change event
-  window.dispatchEvent(new CustomEvent('__paraglideDebugLanguageChange', {
+  window.dispatchEvent(new CustomEvent('__paraglideEditorLanguageChange', {
     detail: { oldLocale, newLocale, elementsRendered: renderedCount }
   }));
 }
@@ -458,7 +458,7 @@ export function switchLanguage(newLocale) {
 ### Step 3: Create Initialization System (1 task)
 - [ ] Create `runtime/initialize.js` with coordinator
 - [ ] Update `runtime.js` to use new initialization
-- [ ] Emit `__paraglideDebugInitialized` only when truly ready
+- [ ] Emit `__paraglideEditorInitialized` only when truly ready
 
 ### Step 4: Update UI Components (3 tasks)
 - [ ] Refactor `overlay.js` to use renderer + dataStore
@@ -481,7 +481,7 @@ export function switchLanguage(newLocale) {
 1. **Parameter Substitution**: ✅ Always works (initial load, language change, editing)
 2. **Popup Shows Edits**: ✅ Displays user's edited version, not server version
 3. **Data Access**: ✅ Single consistent API (`getDisplayTranslation`, `getTranslationVersions`)
-4. **Initialization**: ✅ Coordinated, predictable, one `__paraglideDebugInitialized` event
+4. **Initialization**: ✅ Coordinated, predictable, one `__paraglideEditorInitialized` event
 5. **Rendering**: ✅ One function (`renderTranslation`) used everywhere
 
 ## Files to Create/Modify
