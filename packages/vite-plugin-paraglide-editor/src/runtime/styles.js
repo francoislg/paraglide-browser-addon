@@ -18,7 +18,8 @@
  *
  * Implementation:
  * - Uses CSS classes with ::after pseudo-elements instead of inline styles
- * - Adds position: relative to parent element for ::after positioning
+ * - Adds position: relative only to static elements (.pge-positioned) for ::after positioning
+ * - Fixed/absolute/sticky elements are already positioned and don't need it
  * - ::after overlays use position: absolute + inset: 0 to cover entire element
  * - pointer-events: none on ::after to not interfere with click handling
  *
@@ -41,9 +42,11 @@ export function injectOverlayStyles() {
   const style = document.createElement('style');
   style.id = 'pge-overlay-styles';
   style.textContent = `
+    /* Only added to elements with position:static so ::after has a positioned ancestor */
+    .pge-positioned { position: relative !important; }
+
     /* Hoverable state - yellow dashed border (overlay mode active, not edited) */
     .pge-overlay-hoverable {
-      position: relative !important;
       cursor: pointer !important;
     }
     .pge-overlay-hoverable::after {
@@ -60,7 +63,6 @@ export function injectOverlayStyles() {
 
     /* Edited state - green solid border (translation edited locally) */
     .pge-overlay-edited {
-      position: relative !important;
       cursor: pointer !important;
     }
     .pge-overlay-edited::after {
@@ -77,7 +79,6 @@ export function injectOverlayStyles() {
 
     /* Conflict state - red solid border (conflict detected) */
     .pge-overlay-conflict {
-      position: relative !important;
       cursor: pointer !important;
     }
     .pge-overlay-conflict::after {
@@ -106,7 +107,7 @@ export function injectOverlayStyles() {
  */
 export function setElementOutline(element, state) {
   // Remove all existing overlay classes
-  element.classList.remove('pge-overlay-hoverable', 'pge-overlay-edited', 'pge-overlay-conflict');
+  element.classList.remove('pge-overlay-hoverable', 'pge-overlay-edited', 'pge-overlay-conflict', 'pge-positioned');
 
   // Add appropriate class based on state
   switch (state) {
@@ -121,8 +122,15 @@ export function setElementOutline(element, state) {
       break;
     case 'none':
       // Just remove all classes (already done above)
-      break;
+      return;
     default:
       console.warn(`[paraglide-editor] Unknown outline state: ${state}`);
+      return;
+  }
+
+  // Only static elements need position:relative for the ::after pseudo-element.
+  // Fixed, absolute, sticky, and relative elements are already positioned.
+  if (getComputedStyle(element).position === 'static') {
+    element.classList.add('pge-positioned');
   }
 }

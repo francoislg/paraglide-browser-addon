@@ -1,104 +1,14 @@
 /**
- * Master Initialization Coordinator
- *
- * Purpose: Orchestrate startup of all editor subsystems in correct order.
- *
- * Responsibilities:
- * - Initialize database connection
- * - Load data store (server translations + local edits)
- * - Wait for Paraglide registry to be populated
- * - Emit __paraglideEditorInitialized event when ready
- * - Ensure proper initialization sequence
- *
- * Initialization Order:
- * 1. Database (IndexedDB)
- * 2. Data Store (loads server translations + local edits ONCE)
- * 3. Wait for Paraglide registry (__paraglideInitialized event)
- * 4. Emit __paraglideEditorInitialized
- *
- * This module does NOT:
- * - Build element registry (see registry.js)
- * - Initialize UI components (see runtime.js)
- * - Handle events after initialization (see runtime.js)
+ * Initialize editor data layer (DB + server translations + local edits).
+ * UI setup and element detection happen in runtime.js after this resolves.
  */
 
 import { initDB } from './db.js';
 import { initDataStore } from './dataStore.js';
 import { injectOverlayStyles } from './styles.js';
 
-/**
- * Initialize the Paraglide editor system
- * Loads all data once and coordinates component initialization
- *
- * @returns {Promise<void>}
- */
 export async function initialize() {
-  console.log('[paraglide-editor] Starting initialization...');
-
-  const initSteps = [
-    { name: 'Overlay Styles', fn: injectOverlayStyles },
-    { name: 'Database', fn: initDB },
-    { name: 'Data Store (Server + Local Edits)', fn: initDataStore },
-    { name: 'Registry Wait', fn: waitForRegistry },
-  ];
-
-  for (const step of initSteps) {
-    try {
-      console.log(`[paraglide-editor] Init: ${step.name}...`);
-      await step.fn();
-      console.log(`[paraglide-editor] Init: ${step.name} ✓`);
-    } catch (error) {
-      console.error(`[paraglide-editor] Init: ${step.name} failed:`, error);
-      throw error;
-    }
-  }
-
-  const event = new CustomEvent('__paraglideEditorInitialized', {
-    detail: {
-      timestamp: Date.now(),
-      registrySize: window.__paraglideEditor.registry?.size || 0,
-      serverTranslationsLoaded: Object.keys(window.__paraglideEditor.dataStore?.serverTranslations || {}).length,
-      localEditsLoaded: window.__paraglideEditor.dataStore?.localEdits?.size || 0
-    }
-  });
-  window.dispatchEvent(event);
-
-  console.log('[paraglide-editor] ✓ Initialization complete, emitted __paraglideEditorInitialized');
-  console.log('[paraglide-editor] Data summary:', {
-    registrySize: event.detail.registrySize,
-    locales: event.detail.serverTranslationsLoaded,
-    localEdits: event.detail.localEditsLoaded
-  });
-}
-
-/**
- * Wait for Paraglide registry to be populated by message functions
- * Registry is populated when app calls translation functions like greeting()
- *
- * @returns {Promise<void>}
- */
-async function waitForRegistry() {
-  return new Promise((resolve) => {
-    if (window.__paraglideEditor?.registry?.size > 0) {
-      console.log('[paraglide-editor] Registry already populated:', window.__paraglideEditor.registry.size);
-      resolve();
-      return;
-    }
-
-    console.log('[paraglide-editor] Waiting for __paraglideInitialized event...');
-
-    const timeout = setTimeout(() => {
-      window.removeEventListener('__paraglideInitialized', handler);
-      console.warn('[paraglide-editor] Registry wait timed out after 10s — no translations detected. The page may not use Paraglide message functions.');
-      resolve();
-    }, 10000);
-
-    const handler = (e) => {
-      clearTimeout(timeout);
-      console.log('[paraglide-editor] Registry populated via event:', e.detail.registrySize);
-      window.removeEventListener('__paraglideInitialized', handler);
-      resolve();
-    };
-    window.addEventListener('__paraglideInitialized', handler);
-  });
+  injectOverlayStyles();
+  await initDB();
+  await initDataStore();
 }

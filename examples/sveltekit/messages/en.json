@@ -62,6 +62,7 @@
       "countPlural=*, gender=*": "They posted {count} photos"
     }
   }],
+  "floating_help": "Need help?",
   "variants_demo": "Variants Demo",
   "ordinal_demo": "Ordinal Demo",
   "matching_demo": "Direct Matching Demo",

@@ -280,16 +280,42 @@ export function initOverlayMode() {
   let overlayEnabled = localStorage.getItem("pge-overlay-enabled") === "true";
   let currentPopupElement = null;
   let mouseDownElement = null;
+  let suppressNextClick = false;
+
+  // Suppress the click event that fires after mouseup when we open a popup.
+  // This prevents links from navigating, buttons from firing, etc.
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    },
+    true
+  );
 
   // Track which element received mousedown
   document.addEventListener(
     "mousedown",
     (e) => {
-      if (!overlayEnabled) return;
+      if (!overlayEnabled || e.button !== 0) return;
 
       const element = e.target.closest("[data-paraglide-key]");
       if (element) {
         mouseDownElement = element;
+
+        // Prevent default on mousedown when we'll intercept the click.
+        // This stops link drag initiation and text selection on first click.
+        const isInsidePopup = e.target.closest(".pge-ignore-detection");
+        if (
+          !isInsidePopup &&
+          !e.shiftKey &&
+          currentPopupElement !== element
+        ) {
+          e.preventDefault();
+        }
       }
     },
     true
@@ -299,7 +325,7 @@ export function initOverlayMode() {
   document.addEventListener(
     "mouseup",
     async (e) => {
-      if (!overlayEnabled || !mouseDownElement) return;
+      if (!overlayEnabled || !mouseDownElement || e.button !== 0) return;
 
       const upElement = e.target.closest("[data-paraglide-key]");
 
@@ -310,6 +336,11 @@ export function initOverlayMode() {
       }
 
       const element = upElement;
+
+      // Reset stale reference if popup was removed (e.g. SPA navigation)
+      if (currentPopupElement && !document.getElementById("pge-edit-popup")) {
+        currentPopupElement = null;
+      }
 
       if (currentPopupElement === element) {
         console.log(
@@ -334,6 +365,9 @@ export function initOverlayMode() {
 
       e.preventDefault();
       e.stopPropagation();
+
+      // Set flag BEFORE any await so it's ready when the synchronous click event fires
+      suppressNextClick = true;
 
       const key = element.dataset.paraglideKey;
       const params = element.dataset.paraglideParams

@@ -154,6 +154,18 @@ export default defineConfig({
 VITE_PARAGLIDE_EDITOR=true
 ```
 
+### SvelteKit
+
+SvelteKit bypasses Vite's HTML pipeline, so the runtime script cannot be injected automatically. Add the provided handle to `src/hooks.server.js`:
+
+```javascript
+import { paraglideEditorHandle } from 'vite-plugin-paraglide-editor/sveltekit';
+// compose with your other handles via sequence()
+export const handle = sequence(paraglideHandle, paraglideEditorHandle);
+```
+
+See the [SvelteKit example](./examples/sveltekit/src/hooks.server.js) for a full setup.
+
 ## License
 
 MIT

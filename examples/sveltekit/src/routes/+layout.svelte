@@ -27,6 +27,8 @@
       {@render children()}
     </main>
 
+    <a href="/parameters" class="floating-cta">{m.floating_help()}</a>
+
     <div class="language-switcher">
       <button onclick={() => switchLanguage("en")}>en</button>
       <span class="separator">/</span>
@@ -89,6 +91,20 @@
   .nav a:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
+  }
+
+  .floating-cta {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    background: #16a34a;
+    color: white;
+    text-decoration: none;
+    padding: 14px 24px;
+    border-radius: 50px;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
   }
 
   .language-switcher {

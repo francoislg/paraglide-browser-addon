@@ -104,4 +104,7 @@ The project includes an editor Vite plugin (`packages/vite-plugin-paraglide-edit
 ### SvelteKit Example
 - `examples/sveltekit/src/routes/` - SvelteKit file-based routing
 - `examples/sveltekit/src/routes/+layout.svelte` - Layout component
+- `examples/sveltekit/src/hooks.server.js` - Server hooks with `paraglideEditorHandle`
 - `examples/sveltekit/svelte.config.js` - SvelteKit configuration
+
+**SvelteKit-specific:** SvelteKit sets `appType: 'custom'`, which bypasses Vite's HTML pipeline. The plugin's `transformIndexHtml` hook never fires, so `hooks.server.js` must use `paraglideEditorHandle` from `vite-plugin-paraglide-editor/sveltekit` to inject the runtime via `transformPageChunk`.

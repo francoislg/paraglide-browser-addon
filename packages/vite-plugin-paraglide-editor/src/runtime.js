@@ -1,19 +1,12 @@
 /**
- * Paraglide Browser Debug Runtime - Main Entry Point
+ * Paraglide Editor Runtime — Main Entry Point
  *
- * Purpose: Initialize and coordinate the translation editor system.
- *
- * Responsibilities:
- * - Initialize all editor subsystems in correct order
- * - Set up DOM mutation observers
- * - Listen for debug events and coordinate responses
- * - Expose public API on window.__paraglideEditor
- *
- * This module does NOT:
- * - Manage element registry (see registry.js)
- * - Render translations (see renderer.js, overlay.js)
- * - Handle UI components (see ui/)
- * - Store data (see db.js, dataStore.js)
+ * Flow:
+ * 1. Gate check (pge-enabled localStorage)
+ * 2. Init data layer (DB + server translations + local edits)
+ * 3. Build element registry, apply saved edits, init overlay + UI
+ * 4. MutationObserver keeps registry up-to-date on DOM changes
+ * 5. __paraglideInitialized listener handles late registry population
  */
 import { initialize } from "./runtime/initialize.js";
 import { createFloatingButton, showEditorModal } from "./runtime/ui.js";
@@ -31,35 +24,29 @@ import { isPgeEnabled } from "./runtime/helpers.js";
 (function () {
   if (typeof window === "undefined") return;
 
-  // Client-side gate: require explicit opt-in via localStorage
   if (!isPgeEnabled()) {
     console.log("[paraglide-editor] Runtime disabled. To activate, run:  localStorage.setItem('pge-enabled', 'true')");
     return;
   }
 
-  console.log("[paraglide-editor] Runtime script loaded");
-  console.log("[paraglide-editor] Translation editor enabled");
+  console.log("[paraglide-editor] Runtime loading");
 
   window.__paraglideEditor = window.__paraglideEditor || {};
+  window.__paraglideEditor.refresh = buildElementRegistry;
+  window.__paraglideEditor.refreshElement = refreshElement;
+  window.__paraglideEditor.setElementOutline = setElementOutline;
+  window.__paraglideEditor.getElements = getElements;
 
   initLanguageDetection();
 
-  window.addEventListener("__paraglideEditorInitialized", async (e) => {
-    console.log(
-      "[paraglide-editor] Received __paraglideEditorInitialized event, data fully loaded"
-    );
-    console.log("[paraglide-editor] Initialization details:", e.detail);
-
+  // Rebuild element registry when message functions first populate the registry.
+  // Handles the case where hydration completes after our initial buildElementRegistry call.
+  window.addEventListener("__paraglideInitialized", async () => {
     await buildElementRegistry();
-    await applySavedEditsFromDB();
-    initOverlayMode();
-    console.log(
-      "[paraglide-editor] ✓ Overlay mode initialized after element registry"
-    );
+    applyOutlinesToAllElements();
   });
 
-  window.addEventListener("__paraglideEditorLanguageChange", async (e) => {
-    console.log("[paraglide-editor] Handling language change event:", e.detail);
+  window.addEventListener("__paraglideEditorLanguageChange", async () => {
     await applySavedEditsFromDB();
   });
 
@@ -72,38 +59,26 @@ import { isPgeEnabled } from "./runtime/helpers.js";
     }, 100);
   });
 
-  async function startInitialization() {
-    console.log("[paraglide-editor] Starting initialization...");
+  async function start() {
     await initialize();
+
+    await buildElementRegistry();
+    await applySavedEditsFromDB();
+    initOverlayMode();
+    createFloatingButton(() => showEditorModal());
+
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       characterData: true,
     });
+
+    console.log("[paraglide-editor] Ready");
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", startInitialization);
+    document.addEventListener("DOMContentLoaded", start);
   } else {
-    startInitialization();
-  }
-
-  window.__paraglideEditor.refresh = buildElementRegistry;
-  window.__paraglideEditor.refreshElement = refreshElement;
-  window.__paraglideEditor.setElementOutline = setElementOutline;
-  window.__paraglideEditor.getElements = getElements;
-
-  async function initEditor() {
-    try {
-      createFloatingButton(() => showEditorModal());
-    } catch (error) {
-      console.error("[paraglide-editor] Failed to initialize editor:", error);
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initEditor);
-  } else {
-    setTimeout(initEditor, 100);
+    start();
   }
 })();

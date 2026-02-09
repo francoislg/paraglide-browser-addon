@@ -53,6 +53,33 @@ That's it! The plugin will automatically:
 - Inject the runtime client script
 - Expose the global API at `window.__paraglideEditor`
 
+### 3. SvelteKit Extra Step
+
+SvelteKit uses `appType: 'custom'`, which bypasses Vite's HTML pipeline. The plugin cannot inject its runtime script automatically, so you must add the provided `handle` to your `src/hooks.server.js`:
+
+```javascript
+// src/hooks.server.js
+import { sequence } from '@sveltejs/kit/hooks';
+import { paraglideMiddleware } from '$lib/paraglide/server';
+import { paraglideEditorHandle } from 'vite-plugin-paraglide-editor/sveltekit';
+
+const paraglideHandle = ({ event, resolve }) =>
+  paraglideMiddleware(event.request, ({ request, locale }) => {
+    event.request = request;
+    return resolve(event, {
+      transformPageChunk: ({ html }) => html.replace('%lang%', locale)
+    });
+  });
+
+export const handle = sequence(paraglideHandle, paraglideEditorHandle);
+```
+
+If you don't use `paraglideMiddleware`, you can use it standalone:
+
+```javascript
+export { paraglideEditorHandle as handle } from 'vite-plugin-paraglide-editor/sveltekit';
+```
+
 ### Configuration
 
 | Option | Type | Default | Description |

@@ -62,6 +62,7 @@
       "countPlural=*, gender=*": "Ils ont publié {count} photos"
     }
   }],
+  "floating_help": "Besoin d'aide?",
   "variants_demo": "Démonstration de Variantes",
   "ordinal_demo": "Démonstration Ordinale",
   "matching_demo": "Démonstration de Correspondance Directe",
