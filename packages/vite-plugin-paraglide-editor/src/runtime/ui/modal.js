@@ -18,6 +18,7 @@
 
 import { exportEdits } from '../export.js';
 import { syncWithServer } from '../sync.js';
+import { isOnTopEnabled, setOnTopMode } from '../styles.js';
 import { initLanguageSelector } from './languageSelector.js';
 import { initConflictList } from './conflictList.js';
 
@@ -241,6 +242,10 @@ export function showEditorModal() {
         <h3>Overlay Mode</h3>
         <p class="info">Enable click-to-edit mode to edit translations directly on the page. Hold Shift while clicking to bypass the editor.</p>
         <button id="pge-overlay-toggle-btn">Enable Overlay Mode</button>
+        <p class="info" style="margin-top: 12px; margin-bottom: 4px;"><strong>Overlay Settings</strong></p>
+        <label class="info" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 4px;">
+          <input type="checkbox" id="pge-on-top-toggle"> Always on top
+        </label>
       </div>
 
       <div class="section">
@@ -341,6 +346,14 @@ export function showEditorModal() {
       const newState = !currentState;
       window.__paraglideEditor.setOverlayMode(newState);
       overlayToggleBtn.textContent = newState ? 'Disable Overlay Mode' : 'Enable Overlay Mode';
+    });
+  }
+
+  const onTopToggle = modal.querySelector('#pge-on-top-toggle');
+  if (onTopToggle) {
+    onTopToggle.checked = isOnTopEnabled();
+    onTopToggle.addEventListener('change', () => {
+      setOnTopMode(onTopToggle.checked);
     });
   }
 

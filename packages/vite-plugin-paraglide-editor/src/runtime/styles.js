@@ -54,11 +54,16 @@ export function injectOverlayStyles() {
       position: absolute;
       inset: -3px;
       border: 2px dashed #d97706;
-      background: rgba(251, 191, 36, 0.15);
+      background: rgba(251, 191, 36, 0.08);
       pointer-events: none;
       z-index: 999997;
       box-sizing: border-box;
       border-radius: 2px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .pge-overlay-hoverable:hover::after {
+      background: rgba(251, 191, 36, 0.3);
+      border-color: #b45309;
     }
 
     /* Edited state - green solid border (translation edited locally) */
@@ -70,11 +75,16 @@ export function injectOverlayStyles() {
       position: absolute;
       inset: -3px;
       border: 2px solid #16a34a;
-      background: rgba(34, 197, 94, 0.15);
+      background: rgba(34, 197, 94, 0.08);
       pointer-events: none;
       z-index: 999997;
       box-sizing: border-box;
       border-radius: 2px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .pge-overlay-edited:hover::after {
+      background: rgba(34, 197, 94, 0.3);
+      border-color: #15803d;
     }
 
     /* Conflict state - red solid border (conflict detected) */
@@ -86,16 +96,51 @@ export function injectOverlayStyles() {
       position: absolute;
       inset: -3px;
       border: 2px solid #dc2626;
-      background: rgba(239, 68, 68, 0.15);
+      background: rgba(239, 68, 68, 0.08);
       pointer-events: none;
       z-index: 999997;
       box-sizing: border-box;
       border-radius: 2px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .pge-overlay-conflict:hover::after {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: #b91c1c;
     }
   `;
 
   document.head.appendChild(style);
+  setOnTopMode(isOnTopEnabled());
   console.log('[paraglide-editor] ✓ Overlay styles injected');
+}
+
+/**
+ * Check if "always on top" mode is enabled in localStorage
+ */
+export function isOnTopEnabled() {
+  return localStorage.getItem('pge-on-top') === 'true';
+}
+
+/**
+ * Enable or disable the "always on top" z-index boost for overlay elements
+ */
+export function setOnTopMode(enabled) {
+  localStorage.setItem('pge-on-top', enabled);
+  const existing = document.getElementById('pge-on-top-styles');
+  if (enabled && !existing) {
+    const style = document.createElement('style');
+    style.id = 'pge-on-top-styles';
+    style.textContent = `
+      .pge-overlay-hoverable,
+      .pge-overlay-edited,
+      .pge-overlay-conflict {
+        z-index: 999997 !important;
+      }
+    `;
+    document.head.appendChild(style);
+  } else if (!enabled && existing) {
+    existing.remove();
+  }
 }
 
 /**
