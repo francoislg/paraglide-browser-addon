@@ -158,6 +158,31 @@ export function showEditorModal() {
         margin: 8px 0;
         line-height: 1.5;
       }
+      #pge-locale-override {
+        appearance: auto;
+        background: white;
+        border: 2px solid #667eea;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #667eea;
+        cursor: pointer;
+        outline: none;
+        vertical-align: middle;
+        margin-left: 4px;
+      }
+      #pge-locale-override:hover {
+        border-color: #5a67d8;
+        color: #5a67d8;
+      }
+      #pge-locale-override:focus {
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+      }
+      #pge-locale-override:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
       @media (prefers-color-scheme: dark) {
         #pge-editor-modal-content {
           background: #2d3748;
@@ -192,6 +217,18 @@ export function showEditorModal() {
         .pge-sync-error {
           color: #fc8181 !important;
         }
+        #pge-locale-override {
+          background: #2d3748;
+          border-color: #818cf8;
+          color: #818cf8;
+        }
+        #pge-locale-override:hover {
+          border-color: #a5b4fc;
+          color: #a5b4fc;
+        }
+        #pge-locale-override:focus {
+          box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.3);
+        }
       }
     </style>
     <div id="pge-editor-modal-content">
@@ -209,7 +246,10 @@ export function showEditorModal() {
       <div class="section">
         <h3>Language Selection</h3>
         <p class="info">
-          <strong>Active language:</strong> <strong id="pge-current-locale" style="color: #667eea;">Loading...</strong>
+          <strong>Active language:</strong> <span id="pge-current-locale" style="color: #667eea; font-weight: 600;"></span>
+        </p>
+        <p class="info">
+          <strong>Language override:</strong> <select id="pge-locale-override"></select>
         </p>
         <p class="info">
           <strong>Select languages to edit:</strong> <span id="pge-locale-checkboxes" style="display: inline-flex; gap: 12px; margin-left: 8px;"></span>
@@ -255,10 +295,6 @@ export function showEditorModal() {
 
   const handleLanguageChange = (e) => {
     console.log('[paraglide-editor] Modal detected language change:', e.detail);
-    const currentLocaleEl = document.getElementById('pge-current-locale');
-    if (currentLocaleEl) {
-      currentLocaleEl.textContent = e.detail.newLocale.toUpperCase();
-    }
     initLanguageSelector();
   };
 

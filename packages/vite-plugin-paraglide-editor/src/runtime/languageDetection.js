@@ -21,14 +21,9 @@ import { renderTranslation, renderEditedTemplate } from './renderer.js';
 import { setElementOutline } from './styles.js';
 
 function detectCurrentLocale() {
-  const localStorageLocale = localStorage.getItem('PARAGLIDE_LOCALE');
-  if (localStorageLocale) {
-    return localStorageLocale;
-  }
-
-  const cookieMatch = document.cookie.match(/PARAGLIDE_LOCALE=([^;]+)/);
-  if (cookieMatch) {
-    return cookieMatch[1];
+  const editorOverride = localStorage.getItem('pge-locale-override');
+  if (editorOverride) {
+    return editorOverride;
   }
 
   const htmlLang = document.documentElement.lang;
@@ -111,26 +106,11 @@ export function initLanguageDetection() {
   });
 
   window.addEventListener('storage', (e) => {
-    if (e.key === 'PARAGLIDE_LOCALE') {
-      console.log('[paraglide-editor] Detected localStorage language change');
+    if (e.key === 'pge-locale-override') {
+      console.log('[paraglide-editor] Detected editor locale override change');
       updateCurrentLocale();
     }
   });
-
-  let lastCookie = document.cookie;
-  setInterval(() => {
-    if (document.cookie !== lastCookie) {
-      const oldCookieLocale = lastCookie.match(/PARAGLIDE_LOCALE=([^;]+)/)?.[1];
-      const newCookieLocale = document.cookie.match(/PARAGLIDE_LOCALE=([^;]+)/)?.[1];
-
-      if (oldCookieLocale !== newCookieLocale) {
-        console.log('[paraglide-editor] Detected cookie language change');
-        updateCurrentLocale();
-      }
-
-      lastCookie = document.cookie;
-    }
-  }, 500);
 
   const htmlLangObserver = new MutationObserver((mutations) => {
     const langChanged = mutations.some(mutation =>

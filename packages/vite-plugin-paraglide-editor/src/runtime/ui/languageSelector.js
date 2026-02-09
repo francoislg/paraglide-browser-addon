@@ -40,10 +40,6 @@ function updateSelectedLanguagesDisplay(languages) {
 export async function initLanguageSelector() {
   try {
     const currentLocale = getCurrentLocale();
-    const currentLocaleEl = document.getElementById('pge-current-locale');
-    if (currentLocaleEl) {
-      currentLocaleEl.textContent = currentLocale.toUpperCase();
-    }
 
     let locales = [currentLocale];
     try {
@@ -53,15 +49,53 @@ export async function initLanguageSelector() {
         console.log('[paraglide-editor] Loaded locales from cache:', locales);
       } else {
         console.warn('[paraglide-editor] Server translations not loaded yet, using fallback');
-        if (currentLocaleEl) {
-          currentLocaleEl.textContent = currentLocale.toUpperCase() + ' (loading...)';
-        }
       }
     } catch (error) {
       console.error('[paraglide-editor] Error getting locales from cache:', error);
-      if (currentLocaleEl) {
-        currentLocaleEl.textContent = currentLocale.toUpperCase() + ' (error)';
+    }
+
+    const currentLocaleEl = document.getElementById('pge-current-locale');
+    if (currentLocaleEl) {
+      currentLocaleEl.textContent = currentLocale.toUpperCase();
+    }
+
+    const overrideSelect = document.getElementById('pge-locale-override');
+    if (overrideSelect && overrideSelect.tagName === 'SELECT') {
+      overrideSelect.innerHTML = '';
+
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = 'None';
+      overrideSelect.appendChild(defaultOpt);
+
+      locales.forEach(locale => {
+        const opt = document.createElement('option');
+        opt.value = locale;
+        opt.textContent = locale.toUpperCase();
+        overrideSelect.appendChild(opt);
+      });
+
+      const overrideLocale = localStorage.getItem('pge-locale-override');
+      if (overrideLocale && locales.includes(overrideLocale)) {
+        overrideSelect.value = overrideLocale;
+      } else {
+        overrideSelect.value = '';
       }
+
+      overrideSelect.disabled = locales.length <= 1;
+
+      if (overrideSelect._pgeChangeHandler) {
+        overrideSelect.removeEventListener('change', overrideSelect._pgeChangeHandler);
+      }
+      overrideSelect._pgeChangeHandler = (e) => {
+        const newLocale = e.target.value;
+        if (newLocale === '') {
+          clearLocaleOverride();
+        } else if (newLocale !== getCurrentLocale()) {
+          switchLocale(newLocale, { closeModal: false });
+        }
+      };
+      overrideSelect.addEventListener('change', overrideSelect._pgeChangeHandler);
     }
 
     let selectedLanguages = getSelectedLanguages();
@@ -136,24 +170,21 @@ export async function initLanguageSelector() {
   }
 }
 
-export function switchLocale(newLocale) {
-  console.log(`[paraglide-editor] Switching locale to: ${newLocale}`);
-
-  if (typeof window.switchLanguage === 'function') {
-    window.switchLanguage(newLocale);
-    if (window.__paraglideEditor.updateCurrentLocale) {
-      window.__paraglideEditor.updateCurrentLocale();
-    }
-    document.getElementById('pge-editor-modal')?.remove();
-    return;
+function clearLocaleOverride() {
+  localStorage.removeItem('pge-locale-override');
+  if (window.__paraglideEditor.updateCurrentLocale) {
+    window.__paraglideEditor.updateCurrentLocale();
   }
+}
 
-  localStorage.setItem('PARAGLIDE_LOCALE', newLocale);
-  document.cookie = `PARAGLIDE_LOCALE=${newLocale}; path=/; max-age=34560000`;
+export function switchLocale(newLocale, { closeModal = true } = {}) {
+  console.log(`[paraglide-editor] Switching locale to: ${newLocale}`);
+  localStorage.setItem('pge-locale-override', newLocale);
 
   if (window.__paraglideEditor.updateCurrentLocale) {
     window.__paraglideEditor.updateCurrentLocale();
   }
-
-  window.location.reload();
+  if (closeModal) {
+    document.getElementById('pge-editor-modal')?.remove();
+  }
 }
