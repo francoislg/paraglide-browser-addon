@@ -120,15 +120,19 @@ paraglide-browser-addon/
 
 ## Usage in Your Project
 
+> **Note:** This project is a work in progress and is not yet published to npm. For now, you can install it directly from GitHub as a git dependency.
+
 ```bash
-npm install vite-plugin-paraglide-debug
+npm install github:francoislg/paraglide-browser-addon
 ```
+
+Since the plugin lives in a monorepo subdirectory, you need to use the full path when importing:
 
 ```javascript
 // vite.config.js
 import { defineConfig } from 'vite';
 import { paraglide } from '@inlang/paraglide-js';
-import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug';
+import { paraglideBrowserDebugPlugin } from 'vite-plugin-paraglide-debug/packages/vite-plugin-paraglide-debug/src/index.js';
 
 export default defineConfig({
   plugins: [
