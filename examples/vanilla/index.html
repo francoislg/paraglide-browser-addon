@@ -87,6 +87,9 @@
       font-size: 13px;
       min-width: auto;
     }
+    #search-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
     .language-switcher .separator {
       color: rgba(255, 255, 255, 0.5);
       margin: 0 2px;
@@ -100,6 +103,17 @@
       <p id="greeting"></p>
       <p id="description"></p>
       <p id="current-language"></p>
+    </div>
+
+    <div class="plural-demo">
+      <h3 id="inputs-title"></h3>
+      <div style="display: flex; gap: 12px; align-items: center; margin-top: 12px;">
+        <input id="search-input" type="text" placeholder="" style="flex: 1; padding: 12px 16px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 16px; box-sizing: border-box;" />
+        <img id="logo-img" src="https://placehold.co/48x48/667eea/white?text=P" alt="" style="width: 48px; height: 48px; border-radius: 8px;" />
+        <button id="close-btn" aria-label="" style="padding: 8px 16px; font-size: 20px; line-height: 1;">&#x2715;</button>
+      </div>
+      <p style="margin-top: 16px; font-size: 0.9em; opacity: 0.8;">Multi-attribute element (text + title):</p>
+      <button id="submit-btn" title="" style="padding: 12px 24px;">Submit</button>
     </div>
 
     <div class="plural-demo">

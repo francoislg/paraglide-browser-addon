@@ -5,7 +5,7 @@
  *
  * Responsibilities:
  * - Enable/disable click-to-edit overlay mode
- * - Refresh single element's content and visual state
+ * - Refresh single element's content and visual state (all slots)
  * - Apply saved edits from database to DOM elements
  * - Handle click events for translation editing
  * - Manage visual indicators (outlines) for translatable elements
@@ -23,104 +23,133 @@ import { getCurrentLocale } from "./languageDetection.js";
 import { createEditPopup } from "./ui/popup.js";
 import { setElementOutline } from "./styles.js";
 import { detectActiveVariant, parseVariantStructure } from "./variants.js";
+import { getElementSlots } from "./registry.js";
+
+/** Outline state priority: higher index wins */
+const OUTLINE_PRIORITY = ['none', 'hoverable', 'edited', 'conflict'];
+
+function worstOutlineState(a, b) {
+  return OUTLINE_PRIORITY.indexOf(a) >= OUTLINE_PRIORITY.indexOf(b) ? a : b;
+}
 
 /**
- * Refresh a single element's visual state and content
- * Uses the unified dataStore and renderer for consistency
+ * Compute the outline state for a single slot (key + params) in a given locale.
+ * Does NOT touch the DOM — pure computation.
+ */
+function computeSlotOutlineState(key, params, currentLocale) {
+  const versions = getTranslationVersions(currentLocale, key);
+
+  if (versions.isEdited) {
+    if (versions.hasConflict) return 'conflict';
+
+    if (params && Object.keys(params).length > 0) {
+      const editedVariant = parseVariantStructure(versions.edited);
+      const serverVariant = parseVariantStructure(versions.server);
+      if (editedVariant && serverVariant) {
+        const activeVariantKey = detectActiveVariant(editedVariant, params, currentLocale);
+        if (activeVariantKey) {
+          const editedText = editedVariant.match[activeVariantKey];
+          const serverText = serverVariant.match[activeVariantKey];
+          if (editedText === serverText) return 'hoverable';
+        }
+      }
+    }
+    return 'edited';
+  }
+  return 'hoverable';
+}
+
+/**
+ * Render a single slot's content to the DOM.
+ * Returns true if the DOM was actually updated.
+ */
+function renderSlotToDOM(element, slotName, key, params, currentLocale) {
+  const versions = getTranslationVersions(currentLocale, key);
+
+  let rendered;
+  if (versions.isEdited) {
+    if (Object.keys(params).length > 0) {
+      rendered = renderEditedTemplate(versions.current, params, currentLocale);
+    } else if (
+      typeof versions.current === "string" &&
+      versions.current.trim().startsWith("[{")
+    ) {
+      rendered = renderEditedTemplate(versions.current, {}, currentLocale);
+    } else {
+      rendered = versions.current;
+    }
+  } else {
+    rendered = renderTranslation(key, params, currentLocale);
+  }
+
+  const isAttr = slotName !== '_text';
+  const currentContent = isAttr
+    ? (element.getAttribute(slotName) || '')
+    : element.textContent;
+
+  if (currentContent !== rendered) {
+    if (isAttr) {
+      element.setAttribute(slotName, rendered);
+    } else {
+      element.textContent = rendered;
+    }
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Refresh a single element's visual state and content.
+ * Handles both single-slot and multi-slot elements.
+ *
  * @param {HTMLElement} element - The element to refresh
  * @param {string} locale - The locale to use (defaults to current locale)
  * @returns {boolean} - True if content was updated, false otherwise
  */
 export function refreshElement(element, locale = null) {
-  const isInsidePopup = element.closest(".pge-ignore-detection");
-  if (isInsidePopup) {
-    return false;
-  }
+  if (element.closest(".pge-ignore-detection")) return false;
 
   const currentLocale = locale || getCurrentLocale();
-  const key = element.dataset.paraglideKey;
-  const params = element.dataset.paraglideParams
-    ? JSON.parse(element.dataset.paraglideParams)
-    : {};
+  const slots = getElementSlots(element);
 
-  const versions = getTranslationVersions(currentLocale, key);
+  if (!slots) return false;
 
-  if (versions.isEdited) {
-    let rendered;
-    if (Object.keys(params).length > 0) {
-      rendered = renderEditedTemplate(versions.current, params, currentLocale);
-    } else {
-      if (
-        typeof versions.current === "string" &&
-        versions.current.trim().startsWith("[{")
-      ) {
-        rendered = renderEditedTemplate(versions.current, {}, currentLocale);
-      } else {
-        rendered = versions.current;
-      }
-    }
+  const slotNames = Object.keys(slots);
+  let anyUpdated = false;
+  let anyEdited = false;
+  let worstState = 'hoverable';
 
-    const wasUpdated = element.textContent !== rendered;
-    if (wasUpdated) {
-      element.textContent = rendered;
-    }
+  for (const slotName of slotNames) {
+    const { key, params } = slots[slotName];
+    const versions = getTranslationVersions(currentLocale, key);
 
-    element.dataset.paraglideEdited = "true";
+    // Render slot content
+    const updated = renderSlotToDOM(element, slotName, key, params, currentLocale);
+    if (updated) anyUpdated = true;
 
-    // Check if overlay mode is disabled - if so, don't show any outlines
-    const overlayEnabled = window.__paraglideEditor.isOverlayEnabled?.();
-    if (!overlayEnabled) {
-      setElementOutline(element, "none");
-      return wasUpdated;
-    }
+    if (versions.isEdited) anyEdited = true;
 
-    let outlineState = "edited";
-
-    if (versions.hasConflict) {
-      outlineState = "conflict";
-    } else if (Object.keys(params).length > 0) {
-      const editedVariant = parseVariantStructure(versions.edited);
-      const serverVariant = parseVariantStructure(versions.server);
-
-      if (editedVariant && serverVariant) {
-        const activeVariantKey = detectActiveVariant(
-          editedVariant,
-          params,
-          currentLocale
-        );
-        if (activeVariantKey) {
-          const editedText = editedVariant.match[activeVariantKey];
-          const serverText = serverVariant.match[activeVariantKey];
-
-          if (editedText === serverText) {
-            outlineState = "hoverable";
-          }
-        }
-      }
-    }
-
-    setElementOutline(element, outlineState);
-
-    return wasUpdated;
-  } else {
-    const rendered = renderTranslation(key, params, currentLocale);
-
-    const wasUpdated = element.textContent !== rendered;
-    if (wasUpdated) {
-      element.textContent = rendered;
-    }
-
-    if (element.dataset.paraglideEdited) {
-      delete element.dataset.paraglideEdited;
-    }
-
-    const outlineState = window.__paraglideEditor.isOverlayEnabled?.()
-      ? "hoverable"
-      : "none";
-    setElementOutline(element, outlineState);
-
-    return wasUpdated;
+    // Compute outline state for this slot
+    const slotState = computeSlotOutlineState(key, params, currentLocale);
+    worstState = worstOutlineState(worstState, slotState);
   }
+
+  // Update edited marker
+  if (anyEdited) {
+    element.dataset.paraglideEdited = "true";
+  } else {
+    delete element.dataset.paraglideEdited;
+  }
+
+  // Apply outline
+  const overlayEnabled = window.__paraglideEditor.isOverlayEnabled?.();
+  if (!overlayEnabled) {
+    setElementOutline(element, "none");
+  } else {
+    setElementOutline(element, worstState);
+  }
+
+  return anyUpdated;
 }
 
 /**
@@ -133,18 +162,25 @@ export function refreshElement(element, locale = null) {
  */
 export function refreshElementsByKey(key, locale = null) {
   const currentLocale = locale || getCurrentLocale();
-  const selector = `[data-paraglide-key="${key}"]`;
-  const elements = document.querySelectorAll(selector);
+  // Also match elements that have this key in their slots JSON
+  const allElements = document.querySelectorAll("[data-paraglide-key]");
 
   let updatedCount = 0;
-  elements.forEach((element) => {
+  allElements.forEach((element) => {
+    const slots = getElementSlots(element);
+    if (!slots) return;
+
+    // Check if any slot uses this key
+    const usesKey = Object.values(slots).some(s => s.key === key);
+    if (!usesKey) return;
+
     if (refreshElement(element, currentLocale)) {
       updatedCount++;
     }
   });
 
   console.log(
-    `[paraglide-editor] Refreshed ${updatedCount}/${elements.length} elements with key: ${key}`
+    `[paraglide-editor] Refreshed ${updatedCount} elements with key: ${key}`
   );
   return updatedCount;
 }
@@ -369,22 +405,42 @@ export function initOverlayMode() {
       // Set flag BEFORE any await so it's ready when the synchronous click event fires
       suppressNextClick = true;
 
-      const key = element.dataset.paraglideKey;
-      const params = element.dataset.paraglideParams
-        ? JSON.parse(element.dataset.paraglideParams)
-        : {};
-      const currentText = element.textContent.trim();
+      // Read all slots for this element
+      const slots = getElementSlots(element);
+      const slotNames = slots ? Object.keys(slots) : [];
+
+      // Determine which slot was most likely clicked
+      // If user clicked an attr-only element or the element has only attr slots, pick the attr
+      // Otherwise default to _text if available
+      let activeSlot = '_text';
+      if (slots) {
+        if (slots._text) {
+          activeSlot = '_text';
+        } else {
+          activeSlot = slotNames[0];
+        }
+      }
+
+      const activeSlotData = slots ? slots[activeSlot] : null;
+      const key = activeSlotData ? activeSlotData.key : element.dataset.paraglideKey;
+      const params = activeSlotData ? activeSlotData.params : {};
+      const clickedAttr = activeSlot === '_text' ? null : activeSlot;
+      const currentText = clickedAttr
+        ? (element.getAttribute(clickedAttr) || '').trim()
+        : element.textContent.trim();
 
       console.log("[paraglide-editor] Clicked translatable element:", {
         key,
         params,
         currentText,
+        slots: slotNames,
+        activeSlot,
       });
 
       currentPopupElement = element;
       mouseDownElement = null;
 
-      await createEditPopup(element, key, params, currentText);
+      await createEditPopup(element, key, params, currentText, activeSlot);
 
       // Watch for popup removal to re-enable normal clicks
       const popup = document.getElementById("pge-edit-popup");

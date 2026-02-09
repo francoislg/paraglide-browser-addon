@@ -9,6 +9,14 @@ function updateUI() {
   document.getElementById('description').innerHTML = m.description();
   document.getElementById('current-language').innerHTML = m.current_language();
 
+  // Translated attributes section
+  document.getElementById('inputs-title').innerHTML = m.inputs_title();
+  document.getElementById('search-input').placeholder = m.search_placeholder();
+  document.getElementById('logo-img').alt = m.logo_alt();
+  document.getElementById('close-btn').setAttribute('aria-label', m.close_aria_label());
+  document.getElementById('submit-btn').innerHTML = m.submit_label();
+  document.getElementById('submit-btn').title = m.submit_title();
+
   // Update all variant demos
   document.getElementById('pluralization-demo').innerHTML = m.pluralization_demo();
   updatePluralDemo();

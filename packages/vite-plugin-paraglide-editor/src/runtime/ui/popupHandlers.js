@@ -10,6 +10,16 @@ import { updateLocalCache } from '../dataStore.js';
 import { refreshElementsByKey } from '../overlay.js';
 
 /**
+ * Get the server value for a specific variant from a language input
+ */
+function getServerVariantValue(input, variant) {
+  if (Array.isArray(input.serverValue) && input.serverValue[0]?.match) {
+    return input.serverValue[0].match[variant] || '';
+  }
+  return '';
+}
+
+/**
  * Setup variant selector changes
  * Updates all single textareas when selector changes
  *
@@ -27,6 +37,14 @@ export function setupVariantSelector(popup, languageInputs, globalSelector) {
       if (singleTextarea && input.pluralData) {
         const newValue = input.pluralData.match[selectedVariant] || '';
         singleTextarea.value = newValue;
+
+        // Update server value for revert button
+        const serverVariantValue = getServerVariantValue(input, selectedVariant);
+        singleTextarea.dataset.serverValue = serverVariantValue;
+        const revertBtn = singleTextarea.closest('.pge-textarea-wrapper')?.querySelector('.pge-revert-btn');
+        if (revertBtn) {
+          revertBtn.style.display = newValue !== serverVariantValue ? '' : 'none';
+        }
       }
     });
   });
@@ -95,7 +113,7 @@ export function setupExpandCollapse(popup, languageInputs, globalSelector, globa
         }
 
         allVariantsContainer.style.display = 'none';
-        singleTextarea.style.display = 'block';
+        singleTextarea.closest('.pge-textarea-wrapper').style.display = '';
       });
 
       globalSelector.style.display = 'inline-block';
@@ -118,7 +136,7 @@ export function setupExpandCollapse(popup, languageInputs, globalSelector, globa
         }
 
         allVariantsContainer.style.display = 'flex';
-        singleTextarea.style.display = 'none';
+        singleTextarea.closest('.pge-textarea-wrapper').style.display = 'none';
 
         const variantTextareas = allVariantsContainer.querySelectorAll('.pge-variant-textarea');
         variantTextareas.forEach(ta => {
@@ -163,7 +181,35 @@ export function setupVariantControls(popup, languageInputs, isPlural) {
 }
 
 /**
- * Setup save handler
+ * Setup revert buttons on all textareas
+ * Shows/hides revert button based on whether value differs from server value
+ * Handles click to revert textarea to original server value
+ *
+ * @param {HTMLElement} popup - Popup element
+ */
+export function setupRevertButtons(popup) {
+  popup.querySelectorAll('.pge-textarea-wrapper').forEach(wrapper => {
+    const textarea = wrapper.querySelector('.pge-edit-textarea');
+    const revertBtn = wrapper.querySelector('.pge-revert-btn');
+    if (!textarea || !revertBtn) return;
+
+    // Show/hide on input
+    textarea.addEventListener('input', () => {
+      const serverValue = textarea.dataset.serverValue || '';
+      revertBtn.style.display = textarea.value !== serverValue ? '' : 'none';
+    });
+
+    // Revert on click
+    revertBtn.addEventListener('click', () => {
+      textarea.value = textarea.dataset.serverValue || '';
+      revertBtn.style.display = 'none';
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  });
+}
+
+/**
+ * Setup save handler for a single slot (no multi-slot logic)
  * Saves all language translations and closes popup
  *
  * @param {HTMLElement} popup - Popup element
@@ -228,6 +274,96 @@ export function setupSaveHandler(popup, languageInputs, key, isPlural, close) {
       close();
     } catch (error) {
       console.error('[paraglide-editor] Failed to save edits:', error);
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save All';
+      alert('Failed to save translations. Check console for details.');
+    }
+  });
+}
+
+/**
+ * Setup multi-slot save handler.
+ * Captures current slot's textareas, then iterates ALL slots in slotEdits
+ * to save/revert each one. Refreshes all affected keys afterwards.
+ *
+ * @param {HTMLElement} popup - Popup element
+ * @param {Object} slotEdits - Map of slotName → { languageInputs, isPlural }
+ * @param {Object} slotPopupData - Map of slotName → popupData (with languageInputs, isPlural, etc.)
+ * @param {Function} captureCurrentSlot - Function that captures current textarea values into slotEdits
+ * @param {Function} close - Function to close popup
+ */
+export function setupMultiSlotSaveHandler(popup, slotEdits, slotPopupData, captureCurrentSlot, close) {
+  const saveBtn = popup.querySelector('#pge-save-btn');
+
+  saveBtn.addEventListener('click', async () => {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    try {
+      // Capture current slot's textarea values first
+      captureCurrentSlot();
+
+      let totalSaved = 0;
+      let totalSkipped = 0;
+      const keysToRefresh = new Set();
+
+      for (const [slotName, editData] of Object.entries(slotEdits)) {
+        const popupData = slotPopupData[slotName];
+        if (!popupData) continue;
+
+        const { languageInputs, isPlural } = popupData;
+        const key = popupData.key;
+        keysToRefresh.add(key);
+
+        for (let i = 0; i < languageInputs.length; i++) {
+          const input = languageInputs[i];
+          const locale = input.locale;
+
+          let valueToSave;
+
+          if (isPlural) {
+            // For plural, editData stores the mutated pluralData on languageInputs
+            const pluralStructure = [{
+              declarations: input.pluralData?.declarations || [],
+              selectors: input.pluralData?.selectors || [],
+              match: input.pluralData?.match || {}
+            }];
+            valueToSave = JSON.stringify(pluralStructure);
+          } else {
+            // For simple, editData stores per-locale values
+            valueToSave = editData.simple?.[locale] ?? '';
+          }
+
+          const serverValue = input.serverValue;
+          const serverValueString = typeof serverValue === 'object'
+            ? JSON.stringify(serverValue)
+            : serverValue;
+
+          const isReverted = valueToSave === serverValueString;
+
+          if (isReverted) {
+            console.log(`[paraglide-editor] Reverting ${key} (${locale}) - same as server, deleting edit`);
+            await deleteTranslationEdit(locale, key);
+            updateLocalCache(locale, key, serverValue, false, false);
+            totalSkipped++;
+          } else {
+            await saveTranslationEdit(locale, key, valueToSave);
+            console.log(`[paraglide-editor] ✓ Saved edit for ${key} (${locale})`);
+            updateLocalCache(locale, key, valueToSave, true, false);
+            totalSaved++;
+          }
+        }
+      }
+
+      console.log(`[paraglide-editor] Multi-slot save summary: ${totalSaved} saved, ${totalSkipped} skipped`);
+
+      for (const key of keysToRefresh) {
+        refreshElementsByKey(key);
+      }
+
+      close();
+    } catch (error) {
+      console.error('[paraglide-editor] Failed to save multi-slot edits:', error);
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save All';
       alert('Failed to save translations. Check console for details.');

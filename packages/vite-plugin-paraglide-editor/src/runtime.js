@@ -71,6 +71,8 @@ import { isPgeEnabled } from "./runtime/helpers.js";
       childList: true,
       subtree: true,
       characterData: true,
+      attributes: true,
+      attributeFilter: ['placeholder', 'title', 'alt', 'aria-label'],
     });
 
     console.log("[paraglide-editor] Ready");

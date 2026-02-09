@@ -73,5 +73,12 @@
   "variants_demo": "Demostración de Variantes",
   "ordinal_demo": "Demostración Ordinal",
   "matching_demo": "Demostración de Coincidencia Directa",
-  "multi_selector_demo": "Demostración Multi-Selector"
+  "multi_selector_demo": "Demostración Multi-Selector",
+  "nav_inputs": "Entradas",
+  "inputs_title": "Atributos Traducidos",
+  "search_placeholder": "Buscar...",
+  "logo_alt": "Logotipo de Paraglide",
+  "close_aria_label": "Cerrar diálogo",
+  "submit_label": "Enviar",
+  "submit_title": "Haz clic para enviar tu búsqueda"
 }

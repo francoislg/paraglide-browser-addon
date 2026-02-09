@@ -107,6 +107,34 @@ export function injectOverlayStyles() {
       background: rgba(239, 68, 68, 0.3);
       border-color: #b91c1c;
     }
+
+    /* Attribute-based elements (input, textarea, img) use outline instead of ::after */
+    .pge-overlay-hoverable[data-paraglide-attr]::after,
+    .pge-overlay-edited[data-paraglide-attr]::after,
+    .pge-overlay-conflict[data-paraglide-attr]::after {
+      content: none;
+    }
+    .pge-overlay-hoverable[data-paraglide-attr] {
+      outline: 2px dashed #d97706;
+      outline-offset: 1px;
+    }
+    .pge-overlay-hoverable[data-paraglide-attr]:hover {
+      outline-color: #b45309;
+    }
+    .pge-overlay-edited[data-paraglide-attr] {
+      outline: 2px solid #16a34a;
+      outline-offset: 1px;
+    }
+    .pge-overlay-edited[data-paraglide-attr]:hover {
+      outline-color: #15803d;
+    }
+    .pge-overlay-conflict[data-paraglide-attr] {
+      outline: 2px solid #dc2626;
+      outline-offset: 1px;
+    }
+    .pge-overlay-conflict[data-paraglide-attr]:hover {
+      outline-color: #b91c1c;
+    }
   `;
 
   document.head.appendChild(style);
@@ -173,9 +201,9 @@ export function setElementOutline(element, state) {
       return;
   }
 
-  // Only static elements need position:relative for the ::after pseudo-element.
-  // Fixed, absolute, sticky, and relative elements are already positioned.
-  if (getComputedStyle(element).position === 'static') {
+  // Attribute elements use outline instead of ::after, so they don't need positioning.
+  // For text elements, only static elements need position:relative for the ::after pseudo-element.
+  if (!element.dataset.paraglideAttr && getComputedStyle(element).position === 'static') {
     element.classList.add('pge-positioned');
   }
 }

@@ -58,6 +58,10 @@ export function generateSimpleInput(input, index) {
     value = '';
   }
 
+  const serverValue = typeof input.serverValue === 'string' ? input.serverValue : '';
+  const currentValue = typeof input.displayValue === 'string' ? input.displayValue : '';
+  const showRevert = currentValue !== serverValue;
+
   const editIndicator = input.isEdited
     ? '<span style="color: #48bb78; font-size: 11px; margin-left: 4px;">✓ Edited</span>'
     : '';
@@ -65,13 +69,17 @@ export function generateSimpleInput(input, index) {
   return `
     <div class="pge-lang-row">
       <span class="pge-lang-name ${input.isCurrent ? 'pge-lang-current' : ''}">${input.locale.toUpperCase()}${editIndicator}</span>
-      <textarea
-        class="pge-edit-textarea"
-        data-locale="${input.locale}"
-        data-lang-index="${index}"
-        placeholder="Enter translation for ${input.locale}..."
-        rows="1"
-      >${value}</textarea>
+      <div class="pge-textarea-wrapper">
+        <textarea
+          class="pge-edit-textarea"
+          data-locale="${input.locale}"
+          data-lang-index="${index}"
+          data-server-value="${escapeHtml(serverValue)}"
+          placeholder="Enter translation for ${input.locale}..."
+          rows="1"
+        >${value}</textarea>
+        <button class="pge-revert-btn" type="button" title="Revert to original"${showRevert ? '' : ' style="display:none;"'}>&#x21A9;</button>
+      </div>
     </div>
   `;
 }
@@ -86,38 +94,56 @@ export function generateSimpleInput(input, index) {
  * @returns {string} HTML string
  */
 export function generatePluralInput(input, index, variantForms, activeVariantKey) {
+  // Extract server variant values for revert
+  const serverMatch = Array.isArray(input.serverValue) && input.serverValue[0]?.match
+    ? input.serverValue[0].match
+    : {};
+
   const allVariantsHTML = variantForms.map(variant => {
     const value = escapeHtml(input.pluralData?.match?.[variant] || '');
+    const serverVariantValue = serverMatch[variant] || '';
+    const currentVariantValue = input.pluralData?.match?.[variant] || '';
+    const showRevert = currentVariantValue !== serverVariantValue;
     const displayName = variant.replace(/countPlural=|ordinal=/, '');
     return `
       <div class="pge-variant-row" data-variant="${variant}" data-lang-index="${index}">
         <span class="pge-variant-label">${escapeHtml(displayName)}:</span>
-        <textarea
-          class="pge-edit-textarea pge-variant-textarea"
-          data-locale="${input.locale}"
-          data-variant="${variant}"
-          data-lang-index="${index}"
-          placeholder="Enter ${displayName} variant..."
-          rows="1"
-        >${value}</textarea>
+        <div class="pge-textarea-wrapper">
+          <textarea
+            class="pge-edit-textarea pge-variant-textarea"
+            data-locale="${input.locale}"
+            data-variant="${variant}"
+            data-lang-index="${index}"
+            data-server-value="${escapeHtml(serverVariantValue)}"
+            placeholder="Enter ${displayName} variant..."
+            rows="1"
+          >${value}</textarea>
+          <button class="pge-revert-btn" type="button" title="Revert to original"${showRevert ? '' : ' style="display:none;"'}>&#x21A9;</button>
+        </div>
       </div>
     `;
   }).join('');
 
   const initialVariant = activeVariantKey || variantForms[0];
   const initialValue = escapeHtml(input.pluralData?.match?.[initialVariant] || '');
+  const initialServerValue = serverMatch[initialVariant] || '';
+  const showSingleRevert = (input.pluralData?.match?.[initialVariant] || '') !== initialServerValue;
 
   return `
     <div class="pge-lang-row pge-plural-row" data-lang-index="${index}">
       <span class="pge-lang-name ${input.isCurrent ? 'pge-lang-current' : ''}">${input.locale.toUpperCase()}</span>
       <div class="pge-plural-container">
-        <textarea
-          class="pge-edit-textarea pge-variant-single"
-          data-locale="${input.locale}"
-          data-lang-index="${index}"
-          placeholder="Enter translation..."
-          rows="1"
-        >${initialValue}</textarea>
+        <div class="pge-textarea-wrapper">
+          <textarea
+            class="pge-edit-textarea pge-variant-single"
+            data-locale="${input.locale}"
+            data-lang-index="${index}"
+            data-server-value="${escapeHtml(initialServerValue)}"
+            placeholder="Enter translation..."
+            rows="1"
+          >${initialValue}</textarea>
+          <button class="pge-revert-btn" type="button" title="Revert to original"${showSingleRevert ? '' : ' style="display:none;"'}>&#x21A9;</button>
+        </div>
         <div class="pge-all-variants" data-lang-index="${index}" style="display:none;">
           ${allVariantsHTML}
         </div>
@@ -143,6 +169,43 @@ export function generateLanguageInputsHTML(languageInputs, isPlural, variantForm
       return generateSimpleInput(input, index);
     }
   }).join('');
+}
+
+/**
+ * Generate the slot-switchable body content (variant controls + language inputs).
+ * This is extracted so it can be called again when switching slots.
+ *
+ * @param {Object} params
+ * @param {Array} params.languageInputs
+ * @param {boolean} params.isPlural
+ * @param {string[]} params.variantForms
+ * @param {string} params.activeVariantKey
+ * @returns {string} HTML string for the body content
+ */
+export function generateSlotContentHTML({ languageInputs, isPlural, variantForms, activeVariantKey }) {
+  const variantControlsHTML = generateVariantControls(isPlural, variantForms, activeVariantKey);
+  const languageInputsHTML = generateLanguageInputsHTML(languageInputs, isPlural, variantForms, activeVariantKey);
+  return variantControlsHTML + languageInputsHTML;
+}
+
+/**
+ * Generate slot selector chips HTML
+ *
+ * @param {Object} slots - Map of slotName → { key, params }
+ * @param {string} activeSlot - Currently active slot name
+ * @returns {string} HTML string (empty if single slot)
+ */
+function generateSlotSelector(slots, activeSlot) {
+  const slotNames = Object.keys(slots);
+  if (slotNames.length <= 1) return '';
+
+  const chips = slotNames.map(name => {
+    const isActive = name === activeSlot ? ' pge-slot-active' : '';
+    const displayName = name === '_text' ? 'text' : name;
+    return `<button class="pge-slot-chip${isActive}" data-slot="${escapeHtml(name)}" type="button">${escapeHtml(displayName)}</button>`;
+  }).join('');
+
+  return `<div class="pge-slot-selector">${chips}</div>`;
 }
 
 /**
@@ -263,6 +326,37 @@ export function getPopupStyles() {
         min-width: 60px;
         flex-shrink: 0;
       }
+      #pge-edit-popup .pge-textarea-wrapper {
+        position: relative;
+        flex: 1;
+      }
+      #pge-edit-popup .pge-textarea-wrapper > .pge-edit-textarea {
+        width: 100%;
+        padding-right: 30px;
+      }
+      #pge-edit-popup .pge-revert-btn {
+        position: absolute;
+        right: 5px;
+        top: 4px;
+        width: 22px;
+        height: 22px;
+        padding: 0 !important;
+        margin: 0;
+        border: 1px solid #cbd5e0 !important;
+        border-radius: 3px !important;
+        background: #f7fafc !important;
+        color: #718096 !important;
+        font-size: 14px !important;
+        line-height: 20px !important;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      #pge-edit-popup .pge-revert-btn:hover {
+        background: #edf2f7 !important;
+        color: #4a5568 !important;
+        border-color: #a0aec0 !important;
+      }
       #pge-edit-popup .pge-edit-textarea {
         flex: 1;
         min-height: 32px;
@@ -315,6 +409,40 @@ export function getPopupStyles() {
       #pge-edit-popup .pge-cancel:hover {
         background: #cbd5e0;
       }
+      #pge-edit-popup .pge-next {
+        background: #edf2f7;
+        color: #4a5568;
+        margin-left: auto;
+      }
+      #pge-edit-popup .pge-next:hover {
+        background: #e2e8f0;
+      }
+      /* Slot selector chips */
+      #pge-edit-popup .pge-slot-selector {
+        display: flex;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      #pge-edit-popup .pge-slot-chip {
+        padding: 4px 12px !important;
+        border: 1px solid #cbd5e0 !important;
+        border-radius: 16px !important;
+        background: #f7fafc !important;
+        color: #4a5568 !important;
+        font-size: 12px !important;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      #pge-edit-popup .pge-slot-chip:hover {
+        border-color: #667eea !important;
+        color: #667eea !important;
+      }
+      #pge-edit-popup .pge-slot-chip.pge-slot-active {
+        background: #667eea !important;
+        color: white !important;
+        border-color: #667eea !important;
+      }
       @media (prefers-color-scheme: dark) {
         #pge-edit-popup {
           background: #2d3748;
@@ -357,6 +485,13 @@ export function getPopupStyles() {
         #pge-edit-popup .pge-cancel:hover {
           background: #718096;
         }
+        #pge-edit-popup .pge-next {
+          background: #4a5568;
+          color: #e2e8f0;
+        }
+        #pge-edit-popup .pge-next:hover {
+          background: #718096;
+        }
         #pge-edit-popup .pge-buttons {
           border-top-color: #4a5568;
         }
@@ -365,6 +500,29 @@ export function getPopupStyles() {
         }
         #pge-edit-popup .pge-variant-label {
           color: #a0aec0;
+        }
+        #pge-edit-popup .pge-revert-btn {
+          background: #4a5568 !important;
+          border-color: #718096 !important;
+          color: #a0aec0 !important;
+        }
+        #pge-edit-popup .pge-revert-btn:hover {
+          background: #718096 !important;
+          color: #f7fafc !important;
+        }
+        #pge-edit-popup .pge-slot-chip {
+          background: #4a5568 !important;
+          border-color: #718096 !important;
+          color: #e2e8f0 !important;
+        }
+        #pge-edit-popup .pge-slot-chip:hover {
+          border-color: #818cf8 !important;
+          color: #818cf8 !important;
+        }
+        #pge-edit-popup .pge-slot-chip.pge-slot-active {
+          background: #667eea !important;
+          color: white !important;
+          border-color: #667eea !important;
         }
       }
     </style>
@@ -381,28 +539,49 @@ export function getPopupStyles() {
  * @param {boolean} params.isPlural - Whether this is a plural translation
  * @param {string[]} params.variantForms - Variant forms
  * @param {string} params.activeVariantKey - Active variant key
+ * @param {string} [params.attr] - Attribute name if attr-based
+ * @param {Object} [params.slots] - All slots map (for multi-slot elements)
+ * @param {string} [params.activeSlot] - Currently active slot name
  * @returns {string} Complete HTML string
  */
-export function generatePopupHTML({ languageInputs, key, params, isPlural, variantForms, activeVariantKey }) {
-  const variantControlsHTML = generateVariantControls(isPlural, variantForms, activeVariantKey);
-  const languageInputsHTML = generateLanguageInputsHTML(languageInputs, isPlural, variantForms, activeVariantKey);
+export function generatePopupHTML({ languageInputs, key, params, isPlural, variantForms, activeVariantKey, attr, slots, activeSlot }) {
   const styles = getPopupStyles();
+  const slotContentHTML = generateSlotContentHTML({ languageInputs, isPlural, variantForms, activeVariantKey });
 
   const paramsDisplay = params && Object.keys(params).length > 0
     ? `<br><strong>Params:</strong> ${escapeHtml(JSON.stringify(params))}`
+    : '';
+
+  const attrDisplay = attr
+    ? `<br><strong>Attribute:</strong> ${escapeHtml(attr)}`
+    : '';
+
+  // Slot selector (only for multi-slot elements)
+  const slotSelectorHTML = slots && activeSlot
+    ? generateSlotSelector(slots, activeSlot)
+    : '';
+
+  // Next button (only visible for multi-slot)
+  const hasMultipleSlots = slots && Object.keys(slots).length > 1;
+  const nextBtnHTML = hasMultipleSlots
+    ? `<button class="pge-next" id="pge-next-btn">Next &rarr;</button>`
     : '';
 
   return `
     ${styles}
     <h4>Edit Translation</h4>
     <div class="pge-meta">
-      <strong>Key:</strong> ${escapeHtml(key)}
-      ${paramsDisplay}
+      <strong>Key:</strong> <span id="pge-slot-key">${escapeHtml(key)}</span>
+      <span id="pge-slot-params">${paramsDisplay}</span>
+      <span id="pge-slot-attr">${attrDisplay}</span>
+      ${slotSelectorHTML}
     </div>
-    ${variantControlsHTML}
-    ${languageInputsHTML}
+    <div id="pge-slot-content">
+      ${slotContentHTML}
+    </div>
     <div class="pge-buttons">
       <button class="pge-cancel" id="pge-cancel-btn">Cancel</button>
+      ${nextBtnHTML}
       <button class="pge-save" id="pge-save-btn">Save All</button>
     </div>
   `;

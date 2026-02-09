@@ -54,8 +54,9 @@ export function getTranslationMetadata(element) {
   }
 
   const isEdited = element.dataset.paraglideEdited === 'true';
+  const attr = element.dataset.paraglideAttr || null;
 
-  return { key, params, isEdited };
+  return { key, params, isEdited, attr };
 }
 
 /**
@@ -74,7 +75,7 @@ export function getTranslationMetadata(element) {
  *   isEdited: true
  * });
  */
-export function setTranslationMetadata(element, { key, params, isEdited }) {
+export function setTranslationMetadata(element, { key, params, isEdited, attr }) {
   if (key) {
     element.dataset.paraglideKey = key;
   }
@@ -89,6 +90,12 @@ export function setTranslationMetadata(element, { key, params, isEdited }) {
     element.dataset.paraglideEdited = 'true';
   } else {
     delete element.dataset.paraglideEdited;
+  }
+
+  if (attr) {
+    element.dataset.paraglideAttr = attr;
+  } else {
+    delete element.dataset.paraglideAttr;
   }
 }
 

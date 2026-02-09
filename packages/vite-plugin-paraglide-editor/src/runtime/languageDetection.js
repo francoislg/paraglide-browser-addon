@@ -19,6 +19,7 @@
 import { getDisplayTranslation } from './dataStore.js';
 import { renderTranslation, renderEditedTemplate } from './renderer.js';
 import { setElementOutline } from './styles.js';
+import { getElementSlots } from './registry.js';
 
 function detectCurrentLocale() {
   const editorOverride = localStorage.getItem('pge-locale-override');
@@ -34,44 +35,67 @@ function detectCurrentLocale() {
   return 'en';
 }
 
+/** Outline state priority: higher index wins */
+const OUTLINE_PRIORITY = ['none', 'hoverable', 'edited', 'conflict'];
+function worstOutlineState(a, b) {
+  return OUTLINE_PRIORITY.indexOf(a) >= OUTLINE_PRIORITY.indexOf(b) ? a : b;
+}
+
 function reRenderAllTranslations(newLocale) {
   const elements = document.querySelectorAll('[data-paraglide-key]');
   let renderedCount = 0;
 
   elements.forEach(element => {
-    const key = element.dataset.paraglideKey;
-    const params = element.dataset.paraglideParams
-      ? JSON.parse(element.dataset.paraglideParams)
-      : {};
+    const slots = getElementSlots(element);
+    if (!slots) return;
 
-    const translation = getDisplayTranslation(newLocale, key);
+    let anyEdited = false;
+    let worstState = 'hoverable';
 
-    if (!translation.value) {
-      console.warn(`[paraglide-editor] No translation found for ${key} in ${newLocale}`);
-      return;
+    for (const [slotName, slotData] of Object.entries(slots)) {
+      const { key, params } = slotData;
+      const translation = getDisplayTranslation(newLocale, key);
+
+      if (!translation.value) {
+        console.warn(`[paraglide-editor] No translation found for ${key} in ${newLocale}`);
+        continue;
+      }
+
+      let rendered;
+      if (translation.isEdited) {
+        rendered = renderEditedTemplate(translation.value, params, newLocale);
+      } else {
+        rendered = renderTranslation(key, params, newLocale);
+      }
+
+      const isAttr = slotName !== '_text';
+      if (isAttr) {
+        if (element.getAttribute(slotName) !== rendered) {
+          element.setAttribute(slotName, rendered);
+          renderedCount++;
+        }
+      } else {
+        if (element.textContent !== rendered) {
+          element.textContent = rendered;
+          renderedCount++;
+        }
+      }
+
+      if (translation.isEdited) {
+        anyEdited = true;
+        const slotState = translation.hasConflict ? 'conflict' : 'edited';
+        worstState = worstOutlineState(worstState, slotState);
+      }
     }
 
-    let rendered;
-    if (translation.isEdited) {
-      rendered = renderEditedTemplate(translation.value, params, newLocale);
-    } else {
-      rendered = renderTranslation(key, params, newLocale);
-    }
-
-    if (element.textContent !== rendered) {
-      element.textContent = rendered;
-      renderedCount++;
-    }
-
-    if (translation.isEdited) {
+    if (anyEdited) {
       element.dataset.paraglideEdited = 'true';
-      const outlineState = translation.hasConflict ? 'conflict' : 'edited';
-      setElementOutline(element, outlineState);
     } else {
       delete element.dataset.paraglideEdited;
-      const outlineState = window.__paraglideEditor.isOverlayEnabled?.() ? 'hoverable' : 'none';
-      setElementOutline(element, outlineState);
     }
+
+    const overlayEnabled = window.__paraglideEditor.isOverlayEnabled?.();
+    setElementOutline(element, overlayEnabled ? worstState : 'none');
   });
 
   console.log(`[paraglide-editor] ✓ Re-rendered ${renderedCount} elements for locale ${newLocale}`);
