@@ -53,6 +53,38 @@ const __dirname = path.dirname(__filename);
  * VITE_PARAGLIDE_BROWSER_DEBUG=true
  * ```
  */
+// Shared __debugWrap function body used by both re-export and direct-export wrappers
+const DEBUG_WRAP_FN = `
+function __debugWrap(text, key, params) {
+  if (typeof text !== 'string') return text;
+
+  if (typeof window !== 'undefined') {
+    window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
+    const wasEmpty = !window.__paraglideBrowserDebug.registry;
+    window.__paraglideBrowserDebug.registry = window.__paraglideBrowserDebug.registry || new Map();
+    window.__paraglideBrowserDebug.registry.set(text, {
+      key: key,
+      params: params || {},
+      timestamp: Date.now()
+    });
+
+    if (wasEmpty) {
+      requestAnimationFrame(() => {
+        const event = new CustomEvent('__paraglideInitialized', {
+          detail: {
+            timestamp: Date.now(),
+            registrySize: window.__paraglideBrowserDebug.registry.size
+          }
+        });
+        window.dispatchEvent(event);
+        console.log('[paraglide-debug] Registry initialized with ' + window.__paraglideBrowserDebug.registry.size + ' entries');
+      });
+    }
+  }
+
+  return text;
+}`;
+
 export function paraglideBrowserDebugPlugin() {
 
   let viteConfig;
@@ -181,7 +213,6 @@ export function paraglideBrowserDebugPlugin() {
       console.log("[paraglide-debug] ✓ Intercepting _index.js");
 
       this.originalIndexCode = code;
-      this.originalIndexId = id;
 
       const hasReExports = code.includes('export * from');
 
@@ -212,7 +243,6 @@ export function paraglideBrowserDebugPlugin() {
 
 ${moduleNames.map(name => `import * as _${name} from './${name}.js';`).join('\n')}
 
-// Expose original message functions for re-rendering
 if (typeof window !== 'undefined') {
   window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
   window.__paraglideBrowserDebug.messageFunctions = {
@@ -220,42 +250,8 @@ ${moduleNames.map(name => `    ${name}: _${name}.${name}`).join(',\n')}
   };
 }
 
-// Debug wrapper function - stores text mapping in global registry
-function __debugWrap(text, key, params) {
-  if (typeof text !== 'string') return text;
+${DEBUG_WRAP_FN}
 
-  // Store mapping in global registry
-  if (typeof window !== 'undefined') {
-    window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
-    const wasEmpty = !window.__paraglideBrowserDebug.registry;
-    window.__paraglideBrowserDebug.registry = window.__paraglideBrowserDebug.registry || new Map();
-    window.__paraglideBrowserDebug.registry.set(text, {
-      key: key,
-      params: params || {},
-      timestamp: Date.now()
-    });
-
-    // Dispatch initialization event after registry is fully populated
-    // Use requestAnimationFrame to defer until after all synchronous message calls
-    if (wasEmpty) {
-      requestAnimationFrame(() => {
-        const event = new CustomEvent('__paraglideInitialized', {
-          detail: {
-            timestamp: Date.now(),
-            registrySize: window.__paraglideBrowserDebug.registry.size
-          }
-        });
-        window.dispatchEvent(event);
-        console.log('[paraglide-debug] Registry initialized with ' + window.__paraglideBrowserDebug.registry.size + ' entries, dispatched __paraglideInitialized event');
-      });
-    }
-  }
-
-  // Return plain text (no HTML manipulation)
-  return text;
-}
-
-// Export wrapped versions of all message functions
 ${moduleNames
   .map(
     (name) => `export const ${name} = (inputs, options) => {
@@ -319,48 +315,13 @@ ${moduleNames
 
 import * as _original from './_index.js?original';
 
-// Expose original message functions for re-rendering
 if (typeof window !== 'undefined') {
   window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
   window.__paraglideBrowserDebug.messageFunctions = _original;
 }
 
-// Debug wrapper function - stores text mapping in global registry
-function __debugWrap(text, key, params) {
-  if (typeof text !== 'string') return text;
+${DEBUG_WRAP_FN}
 
-  // Store mapping in global registry
-  if (typeof window !== 'undefined') {
-    window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
-    const wasEmpty = !window.__paraglideBrowserDebug.registry;
-    window.__paraglideBrowserDebug.registry = window.__paraglideBrowserDebug.registry || new Map();
-    window.__paraglideBrowserDebug.registry.set(text, {
-      key: key,
-      params: params || {},
-      timestamp: Date.now()
-    });
-
-    // Dispatch initialization event after registry is fully populated
-    // Use requestAnimationFrame to defer until after all synchronous message calls
-    if (wasEmpty) {
-      requestAnimationFrame(() => {
-        const event = new CustomEvent('__paraglideInitialized', {
-          detail: {
-            timestamp: Date.now(),
-            registrySize: window.__paraglideBrowserDebug.registry.size
-          }
-        });
-        window.dispatchEvent(event);
-        console.log('[paraglide-debug] Registry initialized with ' + window.__paraglideBrowserDebug.registry.size + ' entries, dispatched __paraglideInitialized event');
-      });
-    }
-  }
-
-  // Return plain text (no HTML manipulation)
-  return text;
-}
-
-// Export wrapped versions of all message functions
 ${exports
   .map(
     ({ exportedName }) => `export const ${exportedName} = (inputs, options) => {

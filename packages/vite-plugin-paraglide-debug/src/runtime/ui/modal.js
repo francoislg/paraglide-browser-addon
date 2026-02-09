@@ -112,6 +112,34 @@ export function showEditorModal() {
       #pg-editor-modal button.secondary:hover {
         background: #4a5568;
       }
+      #pg-editor-modal button:disabled {
+        background: #a0aec0;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+      #pg-editor-modal button:disabled:hover {
+        background: #a0aec0;
+      }
+      .pg-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: pg-spin 0.8s linear infinite;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+      @keyframes pg-spin {
+        to { transform: rotate(360deg); }
+      }
+      .pg-sync-success {
+        color: #38a169 !important;
+      }
+      .pg-sync-error {
+        color: #e53e3e !important;
+      }
       #pg-editor-modal .section {
         margin: 16px 0;
         padding: 16px;
@@ -155,6 +183,15 @@ export function showEditorModal() {
         #pg-editor-modal .info {
           color: #cbd5e0;
         }
+        #pg-sync-status {
+          color: #a0aec0 !important;
+        }
+        .pg-sync-success {
+          color: #68d391 !important;
+        }
+        .pg-sync-error {
+          color: #fc8181 !important;
+        }
       }
     </style>
     <div id="pg-editor-modal-content">
@@ -187,7 +224,8 @@ export function showEditorModal() {
       <div class="section">
         <h3>Sync with Server</h3>
         <p class="info">Fetch the latest translations from the server and detect conflicts with your local edits.</p>
-        <button onclick="window.__paraglideBrowserDebug.syncWithServer()">Sync Now</button>
+        <button id="pg-sync-btn">Sync Now</button>
+        <div id="pg-sync-status" style="margin-top: 8px; font-size: 13px; color: #4a5568;"></div>
       </div>
 
       <div class="section">
@@ -215,19 +253,29 @@ export function showEditorModal() {
     </div>
   `;
 
-  const handleEscKey = (e) => {
-    if (e.key === 'Escape') {
-      modal.remove();
-      document.removeEventListener('keydown', handleEscKey);
+  const handleLanguageChange = (e) => {
+    console.log('[paraglide-debug] Modal detected language change:', e.detail);
+    const currentLocaleEl = document.getElementById('pg-current-locale');
+    if (currentLocaleEl) {
+      currentLocaleEl.textContent = e.detail.newLocale.toUpperCase();
     }
+    initLanguageSelector();
   };
+
+  function closeModal() {
+    window.removeEventListener('__paraglideDebugLanguageChange', handleLanguageChange);
+    document.removeEventListener('keydown', handleEscKey);
+    modal.remove();
+  }
+
+  function handleEscKey(e) {
+    if (e.key === 'Escape') closeModal();
+  }
+
   document.addEventListener('keydown', handleEscKey);
 
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.remove();
-      document.removeEventListener('keydown', handleEscKey);
-    }
+    if (e.target === modal) closeModal();
   });
 
   const modalContent = modal.querySelector('#pg-editor-modal-content');
@@ -235,6 +283,11 @@ export function showEditorModal() {
     modalContent.addEventListener('click', (e) => {
       e.stopPropagation();
     });
+  }
+
+  const closeBtn = modal.querySelector('#pg-close-modal-x');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeModal);
   }
 
   document.body.appendChild(modal);
@@ -255,46 +308,46 @@ export function showEditorModal() {
     });
   }
 
+  const syncBtn = modal.querySelector('#pg-sync-btn');
+  const syncStatus = modal.querySelector('#pg-sync-status');
+  if (syncBtn) {
+    syncBtn.addEventListener('click', async () => {
+      syncBtn.disabled = true;
+      syncBtn.innerHTML = '<span class="pg-spinner"></span>Syncing...';
+      syncStatus.textContent = '';
+      syncStatus.className = '';
+
+      try {
+        const stats = await syncWithServer();
+
+        const parts = [];
+        const total = (stats.newKeys || 0) + (stats.updated || 0) + (stats.unchanged || 0) + (stats.conflicts || 0);
+        parts.push(`${total} items`);
+
+        parts.push(`${stats.newKeys || 0} new`);
+
+        const changes = (stats.updated || 0) + (stats.autoResolved || 0);
+        parts.push(`${changes} changes`);
+
+        parts.push(`${stats.conflicts || 0} conflicts`);
+
+        syncStatus.textContent = parts.join(', ');
+        syncStatus.className = stats.conflicts > 0 ? 'pg-sync-error' : 'pg-sync-success';
+      } catch (error) {
+        syncStatus.textContent = `Error: ${error.message}`;
+        syncStatus.className = 'pg-sync-error';
+      } finally {
+        syncBtn.disabled = false;
+        syncBtn.innerHTML = 'Sync Now';
+      }
+    });
+  }
+
   initLanguageSelector();
 
   initConflictList();
 
-  const handleLanguageChange = (e) => {
-    console.log('[paraglide-debug] Modal detected language change:', e.detail);
-    const currentLocaleEl = document.getElementById('pg-current-locale');
-    if (currentLocaleEl) {
-      currentLocaleEl.textContent = e.detail.newLocale.toUpperCase();
-    }
-    initLanguageSelector();
-  };
-
   window.addEventListener('__paraglideDebugLanguageChange', handleLanguageChange);
-
-  const originalHandleEscKey = handleEscKey;
-  const handleEscKeyWithCleanup = (e) => {
-    if (e.key === 'Escape') {
-      window.removeEventListener('__paraglideDebugLanguageChange', handleLanguageChange);
-      originalHandleEscKey(e);
-    }
-  };
-
-  document.removeEventListener('keydown', handleEscKey);
-  document.addEventListener('keydown', handleEscKeyWithCleanup);
-
-  modal.addEventListener('click', (originalE) => {
-    if (originalE.target === modal) {
-      window.removeEventListener('__paraglideDebugLanguageChange', handleLanguageChange);
-    }
-  });
-
-  const closeBtnWithCleanup = modal.querySelector('#pg-close-modal-x');
-  if (closeBtnWithCleanup) {
-    closeBtnWithCleanup.addEventListener('click', () => {
-      window.removeEventListener('__paraglideDebugLanguageChange', handleLanguageChange);
-      modal.remove();
-      document.removeEventListener('keydown', handleEscKeyWithCleanup);
-    });
-  }
 }
 
 if (typeof window !== 'undefined') {

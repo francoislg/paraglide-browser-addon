@@ -7,7 +7,7 @@
 
 import { getTranslationVersions } from '../dataStore.js';
 import { getCurrentLocale } from '../languageDetection.js';
-import { getSelectedLanguages, fetchTranslationsForKey } from '../helpers.js';
+import { getSelectedLanguages } from '../helpers.js';
 import { detectActiveVariant, parseVariantStructure } from '../variants.js';
 
 /**

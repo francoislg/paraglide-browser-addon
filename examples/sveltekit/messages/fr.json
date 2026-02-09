@@ -5,8 +5,6 @@
   "nav_variants": "Variantes",
   "greeting": "Bonjour, {name}!",
   "description": "Cet exemple démontre l'intégration de Paraglide avec SvelteKit et le plugin de métadonnées de débogage.",
-  "language_switcher": "Changer de langue",
-  "current_language": "Langue actuelle: Français",
   "simple_title": "Traductions Simples",
   "simple_content": "Cette page démontre des traductions statiques de base sans contenu dynamique ni paramètres.",
   "simple_example_1": "Bienvenue dans notre application",

@@ -24,6 +24,7 @@
 
 import { initDB } from './db.js';
 import { initDataStore } from './dataStore.js';
+import { injectOverlayStyles } from './styles.js';
 
 /**
  * Initialize the Paraglide debug system
@@ -35,6 +36,7 @@ export async function initialize() {
   console.log('[paraglide-debug] Starting initialization...');
 
   const initSteps = [
+    { name: 'Overlay Styles', fn: injectOverlayStyles },
     { name: 'Database', fn: initDB },
     { name: 'Data Store (Server + Local Edits)', fn: initDataStore },
     { name: 'Registry Wait', fn: waitForRegistry },
@@ -84,7 +86,15 @@ async function waitForRegistry() {
     }
 
     console.log('[paraglide-debug] Waiting for __paraglideInitialized event...');
+
+    const timeout = setTimeout(() => {
+      window.removeEventListener('__paraglideInitialized', handler);
+      console.warn('[paraglide-debug] Registry wait timed out after 10s — no translations detected. The page may not use Paraglide message functions.');
+      resolve();
+    }, 10000);
+
     const handler = (e) => {
+      clearTimeout(timeout);
       console.log('[paraglide-debug] Registry populated via event:', e.detail.registrySize);
       window.removeEventListener('__paraglideInitialized', handler);
       resolve();

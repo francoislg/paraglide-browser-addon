@@ -279,19 +279,43 @@ export function applyOutlinesToAllElements() {
 export function initOverlayMode() {
   let overlayEnabled = localStorage.getItem("pg-overlay-enabled") === "true";
   let currentPopupElement = null;
+  let mouseDownElement = null;
 
+  // Track which element received mousedown
   document.addEventListener(
-    "click",
-    async (e) => {
+    "mousedown",
+    (e) => {
       if (!overlayEnabled) return;
 
       const element = e.target.closest("[data-paraglide-key]");
-      if (!element) return;
+      if (element) {
+        mouseDownElement = element;
+      }
+    },
+    true
+  );
+
+  // Only open popup if mouseup is on the same element as mousedown
+  document.addEventListener(
+    "mouseup",
+    async (e) => {
+      if (!overlayEnabled || !mouseDownElement) return;
+
+      const upElement = e.target.closest("[data-paraglide-key]");
+
+      // Check if mouseup is on the same element as mousedown
+      if (upElement !== mouseDownElement) {
+        mouseDownElement = null;
+        return;
+      }
+
+      const element = upElement;
 
       if (currentPopupElement === element) {
         console.log(
           "[paraglide-debug] Popup already open for this element, allowing normal interaction"
         );
+        mouseDownElement = null;
         return;
       }
 
@@ -299,10 +323,12 @@ export function initOverlayMode() {
         console.log(
           "[paraglide-debug] Shift+click detected, allowing normal interaction"
         );
+        mouseDownElement = null;
         return;
       }
 
       if (e.target.closest(".pg-ignore-detection")) {
+        mouseDownElement = null;
         return;
       }
 
@@ -322,19 +348,29 @@ export function initOverlayMode() {
       });
 
       currentPopupElement = element;
+      mouseDownElement = null;
 
       await createEditPopup(element, key, params, currentText);
 
-      const checkPopupClosed = setInterval(() => {
-        const popup = document.getElementById("pg-edit-popup");
-        if (!popup) {
-          currentPopupElement = null;
-          clearInterval(checkPopupClosed);
-          console.log(
-            "[paraglide-debug] Popup closed, normal clicks enabled again"
-          );
-        }
-      }, 100);
+      // Watch for popup removal to re-enable normal clicks
+      const popup = document.getElementById("pg-edit-popup");
+      if (popup) {
+        const observer = new MutationObserver((mutations) => {
+          for (const mutation of mutations) {
+            for (const removed of mutation.removedNodes) {
+              if (removed === popup || removed.contains?.(popup)) {
+                currentPopupElement = null;
+                observer.disconnect();
+                console.log("[paraglide-debug] Popup closed, normal clicks enabled again");
+                return;
+              }
+            }
+          }
+        });
+        observer.observe(popup.parentNode, { childList: true });
+      } else {
+        currentPopupElement = null;
+      }
     },
     true
   );

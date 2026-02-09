@@ -1,19 +1,26 @@
 /**
  * Visual Styling for Translation Elements
  *
- * Purpose: Manage visual indicators (outlines) for translation elements.
+ * Purpose: Manage visual indicators (overlays) for translation elements.
  *
  * Responsibilities:
- * - Apply outline styles based on element state
- * - Support multiple states: edited, conflict, hoverable, none
+ * - Inject global CSS for overlay styles using ::after pseudo-elements
+ * - Apply overlay classes based on element state
+ * - Support multiple states: edited, conflict, hoverable
  * - Provide consistent visual feedback across the application
  * - Single point of entry for all element styling
  *
  * Visual States:
- * - edited: Green outline (2px solid) - translation has been edited locally
- * - conflict: Red outline (2px solid) - conflict between local and server
- * - hoverable: Yellow dashed outline (1px) - overlay mode active
- * - none: No outline - default state
+ * - hoverable: Yellow dashed border (1px) via ::after - overlay mode active, not edited
+ * - edited: Green solid border (2px) via ::after - translation has been edited locally
+ * - conflict: Red solid border (2px) via ::after - conflict between local and server
+ * - none: No overlay class - removes all overlay styling
+ *
+ * Implementation:
+ * - Uses CSS classes with ::after pseudo-elements instead of inline styles
+ * - Adds position: relative to parent element for ::after positioning
+ * - ::after overlays use position: absolute + inset: 0 to cover entire element
+ * - pointer-events: none on ::after to not interfere with click handling
  *
  * This module does NOT:
  * - Manage element registry (see registry.js)
@@ -22,28 +29,98 @@
  */
 
 /**
- * Set the outline style for an element based on its state
+ * Inject global CSS styles for overlays
+ * Called during initialization
+ */
+export function injectOverlayStyles() {
+  // Check if styles already injected
+  if (document.getElementById('pg-overlay-styles')) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.id = 'pg-overlay-styles';
+  style.textContent = `
+    /* Hoverable state - yellow dashed border (overlay mode active, not edited) */
+    .pg-overlay-hoverable {
+      position: relative !important;
+      cursor: pointer !important;
+    }
+    .pg-overlay-hoverable::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 2px dashed #d97706;
+      background: rgba(251, 191, 36, 0.15);
+      pointer-events: none;
+      z-index: 999997;
+      box-sizing: border-box;
+      border-radius: 2px;
+    }
+
+    /* Edited state - green solid border (translation edited locally) */
+    .pg-overlay-edited {
+      position: relative !important;
+      cursor: pointer !important;
+    }
+    .pg-overlay-edited::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 2px solid #16a34a;
+      background: rgba(34, 197, 94, 0.15);
+      pointer-events: none;
+      z-index: 999997;
+      box-sizing: border-box;
+      border-radius: 2px;
+    }
+
+    /* Conflict state - red solid border (conflict detected) */
+    .pg-overlay-conflict {
+      position: relative !important;
+      cursor: pointer !important;
+    }
+    .pg-overlay-conflict::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 2px solid #dc2626;
+      background: rgba(239, 68, 68, 0.15);
+      pointer-events: none;
+      z-index: 999997;
+      box-sizing: border-box;
+      border-radius: 2px;
+    }
+  `;
+
+  document.head.appendChild(style);
+  console.log('[paraglide-debug] ✓ Overlay styles injected');
+}
+
+/**
+ * Set the overlay style for an element based on its state
  * This is the single point of entry for modifying element overlays
+ *
  * @param {HTMLElement} element - The element to style
  * @param {string} state - The state: 'edited', 'conflict', 'hoverable', 'none'
  */
 export function setElementOutline(element, state) {
+  // Remove all existing overlay classes
+  element.classList.remove('pg-overlay-hoverable', 'pg-overlay-edited', 'pg-overlay-conflict');
+
+  // Add appropriate class based on state
   switch (state) {
     case 'edited':
-      element.style.outline = '2px solid #48bb78'; // Green for edited
-      element.style.cursor = 'pointer';
+      element.classList.add('pg-overlay-edited');
       break;
     case 'conflict':
-      element.style.outline = '2px solid #f56565'; // Red for conflicts
-      element.style.cursor = 'pointer';
+      element.classList.add('pg-overlay-conflict');
       break;
     case 'hoverable':
-      element.style.outline = '1px dashed #f59e0b'; // Yellow for overlay mode
-      element.style.cursor = 'pointer';
+      element.classList.add('pg-overlay-hoverable');
       break;
     case 'none':
-      element.style.outline = '';
-      element.style.cursor = '';
+      // Just remove all classes (already done above)
       break;
     default:
       console.warn(`[paraglide-debug] Unknown outline state: ${state}`);

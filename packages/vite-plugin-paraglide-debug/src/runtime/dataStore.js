@@ -205,30 +205,6 @@ export function getTranslationVersions(locale, key) {
 }
 
 /**
- * Check if a translation has been edited locally
- *
- * @param {string} locale - Locale code
- * @param {string} key - Translation key
- * @returns {boolean}
- */
-export function isTranslationEdited(locale, key) {
-  const cacheKey = `${locale}:${key}`;
-  return localEdits?.get(cacheKey)?.isEdited || false;
-}
-
-/**
- * Check if a translation has a conflict
- *
- * @param {string} locale - Locale code
- * @param {string} key - Translation key
- * @returns {boolean}
- */
-export function hasTranslationConflict(locale, key) {
-  const cacheKey = `${locale}:${key}`;
-  return localEdits?.get(cacheKey)?.hasConflict || false;
-}
-
-/**
  * Update local cache after editing (call after saving to DB)
  *
  * @param {string} locale - Locale code
@@ -275,20 +251,3 @@ export function getServerTranslations() {
   return serverTranslations;
 }
 
-/**
- * Get all local edits (for export, debugging)
- *
- * @returns {Map}
- */
-export function getLocalEdits() {
-  return localEdits;
-}
-
-/**
- * Check if data store is initialized
- *
- * @returns {boolean}
- */
-export function isDataStoreInitialized() {
-  return isInitialized;
-}
