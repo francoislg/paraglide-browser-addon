@@ -26,9 +26,16 @@ import {
 import { initLanguageDetection } from "./runtime/languageDetection.js";
 import { setElementOutline } from "./runtime/styles.js";
 import { buildElementRegistry, getElements } from "./runtime/registry.js";
+import { isPgEnabled } from "./runtime/helpers.js";
 
 (function () {
   if (typeof window === "undefined") return;
+
+  // Client-side gate: require explicit opt-in via localStorage
+  if (!isPgEnabled()) {
+    console.log("[paraglide-debug] Runtime disabled (set localStorage 'pg-enabled' to 'true' to activate)");
+    return;
+  }
 
   console.log("[paraglide-debug] Runtime script loaded");
   console.log("[paraglide-debug] Translation editor enabled");

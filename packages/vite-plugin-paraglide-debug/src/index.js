@@ -30,6 +30,11 @@ const __dirname = path.dirname(__filename);
  * - Plugin becomes a no-op (no transformation, no runtime injection)
  * - Zero overhead in production builds
  *
+ * @param {Object} [options] - Plugin options
+ * @param {boolean} [options.requireOptIn=false] - When true, the debug runtime
+ *   stays dormant until the user sets `localStorage.setItem('pg-enabled', 'true')`.
+ *   When false (default), debug tools activate automatically when the env var is set.
+ *
  * @example
  * ```js
  * // vite.config.js
@@ -42,7 +47,11 @@ const __dirname = path.dirname(__filename);
  *       project: './project.inlang',
  *       outdir: './src/paraglide'
  *     }),
+ *     // Debug tools activate automatically (default)
  *     paraglideBrowserDebugPlugin()
+ *
+ *     // Or require explicit opt-in via localStorage
+ *     // paraglideBrowserDebugPlugin({ requireOptIn: true })
  *   ]
  * });
  * ```
@@ -53,11 +62,28 @@ const __dirname = path.dirname(__filename);
  * VITE_PARAGLIDE_BROWSER_DEBUG=true
  * ```
  */
-// Shared __debugWrap function body used by both re-export and direct-export wrappers
-const DEBUG_WRAP_FN = `
+/**
+ * Generate the __debugWrap function body injected into the message wrapper module.
+ * When requireOptIn is false, the localStorage gate is skipped entirely.
+ */
+function getDebugWrapFn(requireOptIn) {
+  return `
+${requireOptIn ? `let __debugEnabled;
+function __isPgEnabled() {
+  return typeof window !== 'undefined' && localStorage.getItem('pg-enabled') === 'true';
+}` : ''}
 function __debugWrap(text, key, params) {
   if (typeof text !== 'string') return text;
-
+${requireOptIn ? `
+  if (__debugEnabled === undefined) {
+    __debugEnabled = __isPgEnabled();
+    if (typeof window !== 'undefined') {
+      window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
+      window.__paraglideBrowserDebug.isPgEnabled = __isPgEnabled;
+    }
+  }
+  if (!__debugEnabled) return text;
+` : ''}
   if (typeof window !== 'undefined') {
     window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {};
     const wasEmpty = !window.__paraglideBrowserDebug.registry;
@@ -84,8 +110,10 @@ function __debugWrap(text, key, params) {
 
   return text;
 }`;
+}
 
-export function paraglideBrowserDebugPlugin() {
+export function paraglideBrowserDebugPlugin(options = {}) {
+  const { requireOptIn = false } = options;
 
   let viteConfig;
   let isDebugMode = false;
@@ -250,7 +278,7 @@ ${moduleNames.map(name => `    ${name}: _${name}.${name}`).join(',\n')}
   };
 }
 
-${DEBUG_WRAP_FN}
+${getDebugWrapFn(requireOptIn)}
 
 ${moduleNames
   .map(
@@ -320,7 +348,7 @@ if (typeof window !== 'undefined') {
   window.__paraglideBrowserDebug.messageFunctions = _original;
 }
 
-${DEBUG_WRAP_FN}
+${getDebugWrapFn(requireOptIn)}
 
 ${exports
   .map(
@@ -345,12 +373,12 @@ ${exports
       handler(html) {
         if (!isDebugMode) return html;
 
-        // Inject script tag that loads from the served endpoint
-        const scriptTag =
+        const configScript = `<script>window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {}; window.__paraglideBrowserDebug.config = { requireOptIn: ${requireOptIn} };</script>`;
+        const runtimeScript =
           '<script type="module" src="/@paraglide-debug/runtime.js"></script>';
 
-        // Inject before closing </body> tag
-        return html.replace("</body>", scriptTag + "\n</body>");
+        // Inject config before runtime, before closing </body> tag
+        return html.replace("</body>", configScript + "\n" + runtimeScript + "\n</body>");
       },
     },
 
@@ -358,12 +386,12 @@ ${exports
     transformPageChunk({ html, done }) {
       if (!isDebugMode || !done) return null;
 
-      // Inject script tag that loads from the served endpoint
-      const scriptTag =
+      const configScript = `<script>window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {}; window.__paraglideBrowserDebug.config = { requireOptIn: ${requireOptIn} };</script>`;
+      const runtimeScript =
         '<script type="module" src="/@paraglide-debug/runtime.js"></script>';
 
-      // Inject before closing </body> tag
-      return html.replace("</body>", scriptTag + "\n</body>");
+      // Inject config before runtime, before closing </body> tag
+      return html.replace("</body>", configScript + "\n" + runtimeScript + "\n</body>");
     },
   };
 }

@@ -53,6 +53,22 @@ That's it! The plugin will automatically:
 - Inject the runtime client script
 - Expose the global API at `window.__paraglideBrowserDebug`
 
+### Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `requireOptIn` | `boolean` | `false` | When `true`, the debug runtime stays dormant until the user sets `localStorage.setItem('pg-enabled', 'true')` in their browser console. When `false` (default), debug tools activate automatically. |
+
+**Activation model:**
+
+1. **Environment variable** (`VITE_PARAGLIDE_BROWSER_DEBUG=true`) — build-time gate. When disabled, the plugin is a no-op with zero overhead.
+2. **localStorage opt-in** (`pg-enabled`) — browser-side gate, only enforced when `requireOptIn: true`. Useful for production/QA builds where you want debug support available but not active by default.
+
+```javascript
+// Require explicit opt-in in the browser
+paraglideBrowserDebugPlugin({ requireOptIn: true })
+```
+
 ## Browser API
 
 ### Global Object

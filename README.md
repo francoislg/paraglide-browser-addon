@@ -140,7 +140,11 @@ export default defineConfig({
       project: './project.inlang',
       outdir: './src/paraglide'
     }),
+    // Debug tools activate automatically (default)
     paraglideBrowserDebugPlugin()
+
+    // Or require explicit browser opt-in via localStorage:
+    // paraglideBrowserDebugPlugin({ requireOptIn: true })
   ]
 });
 ```
