@@ -9,8 +9,8 @@ import { getCurrentLocale } from './languageDetection.js';
  *
  * When `requireOptIn` is false (the default), this always returns true —
  * the debug tools activate automatically when the Vite env var is set.
- * When `requireOptIn` is true, the user must set
- * `localStorage.setItem('pg-enabled', 'true')` to activate the tools.
+ * When `requireOptIn` is true, the user must run this in the browser console:
+ * `localStorage.setItem('pg-enabled', 'true')`
  *
  * @returns {boolean}
  */

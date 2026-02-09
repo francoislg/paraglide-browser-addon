@@ -17,9 +17,31 @@ const __dirname = path.dirname(__filename);
  * **How it works:**
  * 1. Detects `VITE_PARAGLIDE_BROWSER_DEBUG=true` environment variable
  * 2. Intercepts `messages/_index.js` transform and wraps message functions
- * 3. Injects runtime script via HTML transformation
+ * 3. Injects runtime script via `transformIndexHtml` (standard Vite apps)
  * 4. Serves translation JSON at `/@paraglide-debug/langs.json` endpoint
  * 5. Provides virtual modules under `/@paraglide-debug/*` prefix
+ *
+ * **SvelteKit note:**
+ * SvelteKit sets `appType: 'custom'`, which bypasses Vite's HTML pipeline.
+ * The `transformIndexHtml` hook will NOT run. SvelteKit projects must add
+ * the provided handle to `src/hooks.server.js`:
+ *
+ * ```js
+ * // src/hooks.server.js
+ * import { sequence } from '@sveltejs/kit/hooks';
+ * import { paraglideMiddleware } from '$lib/paraglide/server';
+ * import { paraglideDebugHandle } from 'vite-plugin-paraglide-debug/sveltekit';
+ *
+ * const paraglideHandle = ({ event, resolve }) =>
+ *   paraglideMiddleware(event.request, ({ request, locale }) => {
+ *     event.request = request;
+ *     return resolve(event, {
+ *       transformPageChunk: ({ html }) => html.replace('%lang%', locale)
+ *     });
+ *   });
+ *
+ * export const handle = sequence(paraglideHandle, paraglideDebugHandle);
+ * ```
  *
  * **When debug mode is enabled:**
  * - Message functions store text→metadata mapping in `window.__paraglideBrowserDebug.registry`
@@ -32,7 +54,8 @@ const __dirname = path.dirname(__filename);
  *
  * @param {Object} [options] - Plugin options
  * @param {boolean} [options.requireOptIn=false] - When true, the debug runtime
- *   stays dormant until the user sets `localStorage.setItem('pg-enabled', 'true')`.
+ *   stays dormant until the user activates it from the browser console:
+ *   `localStorage.setItem('pg-enabled', 'true')`
  *   When false (default), debug tools activate automatically when the env var is set.
  *
  * @example
@@ -164,6 +187,11 @@ export function paraglideBrowserDebugPlugin(options = {}) {
 
     // Load virtual module content
     load(id) {
+      // Config module is always available (SvelteKit handle imports it unconditionally)
+      if (id === "/@paraglide-debug/config.js") {
+        return `export const requireOptIn = ${requireOptIn};`;
+      }
+
       if (!isDebugMode) {
         if (id === "/@paraglide-debug/runtime.js") {
           return "// Paraglide debug mode is disabled";
@@ -199,9 +227,6 @@ export function paraglideBrowserDebugPlugin(options = {}) {
 
       console.log(
         "[paraglide-debug] ✓ Serving translations at /@paraglide-debug/langs.json"
-      );
-      console.log(
-        "[paraglide-debug] Note: For SvelteKit, add script tag to app.html conditioned on env variable"
       );
     },
 
@@ -367,7 +392,8 @@ ${exports
       };
     },
 
-    // Inject runtime script to build element registry (for standard Vite apps)
+    // Inject runtime script for standard Vite apps (vanilla, React, etc.)
+    // NOTE: This does NOT run in SvelteKit — see JSDoc above for SvelteKit setup.
     transformIndexHtml: {
       order: htmlTransformOrder,
       handler(html) {
@@ -380,18 +406,6 @@ ${exports
         // Inject config before runtime, before closing </body> tag
         return html.replace("</body>", configScript + "\n" + runtimeScript + "\n</body>");
       },
-    },
-
-    // SvelteKit-specific hook for HTML transformation
-    transformPageChunk({ html, done }) {
-      if (!isDebugMode || !done) return null;
-
-      const configScript = `<script>window.__paraglideBrowserDebug = window.__paraglideBrowserDebug || {}; window.__paraglideBrowserDebug.config = { requireOptIn: ${requireOptIn} };</script>`;
-      const runtimeScript =
-        '<script type="module" src="/@paraglide-debug/runtime.js"></script>';
-
-      // Inject config before runtime, before closing </body> tag
-      return html.replace("</body>", configScript + "\n" + runtimeScript + "\n</body>");
     },
   };
 }

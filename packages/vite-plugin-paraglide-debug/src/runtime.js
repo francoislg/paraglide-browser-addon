@@ -33,7 +33,7 @@ import { isPgEnabled } from "./runtime/helpers.js";
 
   // Client-side gate: require explicit opt-in via localStorage
   if (!isPgEnabled()) {
-    console.log("[paraglide-debug] Runtime disabled (set localStorage 'pg-enabled' to 'true' to activate)");
+    console.log("[paraglide-debug] Runtime disabled. To activate, run:  localStorage.setItem('pg-enabled', 'true')");
     return;
   }
 
