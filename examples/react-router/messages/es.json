@@ -64,6 +64,13 @@
       "countPlural=*, gender=*": "Publicó {count} fotos"
     }
   }],
+  "nav_stacking": "Apilamiento",
+  "stacking_title": "Prueba de Contexto de Apilamiento",
+  "stacking_description": "Esta página prueba que la superposición del editor aparece sobre elementos con apilamiento CSS complejo.",
+  "stacking_card_title": "Tarjeta con superposición absoluta",
+  "stacking_card_text": "Este texto está detrás de un elemento posicionado absoluto con z-index: 10.",
+  "stacking_card_button": "Haz clic",
+  "stacking_card_link": "Soy un enlace",
   "variants_demo": "Demostración de Variantes",
   "ordinal_demo": "Demostración Ordinal",
   "matching_demo": "Demostración de Coincidencia Directa",

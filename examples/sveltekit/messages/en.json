@@ -62,6 +62,13 @@
       "countPlural=*, gender=*": "They posted {count} photos"
     }
   }],
+  "nav_stacking": "Stacking",
+  "stacking_title": "Stacking Context Test",
+  "stacking_description": "This page tests that the editor overlay appears above elements with complex CSS stacking.",
+  "stacking_card_title": "Card with absolute overlay",
+  "stacking_card_text": "This text is behind an absolute positioned element with z-index: 10.",
+  "stacking_card_button": "Click me",
+  "stacking_card_link": "I am a link",
   "floating_help": "Need help?",
   "variants_demo": "Variants Demo",
   "ordinal_demo": "Ordinal Demo",

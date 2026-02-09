@@ -64,6 +64,13 @@
       "countPlural=*, gender=*": "Ils ont publié {count} photos"
     }
   }],
+  "nav_stacking": "Empilement",
+  "stacking_title": "Test de Contexte d'Empilement",
+  "stacking_description": "Cette page teste que la superposition de l'éditeur apparaît au-dessus des éléments avec un empilement CSS complexe.",
+  "stacking_card_title": "Carte avec superposition absolue",
+  "stacking_card_text": "Ce texte est derrière un élément positionné en absolu avec z-index: 10.",
+  "stacking_card_button": "Cliquez ici",
+  "stacking_card_link": "Je suis un lien",
   "variants_demo": "Démonstration de Variantes",
   "ordinal_demo": "Démonstration Ordinale",
   "matching_demo": "Démonstration de Correspondance Directe",

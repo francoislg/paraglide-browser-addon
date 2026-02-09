@@ -20,6 +20,7 @@
         <a href="/">{m.nav_simple()}</a>
         <a href="/parameters">{m.nav_parameters()}</a>
         <a href="/variants">{m.nav_variants()}</a>
+        <a href="/stacking">{m.nav_stacking()}</a>
       </nav>
     </header>
 

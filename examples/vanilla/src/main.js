@@ -21,6 +21,14 @@ function updateUI() {
 
   document.getElementById('multi-selector-demo').innerHTML = m.multi_selector_demo();
   updateMultiSelectorDemo();
+
+  // Stacking section
+  document.getElementById('stacking-title').innerHTML = m.stacking_title();
+  document.getElementById('stacking-description').innerHTML = m.stacking_description();
+  document.getElementById('stacking-card-title').innerHTML = m.stacking_card_title();
+  document.getElementById('stacking-card-text').innerHTML = m.stacking_card_text();
+  document.getElementById('stacking-card-button').innerHTML = m.stacking_card_button();
+  document.getElementById('stacking-card-link').innerHTML = m.stacking_card_link();
 }
 
 function updatePluralDemo() {
