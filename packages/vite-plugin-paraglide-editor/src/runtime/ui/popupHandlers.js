@@ -5,7 +5,7 @@
  * Variant controls, save/cancel handlers, etc.
  */
 
-import { saveTranslationEdit, deleteTranslationEdit } from '../db.js';
+import { saveTranslationEdit, revertTranslationEdit } from '../db.js';
 import { updateLocalCache } from '../dataStore.js';
 import { refreshElementsByKey } from '../overlay.js';
 
@@ -256,7 +256,7 @@ export function setupSaveHandler(popup, languageInputs, key, isPlural, close) {
 
         if (isReverted) {
           console.log(`[paraglide-editor] Reverting ${key} (${locale}) - same as server, deleting edit`);
-          await deleteTranslationEdit(locale, key);
+          await revertTranslationEdit(locale, key);
           updateLocalCache(locale, key, serverValue, false, false);
           skippedCount++;
         } else {
@@ -343,7 +343,7 @@ export function setupMultiSlotSaveHandler(popup, slotEdits, slotPopupData, captu
 
           if (isReverted) {
             console.log(`[paraglide-editor] Reverting ${key} (${locale}) - same as server, deleting edit`);
-            await deleteTranslationEdit(locale, key);
+            await revertTranslationEdit(locale, key);
             updateLocalCache(locale, key, serverValue, false, false);
             totalSkipped++;
           } else {

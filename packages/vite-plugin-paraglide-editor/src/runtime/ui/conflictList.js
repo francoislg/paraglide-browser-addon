@@ -355,8 +355,6 @@ async function handleResolution(conflict, resolution) {
     console.log(`[paraglide-editor] Updated ${updatedCount} elements on page for key: ${conflict.key}`);
 
     await initConflictList();
-
-    alert('Conflict resolved successfully!');
   } catch (error) {
     console.error('[paraglide-editor] Failed to resolve conflict:', error);
     alert('Failed to resolve conflict. Please try again.');

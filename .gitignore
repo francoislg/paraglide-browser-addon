@@ -8,7 +8,7 @@ dist/
 src/paraglide/
 
 # Inlang cache
-project.inlang/cache/
+**/project.inlang/cache/
 
 # Environment variables
 .env

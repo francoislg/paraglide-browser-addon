@@ -37,6 +37,12 @@ function updateUI() {
   document.getElementById('stacking-card-text').innerHTML = m.stacking_card_text();
   document.getElementById('stacking-card-button').innerHTML = m.stacking_card_button();
   document.getElementById('stacking-card-link').innerHTML = m.stacking_card_link();
+  document.getElementById('stacking-nested-title').innerHTML = m.stacking_nested_title();
+  document.getElementById('stacking-nested-hint').innerHTML = m.stacking_nested_hint();
+  document.getElementById('stacking-outer-text').innerHTML = m.stacking_outer();
+  document.getElementById('stacking-outer-link').innerHTML = m.stacking_outer_link();
+  document.getElementById('stacking-inner').setAttribute('aria-label', m.stacking_inner_aria());
+  document.getElementById('stacking-inner-text').innerHTML = m.stacking_inner();
 }
 
 function updatePluralDemo() {

@@ -75,7 +75,7 @@ export async function saveTranslationEdit(locale, key, newValue, originalValue =
     id,
     locale,
     key,
-    originalValue: existingRecord?.originalValue || originalValue || newValue,
+    originalValue: existingRecord?.originalValue ?? originalValue ?? newValue,
     editedValue: newValue,
     isEdited: true,
     hasConflict: false,
@@ -99,6 +99,35 @@ export async function deleteTranslationEdit(locale, key) {
 
   return new Promise((resolve, reject) => {
     const req = store.delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function revertTranslationEdit(locale, key) {
+  const database = await initDB();
+  const tx = database.transaction(STORE_NAME, 'readwrite');
+  const store = tx.objectStore(STORE_NAME);
+
+  const id = `${locale}:${key}`;
+
+  const existingRecord = await new Promise((resolve, reject) => {
+    const req = store.get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+
+  if (!existingRecord) return;
+
+  const updatedRecord = {
+    ...existingRecord,
+    editedValue: existingRecord.originalValue,
+    isEdited: false,
+    hasConflict: false,
+  };
+
+  return new Promise((resolve, reject) => {
+    const req = store.put(updatedRecord);
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
   });

@@ -141,10 +141,12 @@ export function refreshElement(element, locale = null) {
     delete element.dataset.paraglideEdited;
   }
 
-  // Apply outline
+  // Apply outline — 'selected' if popup is open for this element
   const overlayEnabled = window.__paraglideEditor.isOverlayEnabled?.();
   if (!overlayEnabled) {
     setElementOutline(element, "none");
+  } else if (element === window.__paraglideEditor.popupElement) {
+    setElementOutline(element, "selected");
   } else {
     setElementOutline(element, worstState);
   }
@@ -315,8 +317,46 @@ export function applyOutlinesToAllElements() {
 export function initOverlayMode() {
   let overlayEnabled = localStorage.getItem("pge-overlay-enabled") === "true";
   let currentPopupElement = null;
+  let popupObserver = null;
   let mouseDownElement = null;
   let suppressNextClick = false;
+
+  // Cycle state for overlapping elements
+  let cycleCandidates = [];
+  let cycleIndex = -1;
+  let cyclePoint = null;
+
+  function isSamePoint(p1, p2, threshold = 5) {
+    if (!p1 || !p2) return false;
+    return Math.abs(p1.x - p2.x) <= threshold && Math.abs(p1.y - p2.y) <= threshold;
+  }
+
+  function getCandidatesAtPoint(x, y) {
+    const elementsAtPoint = document.elementsFromPoint(x, y);
+    const seen = new Set();
+    const candidates = [];
+    for (const el of elementsAtPoint) {
+      if (el.closest(".pge-ignore-detection")) continue;
+      const candidate = el.closest("[data-paraglide-key]");
+      if (candidate && !seen.has(candidate)) {
+        seen.add(candidate);
+        candidates.push(candidate);
+      }
+    }
+    return candidates;
+  }
+
+  function setPopupElement(element) {
+    if (popupObserver) {
+      popupObserver.disconnect();
+      popupObserver = null;
+    }
+    const prev = currentPopupElement;
+    currentPopupElement = element;
+    window.__paraglideEditor.popupElement = element;
+    if (prev && prev !== element) refreshElement(prev);
+    if (element) refreshElement(element);
+  }
 
   // Suppress the click event that fires after mouseup when we open a popup.
   // This prevents links from navigating, buttons from firing, etc.
@@ -344,12 +384,12 @@ export function initOverlayMode() {
 
         // Prevent default on mousedown when we'll intercept the click.
         // This stops link drag initiation and text selection on first click.
+        // Skip preventDefault if the next click will pass through (cycle exhausted).
         const isInsidePopup = e.target.closest(".pge-ignore-detection");
-        if (
-          !isInsidePopup &&
-          !e.shiftKey &&
-          currentPopupElement !== element
-        ) {
+        const wouldPassThrough = currentPopupElement
+          && isSamePoint(cyclePoint, { x: e.clientX, y: e.clientY })
+          && cycleIndex + 1 >= cycleCandidates.length;
+        if (!isInsidePopup && !e.shiftKey && !wouldPassThrough) {
           e.preventDefault();
         }
       }
@@ -362,29 +402,6 @@ export function initOverlayMode() {
     "mouseup",
     async (e) => {
       if (!overlayEnabled || !mouseDownElement || e.button !== 0) return;
-
-      const upElement = e.target.closest("[data-paraglide-key]");
-
-      // Check if mouseup is on the same element as mousedown
-      if (upElement !== mouseDownElement) {
-        mouseDownElement = null;
-        return;
-      }
-
-      const element = upElement;
-
-      // Reset stale reference if popup was removed (e.g. SPA navigation)
-      if (currentPopupElement && !document.getElementById("pge-edit-popup")) {
-        currentPopupElement = null;
-      }
-
-      if (currentPopupElement === element) {
-        console.log(
-          "[paraglide-editor] Popup already open for this element, allowing normal interaction"
-        );
-        mouseDownElement = null;
-        return;
-      }
 
       if (e.shiftKey) {
         console.log(
@@ -399,19 +416,77 @@ export function initOverlayMode() {
         return;
       }
 
+      const clickPoint = { x: e.clientX, y: e.clientY };
+      const candidates = getCandidatesAtPoint(clickPoint.x, clickPoint.y);
+
+      // Validate mousedown target is among candidates (prevents drag-across)
+      if (!candidates.includes(mouseDownElement)) {
+        mouseDownElement = null;
+        return;
+      }
+
+      // Reset stale reference if popup was removed (e.g. SPA navigation)
+      if (currentPopupElement && !document.getElementById("pge-edit-popup")) {
+        setPopupElement(null);
+      }
+
+      // Determine cycle action BEFORE calling preventDefault
+      let element;
+      let nextCycleIndex;
+
+      if (!isSamePoint(cyclePoint, clickPoint) || cycleCandidates.length === 0) {
+        // Fresh click at a new position
+        if (currentPopupElement === candidates[0] && candidates.length > 1) {
+          nextCycleIndex = 1;
+        } else {
+          nextCycleIndex = 0;
+        }
+      } else {
+        // Same position — cycle or pass through
+        if (currentPopupElement && candidates.length === 1) {
+          // Only one candidate and popup already open — pass through
+          nextCycleIndex = -1;
+        } else {
+          const next = cycleIndex + 1;
+          if (next >= candidates.length) {
+            // Cycled past last — pass through
+            nextCycleIndex = -1;
+          } else {
+            nextCycleIndex = next;
+          }
+        }
+      }
+
+      // Pass through: close popup, reset cycle, let native event fire
+      if (nextCycleIndex === -1) {
+        if (currentPopupElement) {
+          setPopupElement(null);
+          const popup = document.getElementById("pge-edit-popup");
+          if (popup) popup.remove();
+        }
+        cycleCandidates = [];
+        cycleIndex = -1;
+        cyclePoint = null;
+        mouseDownElement = null;
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
-
-      // Set flag BEFORE any await so it's ready when the synchronous click event fires
       suppressNextClick = true;
+      mouseDownElement = null;
+
+      cycleCandidates = candidates;
+      cyclePoint = clickPoint;
+      cycleIndex = nextCycleIndex;
+
+      element = cycleCandidates[cycleIndex];
+      if (!element) return;
 
       // Read all slots for this element
       const slots = getElementSlots(element);
       const slotNames = slots ? Object.keys(slots) : [];
 
-      // Determine which slot was most likely clicked
-      // If user clicked an attr-only element or the element has only attr slots, pick the attr
-      // Otherwise default to _text if available
       let activeSlot = '_text';
       if (slots) {
         if (slots._text) {
@@ -435,43 +510,61 @@ export function initOverlayMode() {
         currentText,
         slots: slotNames,
         activeSlot,
+        cyclePosition: `${cycleIndex + 1}/${cycleCandidates.length}`,
       });
 
-      currentPopupElement = element;
-      mouseDownElement = null;
+      setPopupElement(element);
 
       await createEditPopup(element, key, params, currentText, activeSlot);
 
-      // Watch for popup removal to re-enable normal clicks
+      // Inject cycle badge if multiple candidates
+      if (cycleCandidates.length > 1) {
+        const popup = document.getElementById("pge-edit-popup");
+        if (popup) {
+          const h4 = popup.querySelector("h4");
+          if (h4) {
+            h4.textContent = `Edit Translation (${cycleIndex + 1}/${cycleCandidates.length})`;
+          }
+        }
+      }
+
+      // Watch for popup removal to clear currentPopupElement (but preserve cycle state)
       const popup = document.getElementById("pge-edit-popup");
       if (popup) {
-        const observer = new MutationObserver((mutations) => {
+        popupObserver = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
             for (const removed of mutation.removedNodes) {
               if (removed === popup || removed.contains?.(popup)) {
-                currentPopupElement = null;
-                observer.disconnect();
-                console.log("[paraglide-editor] Popup closed, normal clicks enabled again");
+                setPopupElement(null);
+                // observer disconnected inside setPopupElement
+                console.log("[paraglide-editor] Popup closed, cycle state preserved");
                 return;
               }
             }
           }
         });
-        observer.observe(popup.parentNode, { childList: true });
+        popupObserver.observe(document.body, { childList: true });
       } else {
-        currentPopupElement = null;
+        setPopupElement(null);
       }
     },
     true
   );
 
   window.__paraglideEditor = window.__paraglideEditor || {};
+  window.__paraglideEditor.popupElement = null;
   window.__paraglideEditor.setOverlayMode = (enabled) => {
     overlayEnabled = enabled;
     localStorage.setItem("pge-overlay-enabled", enabled.toString());
     console.log(
       `[paraglide-editor] Overlay mode ${enabled ? "enabled" : "disabled"}`
     );
+
+    if (!enabled) {
+      cycleCandidates = [];
+      cycleIndex = -1;
+      cyclePoint = null;
+    }
 
     applyOutlinesToAllElements();
   };

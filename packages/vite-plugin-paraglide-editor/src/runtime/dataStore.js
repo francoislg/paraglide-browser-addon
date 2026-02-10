@@ -195,12 +195,12 @@ export function getTranslationVersions(locale, key) {
   const serverValue = serverTranslations?.[locale]?.[key] || '';
 
   return {
-    edited: localEdit?.editedValue || null,
+    edited: localEdit?.editedValue ?? null,
     server: serverValue,
     current: localEdit?.isEdited ? localEdit.editedValue : serverValue,
     isEdited: localEdit?.isEdited || false,
     hasConflict: localEdit?.hasConflict || false,
-    originalValue: localEdit?.originalValue || serverValue,
+    originalValue: localEdit?.originalValue ?? serverValue,
   };
 }
 

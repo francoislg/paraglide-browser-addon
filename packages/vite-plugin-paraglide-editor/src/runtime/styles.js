@@ -6,7 +6,7 @@
  * Responsibilities:
  * - Inject global CSS for overlay styles using ::after pseudo-elements
  * - Apply overlay classes based on element state
- * - Support multiple states: edited, conflict, hoverable
+ * - Support multiple states: edited, conflict, hoverable, selected
  * - Provide consistent visual feedback across the application
  * - Single point of entry for all element styling
  *
@@ -14,6 +14,7 @@
  * - hoverable: Yellow dashed border (1px) via ::after - overlay mode active, not edited
  * - edited: Green solid border (2px) via ::after - translation has been edited locally
  * - conflict: Red solid border (2px) via ::after - conflict between local and server
+ * - selected: Blue solid border (2px) via ::after - popup currently open for this element
  * - none: No overlay class - removes all overlay styling
  *
  * Implementation:
@@ -108,10 +109,27 @@ export function injectOverlayStyles() {
       border-color: #b91c1c;
     }
 
+    /* Selected state - blue solid border (popup currently open for this element) */
+    .pge-overlay-selected {
+      cursor: pointer !important;
+    }
+    .pge-overlay-selected::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 2px solid #2563eb;
+      background: rgba(59, 130, 246, 0.12);
+      pointer-events: none;
+      z-index: 999997;
+      box-sizing: border-box;
+      border-radius: 2px;
+    }
+
     /* Attribute-based elements (input, textarea, img) use outline instead of ::after */
     .pge-overlay-hoverable[data-paraglide-attr]::after,
     .pge-overlay-edited[data-paraglide-attr]::after,
-    .pge-overlay-conflict[data-paraglide-attr]::after {
+    .pge-overlay-conflict[data-paraglide-attr]::after,
+    .pge-overlay-selected[data-paraglide-attr]::after {
       content: none;
     }
     .pge-overlay-hoverable[data-paraglide-attr] {
@@ -134,6 +152,10 @@ export function injectOverlayStyles() {
     }
     .pge-overlay-conflict[data-paraglide-attr]:hover {
       outline-color: #b91c1c;
+    }
+    .pge-overlay-selected[data-paraglide-attr] {
+      outline: 2px solid #2563eb;
+      outline-offset: 1px;
     }
   `;
 
@@ -161,7 +183,8 @@ export function setOnTopMode(enabled) {
     style.textContent = `
       .pge-overlay-hoverable,
       .pge-overlay-edited,
-      .pge-overlay-conflict {
+      .pge-overlay-conflict,
+      .pge-overlay-selected {
         z-index: 999997 !important;
       }
     `;
@@ -176,14 +199,17 @@ export function setOnTopMode(enabled) {
  * This is the single point of entry for modifying element overlays
  *
  * @param {HTMLElement} element - The element to style
- * @param {string} state - The state: 'edited', 'conflict', 'hoverable', 'none'
+ * @param {string} state - The state: 'selected', 'edited', 'conflict', 'hoverable', 'none'
  */
 export function setElementOutline(element, state) {
   // Remove all existing overlay classes
-  element.classList.remove('pge-overlay-hoverable', 'pge-overlay-edited', 'pge-overlay-conflict', 'pge-positioned');
+  element.classList.remove('pge-overlay-hoverable', 'pge-overlay-edited', 'pge-overlay-conflict', 'pge-overlay-selected', 'pge-positioned');
 
   // Add appropriate class based on state
   switch (state) {
+    case 'selected':
+      element.classList.add('pge-overlay-selected');
+      break;
     case 'edited':
       element.classList.add('pge-overlay-edited');
       break;
