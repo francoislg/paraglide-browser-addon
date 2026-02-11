@@ -37,7 +37,8 @@ export async function initDataStore() {
   console.log('[paraglide-editor] Initializing data store...');
 
   try {
-    const response = await fetch('/@paraglide-editor/langs.json');
+    const url = window.__paraglideEditor?.config?.translationsUrl || '/@paraglide-editor/langs.json';
+    const response = await fetch(url);
     if (response.ok) {
       serverTranslations = await response.json();
       const localeCount = Object.keys(serverTranslations).length;

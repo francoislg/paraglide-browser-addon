@@ -1,4 +1,4 @@
-import { createEditorMiddleware } from "./middleware.js";
+import { createEditorMiddleware, readTranslations } from "./middleware.js";
 import { loadEnv } from "vite";
 import fs from "fs";
 import path from "path";
@@ -149,6 +149,9 @@ export function paraglideEditorPlugin(options = {}) {
 
   let viteConfig;
   let isEditorMode = false;
+  let isDev = true;
+  let runtimeUrl;
+  let translationsUrl;
 
   /** @type {"post"} */
   const enforce = "post";
@@ -162,12 +165,23 @@ export function paraglideEditorPlugin(options = {}) {
 
     configResolved(config) {
       viteConfig = config;
+      isDev = config.command === "serve";
       // Load PARAGLIDE_-prefixed env vars from .env files
       // (Vite's config.env only includes VITE_-prefixed vars by default)
       const editorEnv = loadEnv(config.mode, config.root, "PARAGLIDE_");
       isEditorMode = editorEnv.PARAGLIDE_EDITOR === "true";
+
+      const base = config.base || "/";
+      runtimeUrl = isDev
+        ? "/@paraglide-editor/runtime.js"
+        : `${base}paraglide-editor-runtime.js`;
+      translationsUrl = isDev
+        ? "/@paraglide-editor/langs.json"
+        : `${base}paraglide-editor-langs.json`;
+
       console.log("[paraglide-editor] Plugin configured");
       console.log("[paraglide-editor] Editor mode:", isEditorMode);
+      console.log("[paraglide-editor] Dev mode:", isDev);
       console.log(
         "[paraglide-editor] Environment check:",
         editorEnv.PARAGLIDE_EDITOR,
@@ -196,11 +210,35 @@ export function paraglideEditorPlugin(options = {}) {
       return null;
     },
 
+    // Emit real build assets during vite build
+    buildStart() {
+      if (!isEditorMode || isDev) return;
+
+      this.emitFile({
+        type: "chunk",
+        id: "/@paraglide-editor/runtime.js",
+        fileName: "paraglide-editor-runtime.js",
+      });
+
+      const rootPath = viteConfig.root || process.cwd();
+      try {
+        const translations = readTranslations(rootPath);
+        this.emitFile({
+          type: "asset",
+          fileName: "paraglide-editor-langs.json",
+          source: JSON.stringify(translations),
+        });
+        console.log("[paraglide-editor] ✓ Emitted build assets");
+      } catch (err) {
+        console.error("[paraglide-editor] Error reading translations for build:", err);
+      }
+    },
+
     // Load virtual module content
     load(id) {
       // Config module is always available (SvelteKit handle imports it unconditionally)
       if (id === "/@paraglide-editor/config.js") {
-        return `export const requireOptIn = ${requireOptIn};\nexport const editorEnabled = ${isEditorMode};`;
+        return `export const requireOptIn = ${requireOptIn};\nexport const editorEnabled = ${isEditorMode};\nexport const runtimeUrl = ${JSON.stringify(runtimeUrl)};\nexport const translationsUrl = ${JSON.stringify(translationsUrl)};`;
       }
 
       if (!isEditorMode) {
@@ -429,7 +467,10 @@ ${exports
       handler(html) {
         if (!isEditorMode) return html;
 
-        const configScript = `<script>window.__paraglideEditor = window.__paraglideEditor || {}; window.__paraglideEditor.config = { requireOptIn: ${requireOptIn} };</script>`;
+        const configScript = `<script>window.__paraglideEditor = window.__paraglideEditor || {}; window.__paraglideEditor.config = { requireOptIn: ${requireOptIn}, translationsUrl: ${JSON.stringify(translationsUrl)} };</script>`;
+        // Always use the virtual module path — Vite resolves it through our
+        // resolveId/load hooks in both dev and build. During build, Vite's
+        // build-html plugin bundles it into the output automatically.
         const runtimeScript =
           '<script type="module" src="/@paraglide-editor/runtime.js"></script>';
 

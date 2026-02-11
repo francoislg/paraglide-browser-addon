@@ -34,7 +34,7 @@
  * ```
  */
 
-import { requireOptIn, editorEnabled } from "/@paraglide-editor/config.js";
+import { requireOptIn, editorEnabled, runtimeUrl, translationsUrl } from "/@paraglide-editor/config.js";
 
 /**
  * SvelteKit `handle` function that conditionally injects the paraglide-editor
@@ -49,9 +49,9 @@ export async function paraglideEditorHandle({ event, resolve }) {
   return await resolve(event, {
     transformPageChunk: ({ html }) => {
       if (editorEnabled) {
-        const config = `<script>window.__paraglideEditor = window.__paraglideEditor || {}; window.__paraglideEditor.config = { requireOptIn: ${requireOptIn} };</script>`;
+        const config = `<script>window.__paraglideEditor = window.__paraglideEditor || {}; window.__paraglideEditor.config = { requireOptIn: ${requireOptIn}, translationsUrl: "${translationsUrl}" };</script>`;
         const runtime =
-          '<script type="module" src="/@paraglide-editor/runtime.js"></script>';
+          `<script type="module" src="${runtimeUrl}"></script>`;
         return html.replace("</body>", config + "\n" + runtime + "\n</body>");
       }
       return html;
