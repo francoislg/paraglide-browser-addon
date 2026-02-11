@@ -11,6 +11,7 @@ Add a comprehensive in-browser translation editor that allows developers and tra
 ## Problem Statement
 
 Currently, translating strings requires:
+
 1. Finding the translation key in the codebase
 2. Opening the appropriate `{locale}.json` file
 3. Editing the JSON manually
@@ -24,18 +25,22 @@ This workflow is disconnected from the actual UI and makes it difficult for non-
 Create a browser-based translation editor with:
 
 ### 1. Floating UI Widget
+
 - Small button fixed to bottom-right corner
 - Opens modal with translation management tools
 - Non-intrusive, can be minimized
 
 ### 2. Translation Management Modal
+
 Contains:
+
 - **Language selector** - Switch between available locales
 - **Sync button** - Pull latest translations from `/paraglide-editor-langs.json`
 - **Overlay toggle** - Enable/disable edit mode
 - **Download button** - Export modified translations as JSON files
 
 ### 3. Interactive Overlay Mode
+
 - Click any translated element to edit it in-place
 - Shows popup editor with current translation
 - Save button persists changes to IndexedDB
@@ -43,6 +48,7 @@ Contains:
 - Visual indicators for edited translations
 
 ### 4. Change Tracking & Conflict Resolution
+
 - Track when translations were last edited locally
 - Detect differences between local edits and server versions
 - Provide diff editor for conflict resolution
@@ -52,6 +58,7 @@ Contains:
 ## Current Foundation
 
 Already implemented:
+
 - ✅ Debug plugin that injects HTML comments with translation keys
 - ✅ IndexedDB database for storing translations
 - ✅ Sync functionality to fetch from `/paraglide-editor-langs.json`
@@ -59,7 +66,7 @@ Already implemented:
 
 ## User Workflow
 
-1. Developer enables editor mode (`VITE_PARAGLIDE_EDITOR=true`)
+1. Developer enables editor mode (`PARAGLIDE_EDITOR=true`)
 2. Opens page with translations
 3. Clicks floating editor button
 4. Clicks "Sync" to load current translations
@@ -81,17 +88,20 @@ Already implemented:
 ## Technical Considerations
 
 ### Dependencies
+
 - Existing editor plugin infrastructure
 - IndexedDB database (already implemented)
 - Click event interception
 - UI component library or custom components
 
 ### Performance
+
 - Edit mode only active when explicitly enabled
 - Minimal performance impact when disabled
 - Event delegation for click handling
 
 ### Data Flow
+
 1. **Load**: Server → IndexedDB → UI
 2. **Edit**: UI → IndexedDB → Immediate UI update
 3. **Export**: IndexedDB → Downloaded JSON files

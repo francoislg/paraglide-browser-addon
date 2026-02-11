@@ -24,17 +24,17 @@ pnpm add vite-plugin-paraglide-editor
 
 ```javascript
 // vite.config.js
-import { paraglide } from '@inlang/paraglide-vite';
-import { paraglideEditorPlugin } from 'vite-plugin-paraglide-editor';
+import { paraglide } from "@inlang/paraglide-vite";
+import { paraglideEditorPlugin } from "vite-plugin-paraglide-editor";
 
 export default defineConfig({
   plugins: [
     paraglide({
-      project: './project.inlang',
-      outdir: './src/paraglide',
+      project: "./project.inlang",
+      outdir: "./src/paraglide",
     }),
     paraglideEditorPlugin({
-      outdir: './src/paraglide', // Should match paraglide plugin
+      outdir: "./src/paraglide", // Should match paraglide plugin
     }),
   ],
 });
@@ -45,10 +45,11 @@ export default defineConfig({
 Create a `.env` file in your project root:
 
 ```env
-VITE_PARAGLIDE_EDITOR=true
+PARAGLIDE_EDITOR=true
 ```
 
 That's it! The plugin will automatically:
+
 - Wrap your message functions to track translations
 - Inject the runtime client script
 - Expose the global API at `window.__paraglideEditor`
@@ -59,15 +60,15 @@ SvelteKit uses `appType: 'custom'`, which bypasses Vite's HTML pipeline. The plu
 
 ```javascript
 // src/hooks.server.js
-import { sequence } from '@sveltejs/kit/hooks';
-import { paraglideMiddleware } from '$lib/paraglide/server';
-import { paraglideEditorHandle } from 'vite-plugin-paraglide-editor/sveltekit';
+import { sequence } from "@sveltejs/kit/hooks";
+import { paraglideMiddleware } from "$lib/paraglide/server";
+import { paraglideEditorHandle } from "vite-plugin-paraglide-editor/sveltekit";
 
 const paraglideHandle = ({ event, resolve }) =>
   paraglideMiddleware(event.request, ({ request, locale }) => {
     event.request = request;
     return resolve(event, {
-      transformPageChunk: ({ html }) => html.replace('%lang%', locale)
+      transformPageChunk: ({ html }) => html.replace("%lang%", locale),
     });
   });
 
@@ -77,23 +78,23 @@ export const handle = sequence(paraglideHandle, paraglideEditorHandle);
 If you don't use `paraglideMiddleware`, you can use it standalone:
 
 ```javascript
-export { paraglideEditorHandle as handle } from 'vite-plugin-paraglide-editor/sveltekit';
+export { paraglideEditorHandle as handle } from "vite-plugin-paraglide-editor/sveltekit";
 ```
 
 ### Configuration
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
+| Option         | Type      | Default | Description                                                                                                                                                                                            |
+| -------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `requireOptIn` | `boolean` | `false` | When `true`, the editor runtime stays dormant until the user sets `localStorage.setItem('pge-enabled', 'true')` in their browser console. When `false` (default), editor tools activate automatically. |
 
 **Activation model:**
 
-1. **Environment variable** (`VITE_PARAGLIDE_EDITOR=true`) — build-time gate. When disabled, the plugin is a no-op with zero overhead.
+1. **Environment variable** (`PARAGLIDE_EDITOR=true`) — build-time gate. When disabled, the plugin is a no-op with zero overhead.
 2. **localStorage opt-in** (`pge-enabled`) — browser-side gate, only enforced when `requireOptIn: true`. Useful for production/QA builds where you want editor support available but not active by default.
 
 ```javascript
 // Require explicit opt-in in the browser
-paraglideEditorPlugin({ requireOptIn: true })
+paraglideEditorPlugin({ requireOptIn: true });
 ```
 
 ## Browser API
@@ -124,8 +125,8 @@ For browser extensions or TypeScript projects, import the types:
 import type {
   ParaglideEditor,
   TrackedElement,
-  TranslationMetadata
-} from 'vite-plugin-paraglide-editor/client';
+  TranslationMetadata,
+} from "vite-plugin-paraglide-editor/client";
 
 // Access the global API
 const debug = window.__paraglideEditor;
@@ -154,7 +155,7 @@ function highlightTranslations() {
   const debug = window.__paraglideEditor;
 
   if (!debug) {
-    console.warn('Paraglide editor mode not enabled');
+    console.warn("Paraglide editor mode not enabled");
     return;
   }
 
@@ -162,7 +163,7 @@ function highlightTranslations() {
 
   elements.forEach(({ element, key, params }) => {
     // Highlight element
-    element.style.outline = '2px solid orange';
+    element.style.outline = "2px solid orange";
 
     // Add tooltip on hover
     element.title = `Translation key: ${key}`;
@@ -173,8 +174,8 @@ function highlightTranslations() {
 }
 
 // Run after page load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', highlightTranslations);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", highlightTranslations);
 } else {
   highlightTranslations();
 }
@@ -200,12 +201,12 @@ Editor mode should typically only be enabled during development:
 
 ```javascript
 // .env.development
-VITE_PARAGLIDE_EDITOR=true
+PARAGLIDE_EDITOR = true;
 ```
 
 ```javascript
 // .env.production
-VITE_PARAGLIDE_EDITOR=false
+PARAGLIDE_EDITOR = false;
 ```
 
 However, it's safe to ship editor-enabled builds if needed (e.g., for QA environments).

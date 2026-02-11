@@ -6,9 +6,10 @@ A Vite plugin that provides an in-browser translation editor for ParaglideJS wit
 
 ### [`vite-plugin-paraglide-editor`](./packages/vite-plugin-paraglide-editor)
 
-The core Vite plugin that transforms Paraglide-generated message functions to enable in-browser editing when `VITE_PARAGLIDE_EDITOR=true`.
+The core Vite plugin that transforms Paraglide-generated message functions to enable in-browser editing when `PARAGLIDE_EDITOR=true`.
 
 **Features:**
+
 - Wraps message functions to track translation key usage in the browser
 - Click-to-edit overlay mode for editing translations directly on the page
 - Local edit persistence via IndexedDB with server sync and conflict detection
@@ -73,7 +74,7 @@ pnpm dev:vanilla
 
 ## How It Works
 
-When `VITE_PARAGLIDE_EDITOR=true` is set:
+When `PARAGLIDE_EDITOR=true` is set:
 
 1. The Paraglide plugin generates message functions
 2. The editor plugin intercepts `messages/_index.js` and wraps each function to register text-to-key mappings in `window.__paraglideEditor.registry`
@@ -130,28 +131,28 @@ Since the plugin lives in a monorepo subdirectory, you need to use the full path
 
 ```javascript
 // vite.config.js
-import { defineConfig } from 'vite';
-import { paraglide } from '@inlang/paraglide-js';
-import { paraglideEditorPlugin } from 'vite-plugin-paraglide-editor/packages/vite-plugin-paraglide-editor/src/index.js';
+import { defineConfig } from "vite";
+import { paraglide } from "@inlang/paraglide-js";
+import { paraglideEditorPlugin } from "vite-plugin-paraglide-editor/packages/vite-plugin-paraglide-editor/src/index.js";
 
 export default defineConfig({
   plugins: [
     paraglide({
-      project: './project.inlang',
-      outdir: './src/paraglide'
+      project: "./project.inlang",
+      outdir: "./src/paraglide",
     }),
     // Editor tools activate automatically (default)
-    paraglideEditorPlugin()
+    paraglideEditorPlugin(),
 
     // Or require explicit browser opt-in via localStorage:
     // paraglideEditorPlugin({ requireOptIn: true })
-  ]
+  ],
 });
 ```
 
 ```bash
 # .env
-VITE_PARAGLIDE_EDITOR=true
+PARAGLIDE_EDITOR=true
 ```
 
 ### SvelteKit
@@ -159,7 +160,7 @@ VITE_PARAGLIDE_EDITOR=true
 SvelteKit bypasses Vite's HTML pipeline, so the runtime script cannot be injected automatically. Add the provided handle to `src/hooks.server.js`:
 
 ```javascript
-import { paraglideEditorHandle } from 'vite-plugin-paraglide-editor/sveltekit';
+import { paraglideEditorHandle } from "vite-plugin-paraglide-editor/sveltekit";
 // compose with your other handles via sequence()
 export const handle = sequence(paraglideHandle, paraglideEditorHandle);
 ```

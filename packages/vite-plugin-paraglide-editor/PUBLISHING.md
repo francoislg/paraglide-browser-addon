@@ -50,23 +50,28 @@ This document provides a comprehensive checklist for publishing `vite-plugin-par
 ### 3. Testing
 
 #### Example Projects
+
 - [ ] Test vanilla example:
+
   ```bash
   cd examples/vanilla
   rm -rf node_modules/.vite
-  VITE_PARAGLIDE_EDITOR=true pnpm dev
+  PARAGLIDE_EDITOR=true pnpm dev
   ```
+
   - Open http://localhost:3210
   - Verify floating button appears
   - Verify translations can be edited
   - Check console for errors
 
 - [ ] Test React Router example:
+
   ```bash
   cd examples/react-router
   rm -rf node_modules/.vite
-  VITE_PARAGLIDE_EDITOR=true pnpm dev
+  PARAGLIDE_EDITOR=true pnpm dev
   ```
+
   - Open http://localhost:3220
   - Verify editor mode works
   - Test navigation between routes
@@ -75,42 +80,48 @@ This document provides a comprehensive checklist for publishing `vite-plugin-par
   ```bash
   cd examples/sveltekit
   rm -rf node_modules/.vite
-  VITE_PARAGLIDE_EDITOR=true pnpm dev
+  PARAGLIDE_EDITOR=true pnpm dev
   ```
+
   - Open http://localhost:3230
   - Verify SSR + editor mode works
   - Check Network tab for `/@paraglide-editor/` requests
 
 #### Production Builds
+
 - [ ] Test production build with editor mode ON:
+
   ```bash
   cd examples/vanilla
-  VITE_PARAGLIDE_EDITOR=true pnpm build
+  PARAGLIDE_EDITOR=true pnpm build
   pnpm preview
   ```
+
   - Verify editor functionality works in production build
   - Check that runtime script is included
 
 - [ ] Test production build with editor mode OFF:
   ```bash
   cd examples/vanilla
-  VITE_PARAGLIDE_EDITOR=false pnpm build
+  PARAGLIDE_EDITOR=false pnpm build
   pnpm preview
   ```
+
   - Verify NO editor code is injected
   - Check that `window.__paraglideEditor` is undefined
   - Verify no `/@paraglide-editor/` network requests
 
 #### Browser Extension Testing
+
 - [ ] Verify TypeScript types are accessible:
   ```typescript
-  import type { ParaglideEditor } from 'vite-plugin-paraglide-editor/client';
+  import type { ParaglideEditor } from "vite-plugin-paraglide-editor/client";
   ```
 - [ ] Test `window.__paraglideEditor` API in browser console:
   ```javascript
-  window.__paraglideEditor.registry // Should be Map
-  window.__paraglideEditor.getElements() // Should return array
-  window.__paraglideEditor.refresh() // Should re-scan DOM
+  window.__paraglideEditor.registry; // Should be Map
+  window.__paraglideEditor.getElements(); // Should return array
+  window.__paraglideEditor.refresh(); // Should re-scan DOM
   ```
 
 ### 4. Documentation
@@ -147,17 +158,20 @@ This document provides a comprehensive checklist for publishing `vite-plugin-par
 ### Option A: Publish from Local Machine
 
 1. **Login to npm** (if not already logged in):
+
    ```bash
    npm login
    ```
 
 2. **Dry run** to verify package contents:
+
    ```bash
    cd packages/vite-plugin-paraglide-editor
    npm pack --dry-run
    ```
 
 3. **Publish** to npm:
+
    ```bash
    npm publish
    # Or if scoped package (@yourorg/vite-plugin-paraglide-editor):
@@ -186,6 +200,7 @@ This document provides a comprehensive checklist for publishing `vite-plugin-par
 ### 1. Git & GitHub
 
 - [ ] Push commits and tags:
+
   ```bash
   git push origin main
   git push --tags
@@ -200,6 +215,7 @@ This document provides a comprehensive checklist for publishing `vite-plugin-par
 ### 2. Verification
 
 - [ ] Install published package in a test project:
+
   ```bash
   mkdir test-install
   cd test-install
@@ -208,6 +224,7 @@ This document provides a comprehensive checklist for publishing `vite-plugin-par
   ```
 
 - [ ] Verify package.json exports work:
+
   ```bash
   node -e "console.log(require('vite-plugin-paraglide-editor/package.json').version)"
   ```
@@ -222,6 +239,7 @@ This document provides a comprehensive checklist for publishing `vite-plugin-par
 ### 3. Update Root README
 
 - [ ] Add npm badge to root `README.md`:
+
   ```markdown
   [![npm version](https://badge.fury.io/js/vite-plugin-paraglide-editor.svg)](https://www.npmjs.com/package/vite-plugin-paraglide-editor)
   [![npm downloads](https://img.shields.io/npm/dm/vite-plugin-paraglide-editor.svg)](https://www.npmjs.com/package/vite-plugin-paraglide-editor)
@@ -258,11 +276,13 @@ This document provides a comprehensive checklist for publishing `vite-plugin-par
 **Within 72 hours of publishing:**
 
 You can unpublish:
+
 ```bash
 npm unpublish vite-plugin-paraglide-editor@X.Y.Z
 ```
 
 ⚠️ **Warning**: Only works if:
+
 - Published less than 72 hours ago
 - No other packages depend on it
 - You have permission
@@ -289,16 +309,19 @@ Cannot unpublish. Instead:
 ## Tips for Successful Publishing
 
 ### Before First Publish
+
 - Start with `0.1.0` version
 - Mark as "beta" or "alpha" in README if not production-ready
 - Set expectations in README about stability
 
 ### Version Strategy
+
 - Use `0.x.x` versions until API is stable
 - Jump to `1.0.0` when ready for production use
 - Follow semantic versioning strictly after 1.0.0
 
 ### Common Mistakes to Avoid
+
 - ❌ Publishing with stray console.logs
 - ❌ Forgetting to update CHANGELOG
 - ❌ Wrong version in package.json
@@ -308,6 +331,7 @@ Cannot unpublish. Instead:
 - ❌ Publishing with uncommitted changes
 
 ### Best Practices
+
 - ✅ Test in fresh directory (not symlinked)
 - ✅ Use `npm pack` to inspect contents
 - ✅ Keep CHANGELOG up to date

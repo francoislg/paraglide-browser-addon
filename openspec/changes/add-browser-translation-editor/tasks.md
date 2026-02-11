@@ -7,7 +7,8 @@
 ## Current Status Summary
 
 ### ✅ Fully Completed & Working
-- **Element Tracking:** Runtime system with TreeWalker, MutationObserver, data-* attributes (`runtime.js`)
+
+- **Element Tracking:** Runtime system with TreeWalker, MutationObserver, data-\* attributes (`runtime.js`)
 - **Enhanced Database:** Full schema with conflict tracking - `originalValue`, `editedValue`, `isEdited`, `lastEditTime`, `lastSyncTime`, `hasConflict` (`runtime/db.js`)
 - **Sync Logic:** Conflict detection, server sync, conflict flagging (`runtime/sync.js`) - Fixed endpoint URL
 - **Modular UI Components:** Refactored into separate, focused modules
@@ -24,7 +25,7 @@
 - **Full File Export:** Download complete merged translation files (`runtime/export.js`)
 - **Vite Plugin:** Virtual module serving with relative import resolution (`index.js`)
 - **Conditional Loading (Task 2.0):** ✅ Zero footprint when editor disabled
-  - Plugin checks `VITE_PARAGLIDE_EDITOR` env variable
+  - Plugin checks `PARAGLIDE_EDITOR` env variable
   - Debug=false: 4.7 KB bundle (NO editor code)
   - Debug=true: 39.79 KB bundle (~35 KB editor overhead)
   - Virtual modules only served when editor enabled
@@ -37,7 +38,9 @@
   - Supports plural translations in conflict view
 
 ### 🐛 Bugs Fixed
+
 **Session 2025-12-02 AM:**
+
 1. **Locale Detection Bug** - Fixed missing locale detection causing edits to save under wrong locale
    - Added `detectCurrentLocale()` function checking localStorage, cookies, HTML lang
 2. **IndexedDB Query Error** - Fixed `DataError: The parameter is not a valid key` on `index.getAll()`
@@ -46,9 +49,10 @@
    - Added `currentText !== editedValue` check before DOM updates
 4. **Edits Not Persisting on Reload** - All above fixes combined to solve this issue
 
-**Session 2025-12-02 PM:**
-5. **Sync with Server Broken** - Fixed incorrect endpoint URL
-   - Changed from `/paraglide-editor-langs.json` to `/@paraglide-editor/langs.json` (`sync.js:12`)
+**Session 2025-12-02 PM:** 5. **Sync with Server Broken** - Fixed incorrect endpoint URL
+
+- Changed from `/paraglide-editor-langs.json` to `/@paraglide-editor/langs.json` (`sync.js:12`)
+
 6. **Export Only Saving Changes** - Updated to export full merged files
    - Now fetches server translations and merges with edits (`export.js:17-66`)
    - Exports complete `{locale}.json` files instead of `{locale}-edits.json`
@@ -62,41 +66,47 @@
    - Refactored `overlay.js` from ~860 to ~160 lines
    - Refactored `ui.js` from ~460 to ~8 lines (re-exports)
 
-**Session 2025-12-03:**
-8. **Plugin Breaking Build** - Fixed transform attempting to wrap re-export statements
-   - Plugin was trying to wrap `export * from` statements in `_index.js`
-   - Regex `export const (\w+) =` didn't match, causing empty wrapper with no exports
-   - Result: Runtime error "(void 0) is not a function" when importing messages
-   - Initial fix: Pass through re-exports without transformation
-   - Final fix: Properly wrap re-export statements by importing each module individually (`index.js:139-192`)
-   - Verified: Build works correctly with both editor=true and editor=false
+**Session 2025-12-03:** 8. **Plugin Breaking Build** - Fixed transform attempting to wrap re-export statements
+
+- Plugin was trying to wrap `export * from` statements in `_index.js`
+- Regex `export const (\w+) =` didn't match, causing empty wrapper with no exports
+- Result: Runtime error "(void 0) is not a function" when importing messages
+- Initial fix: Pass through re-exports without transformation
+- Final fix: Properly wrap re-export statements by importing each module individually (`index.js:139-192`)
+- Verified: Build works correctly with both editor=true and editor=false
+
 9. **Preview Mode Not Serving Translations** - Added configurePreviewServer hook
    - `configureServer` only runs in dev mode, not preview mode
    - Fetch to `/@paraglide-editor/langs.json` failed in preview
    - Fix: Added `configurePreviewServer` hook to serve middleware in preview (`index.js:105-113`)
    - Result: Translation endpoint now available in both dev and preview modes
 10. **Parameterized Translations Auto-Apply Issue** - Plural items all showing same text
-   - Problem: `applySavedEditsFromDB()` was applying saved edits to ALL elements with same key
-   - For plurals (e.g., `items_count` with `count=0,1,2,5`), all showed same edited text
-   - Root cause: Didn't check `data-paraglide-params` before applying edits
-   - Fix: Skip auto-apply for parameterized translations, only show green outline (`runtime.js:136-144`)
-   - Result: Parameterized translations keep their original dynamic text, marked as edited with outline
+
+- Problem: `applySavedEditsFromDB()` was applying saved edits to ALL elements with same key
+- For plurals (e.g., `items_count` with `count=0,1,2,5`), all showed same edited text
+- Root cause: Didn't check `data-paraglide-params` before applying edits
+- Fix: Skip auto-apply for parameterized translations, only show green outline (`runtime.js:136-144`)
+- Result: Parameterized translations keep their original dynamic text, marked as edited with outline
+
 11. **Initial Load Registry Empty** - Registry worked on language change but not initial load
-   - Problem: Runtime script checked registry before main app populated it (timing/race condition)
-   - Initial load: Runtime → checks registry → empty → returns (failed)
-   - Language change: App populates → runtime checks → success (worked)
-   - Fix: Implemented event-driven initialization with `__paraglideInitialized` custom event
-     - Wrapper dispatches event when registry first created (`index.js:175-182`)
-     - Runtime listens for event and builds on receipt (`runtime.js:30-34`)
-     - Also checks if registry already populated for late-loading runtime (`runtime.js:198-200`)
-   - Result: Clean event-driven pattern, works in all timing scenarios without polling/retries
+
+- Problem: Runtime script checked registry before main app populated it (timing/race condition)
+- Initial load: Runtime → checks registry → empty → returns (failed)
+- Language change: App populates → runtime checks → success (worked)
+- Fix: Implemented event-driven initialization with `__paraglideInitialized` custom event
+  - Wrapper dispatches event when registry first created (`index.js:175-182`)
+  - Runtime listens for event and builds on receipt (`runtime.js:30-34`)
+  - Also checks if registry already populated for late-loading runtime (`runtime.js:198-200`)
+- Result: Clean event-driven pattern, works in all timing scenarios without polling/retries
 
 ### 🔨 Partially Complete
+
 - **Task 3.5:** Parameter handling - basic display but no validation
 - **Task 5.3:** File download - works but no delay for multi-locale
 - **Task 6.1:** ESC key handling exists for popup, needs Ctrl+S
 
 ### ❌ Not Started
+
 - **Task 4.2:** Diff viewer (basic diff shown in resolution dialog, could be enhanced)
 - **Task 4.4:** Bulk conflict resolution
 - **Task 5.2:** Export validation
@@ -106,6 +116,7 @@
 - **Phase 7:** Testing & Documentation
 
 ### Success Criteria Status (from proposal.md)
+
 1. ✅ **Can click any translated element and edit it** - WORKING
 2. ✅ **Changes persist across page reloads** - WORKING (fixed locale detection + infinite loop bugs)
 3. ✅ **Can export all modified translations** - WORKING
@@ -114,6 +125,7 @@
 6. ✅ **Works across all three supported locales (en, es, fr)** - WORKING (language selector functional)
 
 ### Next Priorities
+
 1. **Task 3.5 (Parameter Validation):** Add parameter highlighting and validation
 2. **Phase 6 (Polish):** Loading states, error boundaries, accessibility improvements
 3. **Phase 7 (Testing):** Unit tests, integration tests, manual testing checklist
@@ -125,6 +137,7 @@
 ### Phase 1: Foundation & Storage (Parallel-safe)
 
 #### Task 1.1: Enhance Database Schema ✅ COMPLETED
+
 - [x] Update `src/db.js` to include new fields: `originalValue`, `editedValue`, `isEdited`, `lastEditTime`, `lastSyncTime`, `hasConflict`
 - [x] Add indices for `isEdited` and `hasConflict`
 - [x] Update `saveKey()` to handle the new schema
@@ -135,6 +148,7 @@
 - **Deliverable:** Enhanced database with conflict tracking ✅
 
 #### Task 1.2: Update Sync Logic for Conflict Detection ✅ COMPLETED
+
 - [x] Modify `syncTranslations()` in `src/db.js` to detect conflicts (db.js:150-240)
 - [x] Compare incoming server values with `editedValue` when `isEdited = true`
 - [x] Set `hasConflict = true` when differences detected
@@ -146,12 +160,13 @@
 ### Phase 2: UI Components (Sequential within phase)
 
 #### Task 2.0: Set Up Conditional Loading ✅ COMPLETED
+
 - [x] Implemented via Vite plugin's virtual module system
-- [x] Plugin checks `VITE_PARAGLIDE_EDITOR` environment variable
+- [x] Plugin checks `PARAGLIDE_EDITOR` environment variable
 - [x] Virtual modules (`/@paraglide-editor/runtime.js`) only served when editor=true
 - [x] **Validation Results:**
-  - Build with `VITE_PARAGLIDE_EDITOR=false` → 4.7 KB bundle (NO editor code) ✅
-  - Build with `VITE_PARAGLIDE_EDITOR=true` → 39.79 KB bundle (~35 KB editor) ✅
+  - Build with `PARAGLIDE_EDITOR=false` → 4.7 KB bundle (NO editor code) ✅
+  - Build with `PARAGLIDE_EDITOR=true` → 39.79 KB bundle (~35 KB editor) ✅
   - Verified zero footprint in production builds
 - **Deliverable:** Zero-footprint conditional loading ✅
 - **Implementation:** Plugin approach (virtual modules) instead of dynamic import in app code
@@ -159,6 +174,7 @@
   - Plugin serves empty comment when editor=false, full runtime when editor=true
 
 #### Task 2.1: Create Base Component System ⚠️ SKIPPED
+
 - [ ] Create `src/editor/Component.js` - Simple base class for components
 - [ ] Implement `render()`, `mount()`, `unmount()` lifecycle
 - [ ] Add event delegation helpers
@@ -167,6 +183,7 @@
 - **Note:** Using vanilla JS functional approach instead, no class-based components needed
 
 #### Task 2.2: Build Floating Button Widget ✅ COMPLETED
+
 - [x] Create `src/editor/FloatingButton.js` (implemented in ui.js:8-51)
 - [x] Position at bottom-right with fixed positioning
 - [x] Add translation icon SVG
@@ -176,6 +193,7 @@
 - **Deliverable:** Floating button widget ✅
 
 #### Task 2.3: Build Translation Modal ✅ COMPLETED
+
 - [x] Create `src/editor/Modal.js` (implemented in ui.js:53-223)
 - [x] Implement backdrop and modal container
 - [x] Add close button and ESC key handler (ESC: ui.js:189-196, close button: ui.js:214-221)
@@ -185,6 +203,7 @@
 - **Deliverable:** Modal shell component ✅
 
 #### Task 2.4: Add Language Selector ✅ COMPLETED
+
 - [x] Create `src/editor/LanguageSelector.js` (implemented in ui.js:212-279)
 - [x] Fetch available locales from Paraglide runtime (fetches from /paraglide-editor-langs.json)
 - [x] Display current locale with highlight
@@ -194,6 +213,7 @@
 - **Deliverable:** Working language selector ✅
 
 #### Task 2.5: Add Sync Controls ✅ COMPLETED
+
 - [x] Create `src/editor/SyncControls.js` (implemented in ui.js:160-163 + sync.js:7-48)
 - [x] Add sync button with loading states
 - [x] Wire up to existing `syncTranslations()` method
@@ -203,6 +223,7 @@
 - **Deliverable:** Sync control UI ✅
 
 #### Task 2.6: Add Overlay Toggle ✅ COMPLETED
+
 - [x] Create `src/editor/OverlayToggle.js` (implemented in ui.js:166-172 + overlay.js:331-362)
 - [x] Implement toggle switch UI (checkbox at ui.js:169)
 - [x] Store overlay state in localStorage (overlay.js:299, 335)
@@ -211,6 +232,7 @@
 - **Deliverable:** Overlay mode toggle ✅
 
 #### Task 2.7: Add Download Button ✅ COMPLETED
+
 - [x] Create `src/editor/DownloadControls.js` (implemented in ui.js:175-178)
 - [x] Add download button to modal
 - [x] Wire up to export functionality (Task 5.1)
@@ -220,6 +242,7 @@
 ### Phase 3: Overlay Mode (Sequential)
 
 #### Task 3.1: Implement Click Detection ✅ COMPLETED
+
 - [x] Create `src/editor/OverlayManager.js` (implemented in overlay.js:298-329)
 - [x] Add document click listener (event delegation) (overlay.js:302)
 - [x] Implement `extractTranslationKey()` to parse HTML comments (uses data-paraglide-key attribute)
@@ -229,6 +252,7 @@
 - **Deliverable:** Click detection system ✅
 
 #### Task 3.2: Build Edit Popup ✅ COMPLETED
+
 - [x] Create `src/editor/EditPopup.js` (implemented in overlay.js:10-247)
 - [x] Position near clicked element (smart viewport handling) (overlay.js:159-191)
 - [x] Display translation key, locale, current value (overlay.js:144-148)
@@ -240,6 +264,7 @@
 - **Deliverable:** Edit popup component ✅
 
 #### Task 3.3: Implement Edit Save Logic ✅ COMPLETED
+
 - [x] Wire Save button to `saveEdit()` database method (overlay.js:206-233)
 - [x] Update DOM immediately with new value (overlay.js:219)
 - [x] Preserve HTML comment wrapper (N/A - uses data attributes)
@@ -249,6 +274,7 @@
 - **Deliverable:** Working edit-save flow ✅
 
 #### Task 3.4: Add Visual Indicators ✅ COMPLETED
+
 - [x] Add CSS class for editable elements on hover (overlay.js:338-361)
 - [x] Show "edited" badge for modified translations (green outline, overlay.js:222-223, 343-345)
 - [ ] Show "conflict" badge for conflicted translations (not implemented)
@@ -258,6 +284,7 @@
 - **Deliverable:** Visual feedback system ✅
 
 #### Task 3.5: Handle Parameterized Translations ⚠️ PARTIALLY COMPLETE
+
 - [x] Detect parameters in translation values (e.g., `{name}`) (displayed in popup at overlay.js:147)
 - [ ] Highlight parameters in edit popup
 - [ ] Validate parameters are preserved on save
@@ -266,6 +293,7 @@
 - **Deliverable:** Parameter-aware editing (basic display only)
 
 #### Task 3.6: Handle Plural Translations ✅ COMPLETED
+
 - [x] Detect plural translation structure (overlay.js:95-102, 112-118)
 - [x] Display all plural variants in edit popup (overlay.js:182-196, shared controls at 143-152)
 - [x] Allow editing each variant separately (shared dropdown selector + expand/collapse)
@@ -281,6 +309,7 @@
 ### Phase 4: Conflict Resolution (Sequential)
 
 #### Task 4.1: Build Conflict List View ✅ COMPLETED
+
 - [x] Create `runtime/ui/conflictList.js`
 - [x] Query database for `hasConflict = true` using `getConflicts()` (db.js:134-156)
 - [x] Display list of conflicted translations with visual indicators
@@ -291,6 +320,7 @@
 - **Implementation:** Integrated with modal, auto-refreshes after sync, supports plural translations
 
 #### Task 4.2: Build Diff Viewer ❌ NOT STARTED
+
 - [ ] Create `src/editor/DiffViewer.js`
 - [ ] Implement side-by-side comparison
 - [ ] Highlight additions (green) and deletions (red)
@@ -300,6 +330,7 @@
 - **Deliverable:** Diff visualization
 
 #### Task 4.3: Implement Resolution Actions ✅ COMPLETED
+
 - [x] Add "Keep My Version" button (conflictList.js:183-188)
 - [x] Add "Keep Server Version" button (conflictList.js:190-195)
 - [x] Add "Save Custom" button with textarea for manual editing (conflictList.js:197-207)
@@ -311,6 +342,7 @@
 - **Implementation:** Modal dialog with side-by-side view, three resolution options, ESC/backdrop close
 
 #### Task 4.4: Add Bulk Resolution ❌ NOT STARTED
+
 - [ ] Add "Keep All Local" button
 - [ ] Add "Keep All Server" button
 - [ ] Add checkbox selection for conflicts
@@ -322,6 +354,7 @@
 ### Phase 5: Export Functionality (Sequential)
 
 #### Task 5.1: Implement JSON Generation ✅ COMPLETED
+
 - [x] Create `src/editor/ExportManager.js` (implemented in export.js:7-91)
 - [x] Query database for translations by locale (export.js:9)
 - [x] Fetch server translations and merge with edits (export.js:16-66)
@@ -332,6 +365,7 @@
 - **Deliverable:** Full file export with merged translations ✅
 
 #### Task 5.2: Add Export Validation ❌ NOT STARTED
+
 - [ ] Validate JSON is well-formed
 - [ ] Check parameter consistency
 - [ ] Verify plural structure integrity
@@ -341,6 +375,7 @@
 - **Deliverable:** Export validation system
 
 #### Task 5.3: Implement File Download ✅ COMPLETED
+
 - [x] Generate Blob from JSON string (export.js:72)
 - [x] Create download link with `{locale}.json` filename (export.js:76)
 - [x] Trigger browser download (export.js:74-80)
@@ -349,6 +384,7 @@
 - **Deliverable:** Full file download with merged translations ✅
 
 #### Task 5.4: Add Multi-Locale Export ⚠️ PARTIALLY COMPLETE
+
 - [x] Implement sequential downloads for all locales (export.js:26, loops over locales)
 - [ ] Add delay between downloads to avoid browser blocking
 - [ ] Show progress indicator
@@ -356,6 +392,7 @@
 - **Deliverable:** Multi-locale export (works but no delays/progress)
 
 #### Task 5.5: Add ZIP Export (Optional) ❌ NOT STARTED
+
 - [ ] Integrate ZIP library (e.g., JSZip)
 - [ ] Bundle all locale JSON files into single ZIP
 - [ ] Name ZIP file with timestamp
@@ -366,6 +403,7 @@
 ### Phase 6: Polish & Integration (Parallel-safe)
 
 #### Task 6.1: Add Keyboard Shortcuts ⚠️ PARTIALLY COMPLETE
+
 - [x] ESC closes popup and modal (overlay.js:240-246)
 - [ ] Ctrl/Cmd+S saves translation in popup
 - [ ] Tab navigation through controls
@@ -374,6 +412,7 @@
 - **Deliverable:** Keyboard accessibility (partial)
 
 #### Task 6.2: Add Loading States ⚠️ PARTIALLY COMPLETE
+
 - [ ] Show spinners during async operations
 - [x] Disable buttons during processing (overlay.js:210)
 - [ ] Display progress indicators
@@ -381,6 +420,7 @@
 - **Deliverable:** Loading state UX (basic button disabling only)
 
 #### Task 6.3: Error Handling ⚠️ PARTIALLY COMPLETE
+
 - [x] Add try-catch blocks around all async operations (present in db.js, sync.js, export.js, overlay.js)
 - [x] Display user-friendly error messages (uses alert(), overlay.js:231, sync.js:44)
 - [x] Log detailed errors to console
@@ -389,6 +429,7 @@
 - **Deliverable:** Robust error handling (basic with alerts)
 
 #### Task 6.4: Performance Optimization ⚠️ PARTIALLY COMPLETE
+
 - [x] Implement event delegation for overlay clicks (overlay.js:302, uses capture phase)
 - [ ] Debounce search/filter operations (N/A - no search yet)
 - [x] Use requestAnimationFrame for animations (overlay.js:163 for popup positioning)
@@ -397,6 +438,7 @@
 - **Deliverable:** Optimized performance (some optimizations present)
 
 #### Task 6.5: Accessibility ❌ NOT STARTED
+
 - [ ] Add ARIA labels to all interactive elements
 - [ ] Ensure keyboard navigation works
 - [ ] Test with screen readers
@@ -406,6 +448,7 @@
 - **Deliverable:** Accessible UI
 
 #### Task 6.6: Mobile Responsiveness ⚠️ PARTIALLY COMPLETE
+
 - [ ] Test on mobile viewport sizes
 - [x] Adjust modal sizing for small screens (modal uses max-width: 600px, width: 90% - ui.js:82)
 - [ ] Make touch targets appropriately sized
@@ -416,6 +459,7 @@
 ### Phase 7: Documentation & Testing
 
 #### Task 7.1: Write Unit Tests ❌ NOT STARTED
+
 - [ ] Test database CRUD operations
 - [ ] Test key extraction logic
 - [ ] Test JSON generation
@@ -425,6 +469,7 @@
 - **Deliverable:** Unit test suite
 
 #### Task 7.2: Write Integration Tests ❌ NOT STARTED
+
 - [ ] Test end-to-end edit workflow
 - [ ] Test sync with conflicts
 - [ ] Test export functionality
@@ -433,6 +478,7 @@
 - **Deliverable:** Integration test suite
 
 #### Task 7.3: Update Documentation ❌ NOT STARTED
+
 - [ ] Document new database schema in CLAUDE.md
 - [ ] Add usage instructions to README
 - [ ] Document keyboard shortcuts
@@ -441,6 +487,7 @@
 - **Deliverable:** Updated documentation
 
 #### Task 7.4: Create Demo Video ❌ NOT STARTED
+
 - [ ] Record screen capture of features
 - [ ] Show edit workflow
 - [ ] Show conflict resolution
@@ -508,13 +555,14 @@ Task 5.1 (JSON Gen) ─> Task 5.2 (Validation) ─> Task 5.3 (Download) ─> Tas
 ### Critical Tests
 
 **Bundle Size Verification:**
+
 ```bash
 # Test 1: Production build without debug
-VITE_PARAGLIDE_EDITOR=false npm run build
+PARAGLIDE_EDITOR=false npm run build
 npm run analyze-bundle  # Should show 0 KB editor modules
 
 # Test 2: Production build with debug
-VITE_PARAGLIDE_EDITOR=true npm run build
+PARAGLIDE_EDITOR=true npm run build
 npm run analyze-bundle  # Should show ~50-100 KB editor modules
 
 # Test 3: Development mode

@@ -6,7 +6,7 @@
   "description": "SvelteKit example for vite-plugin-paraglide-editor",
   "scripts": {
     "dev": "vite dev",
-    "build": "VITE_PARAGLIDE_EDITOR=true vite build",
+    "build": "PARAGLIDE_EDITOR=true vite build",
     "preview": "vite preview"
   },
   "dependencies": {

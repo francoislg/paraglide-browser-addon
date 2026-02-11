@@ -13,17 +13,20 @@ The `vite-plugin-paraglide-editor` package has a solid foundation but needs seve
 ### 1. Missing LICENSE File
 
 **Problem**:
+
 - `package.json` specifies `"license": "MIT"`
 - No `LICENSE` or `LICENSE.md` file exists in the package
 - NPM publishing best practices require license file
 - Legal ambiguity for users
 
 **Impact**: ⚠️ HIGH
+
 - Users cannot verify license terms
 - May prevent package from being used in corporate environments
 - NPM will show a warning during publish
 
 **Recommendation**:
+
 ```bash
 # Create LICENSE file
 cat > packages/vite-plugin-paraglide-editor/LICENSE << 'EOF'
@@ -52,6 +55,7 @@ EOF
 ```
 
 Update `package.json` files field:
+
 ```json
 "files": [
   "src",
@@ -65,12 +69,14 @@ Update `package.json` files field:
 ### 2. Invalid `files` Field in package.json
 
 **Problem**:
+
 - `package.json` lists `"runtime.js"` in the `files` array
 - This file **does not exist** at package root
 - Will cause npm publish warnings/errors
 - Actual runtime code is at `src/runtime.js`
 
 **Current `package.json` files field**:
+
 ```json
 "files": [
   "src",
@@ -80,10 +86,12 @@ Update `package.json` files field:
 ```
 
 **Impact**: ⚠️ MEDIUM
+
 - npm publish will warn about missing file
 - Could confuse users looking for entry points
 
 **Recommendation**:
+
 ```json
 "files": [
   "src",
@@ -99,6 +107,7 @@ The `src` directory already contains `src/runtime.js`, so it's included.
 ### 3. Missing Package Metadata
 
 **Problem**:
+
 - `package.json` missing critical fields:
   - `author` is empty string
   - No `repository` field
@@ -107,6 +116,7 @@ The `src` directory already contains `src/runtime.js`, so it's included.
   - No `engines` field
 
 **Current**:
+
 ```json
 {
   "name": "vite-plugin-paraglide-editor",
@@ -116,12 +126,14 @@ The `src` directory already contains `src/runtime.js`, so it's included.
 ```
 
 **Impact**: ⚠️ MEDIUM
+
 - Harder to discover on npm
 - No way for users to report issues
 - Missing on npm package page sidebar
 - Reduces trust and professionalism
 
 **Recommendation**:
+
 ```json
 {
   "name": "vite-plugin-paraglide-editor",
@@ -160,6 +172,7 @@ The `src` directory already contains `src/runtime.js`, so it's included.
 ### 4. Missing .gitignore
 
 **Problem**:
+
 - No `.gitignore` in the package directory
 - Could accidentally commit:
   - `node_modules/` (if dependencies added)
@@ -168,10 +181,12 @@ The `src` directory already contains `src/runtime.js`, so it's included.
   - Test coverage reports
 
 **Impact**: ⚠️ LOW
+
 - Minor risk, but good practice
 - Follows workspace isolation principle
 
 **Recommendation**:
+
 ```bash
 cat > packages/vite-plugin-paraglide-editor/.gitignore << 'EOF'
 # Dependencies
@@ -206,15 +221,18 @@ EOF
 ### 5. No CHANGELOG
 
 **Problem**:
+
 - No `CHANGELOG.md` to track version history
 - Users won't know what changed between versions
 - Best practice for npm packages
 
 **Impact**: ⚠️ MEDIUM
+
 - Difficult for users to understand breaking changes
 - Missing from npm package page
 
 **Recommendation**:
+
 ```bash
 cat > packages/vite-plugin-paraglide-editor/CHANGELOG.md << 'EOF'
 # Changelog
@@ -248,6 +266,7 @@ EOF
 ```
 
 Add to `package.json` files:
+
 ```json
 "files": [
   "src",
@@ -262,12 +281,14 @@ Add to `package.json` files:
 ### 6. No Tests
 
 **Problem**:
+
 - No test files or test infrastructure
 - No `test` script in `package.json`
 - Cannot verify plugin works correctly
 - Risky to publish without tests
 
 **Impact**: ⚠️ HIGH
+
 - High risk of regressions
 - Difficult to maintain confidently
 - Users may lose trust if bugs discovered
@@ -275,6 +296,7 @@ Add to `package.json` files:
 **Recommendation**:
 
 **Option A: Add Vitest** (Recommended - fast, Vite-native)
+
 ```bash
 cd packages/vite-plugin-paraglide-editor
 pnpm add -D vitest
@@ -294,32 +316,33 @@ pnpm add -D vitest
 ```
 
 Create `tests/plugin.test.js`:
-```javascript
-import { describe, it, expect } from 'vitest';
-import { paraglideEditorPlugin } from '../src/index.js';
 
-describe('paraglideEditorPlugin', () => {
-  it('should return a valid Vite plugin', () => {
+```javascript
+import { describe, it, expect } from "vitest";
+import { paraglideEditorPlugin } from "../src/index.js";
+
+describe("paraglideEditorPlugin", () => {
+  it("should return a valid Vite plugin", () => {
     const plugin = paraglideEditorPlugin();
 
-    expect(plugin).toHaveProperty('name', 'paraglide-editor');
-    expect(plugin).toHaveProperty('enforce', 'post');
-    expect(plugin).toHaveProperty('configResolved');
-    expect(plugin).toHaveProperty('transform');
+    expect(plugin).toHaveProperty("name", "paraglide-editor");
+    expect(plugin).toHaveProperty("enforce", "post");
+    expect(plugin).toHaveProperty("configResolved");
+    expect(plugin).toHaveProperty("transform");
   });
 
-  it('should respect editor mode flag', () => {
+  it("should respect editor mode flag", () => {
     const plugin = paraglideEditorPlugin();
 
     // Mock config
     const config = {
-      env: { VITE_PARAGLIDE_EDITOR: 'false' }
+      env: { PARAGLIDE_EDITOR: "false" },
     };
 
     plugin.configResolved(config);
 
     // Transform should return null when editor mode is off
-    const result = plugin.transform('export const test = "value"', 'file.js');
+    const result = plugin.transform('export const test = "value"', "file.js");
     expect(result).toBeNull();
   });
 });
@@ -328,12 +351,14 @@ describe('paraglideEditorPlugin', () => {
 **Option B: Document "No Tests Yet"**
 
 Add to README.md:
+
 ```markdown
 ## Testing
 
 ⚠️ **Test coverage is currently in progress.** This is a pre-1.0 package.
 
 To verify functionality, run the example projects:
+
 - `pnpm --filter vanilla dev`
 - `pnpm --filter react-router dev`
 - `pnpm --filter sveltekit dev`
@@ -344,12 +369,14 @@ To verify functionality, run the example projects:
 ### 7. Missing JSDoc Documentation
 
 **Problem**:
+
 - Core plugin functions lack comprehensive JSDoc comments
 - Runtime files have good purpose comments, but missing function-level docs
 - Makes IDE autocomplete less useful
 - Harder for contributors to understand
 
 **Example** - `src/middleware.js:14`:
+
 ```javascript
 export function createEditorMiddleware(viteConfig) {
   // Missing JSDoc
@@ -360,13 +387,14 @@ export function createEditorMiddleware(viteConfig) {
 ```
 
 **Impact**: ⚠️ LOW
+
 - Reduced DX (developer experience)
 - Harder to contribute
 
 **Recommendation**:
 Add comprehensive JSDoc to all exported functions:
 
-```javascript
+````javascript
 /**
  * Creates middleware for serving Paraglide editor endpoints
  *
@@ -387,39 +415,45 @@ export function createEditorMiddleware(viteConfig) {
     // ...
   };
 }
-```
+````
 
 ---
 
 ### 8. README Might Be Outdated
 
 **Problem**:
+
 - README mentions `<span data-i18n-key="...">` wrapping (line 12)
 - Current implementation uses `data-paraglide-key` attribute (verified in runtime code)
 - Documentation doesn't match implementation
 
 **Current README (line 12)**:
+
 ```markdown
 - 🔍 Wraps translation strings with `<span data-i18n-key="..." data-i18n-params="...">`
 ```
 
 **Actual Implementation** (`src/runtime/overlay.js`):
+
 ```javascript
-element.setAttribute('data-paraglide-key', key);
+element.setAttribute("data-paraglide-key", key);
 ```
 
 **Impact**: ⚠️ MEDIUM
+
 - Users will look for wrong attributes
 - Browser extension developers will be confused
 
 **Recommendation**:
 
 Update README.md line 12:
+
 ```markdown
 - 🔍 Tracks translation strings in DOM with `data-paraglide-key` attributes
 ```
 
 Update lines 84-86:
+
 ```html
 <!-- Current (incorrect) -->
 <h1 data-i18n-key="welcome">Welcome!</h1>
@@ -429,12 +463,13 @@ Update lines 84-86:
 ```
 
 Update line 90:
+
 ```javascript
 // Current (incorrect)
-document.querySelector('[data-i18n-key="welcome"]')
+document.querySelector('[data-i18n-key="welcome"]');
 
 // Correct
-document.querySelector('[data-paraglide-key="welcome"]')
+document.querySelector('[data-paraglide-key="welcome"]');
 ```
 
 ---
@@ -442,25 +477,29 @@ document.querySelector('[data-paraglide-key="welcome"]')
 ### 9. No npm Scripts
 
 **Problem**:
+
 - `package.json` has NO scripts section
 - No `prepublishOnly` script to prevent accidental publishing
 - No `test` script
 - No `lint` script
 
 **Current**:
+
 ```json
 {
-  "name": "vite-plugin-paraglide-editor",
+  "name": "vite-plugin-paraglide-editor"
   // ... no "scripts" field at all
 }
 ```
 
 **Impact**: ⚠️ MEDIUM
+
 - Cannot run tests via `npm test`
 - No safety checks before publishing
 - Doesn't follow npm conventions
 
 **Recommendation**:
+
 ```json
 {
   "scripts": {
@@ -472,6 +511,7 @@ document.querySelector('[data-paraglide-key="welcome"]')
 ```
 
 When tests are added:
+
 ```json
 {
   "scripts": {
@@ -488,22 +528,26 @@ When tests are added:
 ### 10. No .npmignore
 
 **Problem**:
+
 - No `.npmignore` file to control what gets published
 - Relies entirely on `files` field in `package.json`
 - May accidentally publish unnecessary files
 
 **Impact**: ⚠️ LOW
+
 - `files` field is usually sufficient
 - But `.npmignore` provides more control
 
 **Recommendation**:
 
 **Option A: Use `files` field only** (Current approach - simpler)
+
 - Already have `files` field in `package.json`
 - This is the modern, recommended approach
 - No action needed
 
 **Option B: Add `.npmignore` for more control**
+
 ```bash
 cat > packages/vite-plugin-paraglide-editor/.npmignore << 'EOF'
 # Development files
@@ -530,11 +574,13 @@ EOF
 ### 11. Missing Type Exports Configuration
 
 **Problem**:
+
 - TypeScript definitions exist (`client.d.ts`)
 - But `package.json` export types could be clearer
 - Current config mixes default and types exports
 
 **Current**:
+
 ```json
 "exports": {
   ".": {
@@ -548,12 +594,14 @@ EOF
 ```
 
 **Impact**: ⚠️ LOW
+
 - Works but could be clearer
 - Duplication between "." and "./client"
 
 **Recommendation**:
 
 **Option A: Simplify** (if "./client" import is not needed)
+
 ```json
 "exports": {
   ".": {
@@ -564,12 +612,14 @@ EOF
 ```
 
 Users import as:
+
 ```typescript
-import { paraglideEditorPlugin } from 'vite-plugin-paraglide-editor';
-import type { ParaglideEditor } from 'vite-plugin-paraglide-editor';
+import { paraglideEditorPlugin } from "vite-plugin-paraglide-editor";
+import type { ParaglideEditor } from "vite-plugin-paraglide-editor";
 ```
 
 **Option B: Keep separate client types** (if "/client" import is intentional)
+
 ```json
 "exports": {
   ".": {
@@ -584,9 +634,10 @@ import type { ParaglideEditor } from 'vite-plugin-paraglide-editor';
 ```
 
 Users import as:
+
 ```typescript
-import { paraglideEditorPlugin } from 'vite-plugin-paraglide-editor';
-import type { ParaglideEditor } from 'vite-plugin-paraglide-editor/client';
+import { paraglideEditorPlugin } from "vite-plugin-paraglide-editor";
+import type { ParaglideEditor } from "vite-plugin-paraglide-editor/client";
 ```
 
 **Recommendation**: Use Option B (keep current structure) - it's clearer for type-only imports.
@@ -596,18 +647,21 @@ import type { ParaglideEditor } from 'vite-plugin-paraglide-editor/client';
 ### 12. No Publishing Checklist Documentation
 
 **Problem**:
+
 - No documentation on how to publish the package
 - No pre-publish checklist
 - Risk of publishing incomplete/broken version
 
 **Impact**: ⚠️ MEDIUM
+
 - Easy to forget steps before publishing
 - May publish broken version
 
 **Recommendation**:
 
 Create `packages/vite-plugin-paraglide-editor/PUBLISHING.md`:
-```markdown
+
+````markdown
 # Publishing Checklist
 
 Before publishing `vite-plugin-paraglide-editor` to npm, complete this checklist:
@@ -615,35 +669,40 @@ Before publishing `vite-plugin-paraglide-editor` to npm, complete this checklist
 ## Pre-Publish Checklist
 
 ### 1. Version & Changelog
+
 - [ ] Update version in `package.json` (follow semver)
 - [ ] Update `CHANGELOG.md` with changes
 - [ ] Commit version bump: `git commit -am "chore: bump version to X.Y.Z"`
 - [ ] Tag release: `git tag vite-plugin-paraglide-editor@X.Y.Z`
 
 ### 2. Package Integrity
+
 - [ ] Run `npm pack --dry-run` to see what will be published
 - [ ] Verify `files` array includes all necessary files
 - [ ] Check LICENSE file exists
 - [ ] Verify `package.json` metadata (author, repo, bugs, homepage)
 
 ### 3. Testing
+
 - [ ] Run example projects:
   - `pnpm --filter vanilla dev` (verify works)
   - `pnpm --filter react-router dev` (verify works)
   - `pnpm --filter sveltekit dev` (verify works)
 - [ ] Test production builds:
-  - `VITE_PARAGLIDE_EDITOR=true pnpm --filter vanilla build`
+  - `PARAGLIDE_EDITOR=true pnpm --filter vanilla build`
   - Verify editor mode works in preview
 - [ ] Test with editor mode OFF:
-  - `VITE_PARAGLIDE_EDITOR=false pnpm --filter vanilla build`
+  - `PARAGLIDE_EDITOR=false pnpm --filter vanilla build`
   - Verify no editor code injected
 
 ### 4. Documentation
+
 - [ ] README.md is up to date
 - [ ] API documentation matches implementation
 - [ ] Examples in README work
 
 ### 5. Publish
+
 ```bash
 cd packages/vite-plugin-paraglide-editor
 
@@ -656,8 +715,10 @@ npm publish
 # Or if scoped package
 npm publish --access public
 ```
+````
 
 ### 6. Post-Publish
+
 - [ ] Push git tags: `git push --tags`
 - [ ] Create GitHub release
 - [ ] Announce on Twitter/Discord/etc
@@ -666,12 +727,14 @@ npm publish --access public
 ## Emergency Unpublish
 
 If you need to unpublish within 72 hours:
+
 ```bash
 npm unpublish vite-plugin-paraglide-editor@X.Y.Z
 ```
 
 Note: npm allows unpublishing only within 72 hours and if no other packages depend on it.
-```
+
+````
 
 ---
 
@@ -777,24 +840,27 @@ echo "   - Change 'data-i18n-key' to 'data-paraglide-key'"
 echo ""
 echo "3. Run: npm pack --dry-run"
 echo "   - Verify package contents"
-```
+````
 
 ---
 
 ## Recommended Next Steps
 
 ### Phase 1: Pre-Publish Essentials (Required)
+
 1. ✅ Run the quick fix script above
 2. ✅ Manually update `package.json` (see Issue #2, #3, #9)
 3. ✅ Update README attribute names (see Issue #8)
 4. ✅ Test with `npm pack --dry-run`
 
 ### Phase 2: Quality Improvements (Recommended)
+
 5. Add basic tests with Vitest
 6. Add JSDoc to all exports
 7. Create PUBLISHING.md checklist
 
 ### Phase 3: Polish (Nice to Have)
+
 8. Set up ESLint
 9. Add CI/CD for automated testing
 10. Create contribution guidelines
@@ -815,6 +881,7 @@ echo "   - Verify package contents"
 ## Verification Commands
 
 After fixes:
+
 ```bash
 # Check package contents
 npm pack --dry-run

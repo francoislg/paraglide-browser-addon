@@ -34,13 +34,13 @@
  * ```
  */
 
-import { requireOptIn } from '/@paraglide-editor/config.js';
+import { requireOptIn, editorEnabled } from "/@paraglide-editor/config.js";
 
 /**
  * SvelteKit `handle` function that conditionally injects the paraglide-editor
  * runtime script into rendered HTML.
  *
- * Only injects when `VITE_PARAGLIDE_EDITOR=true` is set.
+ * Only injects when `PARAGLIDE_EDITOR=true` is set.
  * Reads `requireOptIn` from the Vite plugin config automatically.
  *
  * @type {import('@sveltejs/kit').Handle}
@@ -48,12 +48,13 @@ import { requireOptIn } from '/@paraglide-editor/config.js';
 export async function paraglideEditorHandle({ event, resolve }) {
   return await resolve(event, {
     transformPageChunk: ({ html }) => {
-      if (import.meta.env.VITE_PARAGLIDE_EDITOR === 'true') {
+      if (editorEnabled) {
         const config = `<script>window.__paraglideEditor = window.__paraglideEditor || {}; window.__paraglideEditor.config = { requireOptIn: ${requireOptIn} };</script>`;
-        const runtime = '<script type="module" src="/@paraglide-editor/runtime.js"></script>';
-        return html.replace('</body>', config + '\n' + runtime + '\n</body>');
+        const runtime =
+          '<script type="module" src="/@paraglide-editor/runtime.js"></script>';
+        return html.replace("</body>", config + "\n" + runtime + "\n</body>");
       }
       return html;
-    }
+    },
   });
 }
