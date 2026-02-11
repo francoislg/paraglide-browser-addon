@@ -24,6 +24,13 @@ let localEdits = null;         // Map<locale:key, {editedValue, isEdited, hasCon
 let isInitialized = false;
 
 /**
+ * Get the translations URL from config, with dev-mode fallback.
+ */
+export function getTranslationsUrl() {
+  return window.__paraglideEditor?.config?.translationsUrl || '/@paraglide-editor/langs.json';
+}
+
+/**
  * Initialize data store - called once during startup
  * Loads both server translations and local edits into memory
  * Performs initial sync if DB is empty
@@ -37,7 +44,7 @@ export async function initDataStore() {
   console.log('[paraglide-editor] Initializing data store...');
 
   try {
-    const url = window.__paraglideEditor?.config?.translationsUrl || '/@paraglide-editor/langs.json';
+    const url = getTranslationsUrl();
     const response = await fetch(url);
     if (response.ok) {
       serverTranslations = await response.json();

@@ -18,13 +18,13 @@
  */
 
 import { syncTranslations } from './db.js';
-import { refreshDataStore } from './dataStore.js';
+import { refreshDataStore, getTranslationsUrl } from './dataStore.js';
 
 export async function syncWithServer() {
   try {
     console.log('[paraglide-editor] Fetching translations from server...');
 
-    const response = await fetch('/@paraglide-editor/langs.json');
+    const response = await fetch(getTranslationsUrl());
 
     if (!response.ok) {
       throw new Error(`Failed to fetch translations: ${response.status} ${response.statusText}`);
