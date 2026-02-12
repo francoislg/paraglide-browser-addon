@@ -18,5 +18,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "exports": {
+    ".": "./packages/vite-plugin-paraglide-editor/src/index.js",
+    "./sveltekit": "./packages/vite-plugin-paraglide-editor/src/sveltekit.js"
+  },
   "devDependencies": {}
 }
