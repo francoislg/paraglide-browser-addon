@@ -192,6 +192,14 @@ export function paraglideEditorPlugin(options = {}) {
     name: "paraglide-editor",
     enforce, // Run after the official Paraglide plugin
 
+    config() {
+      return {
+        ssr: {
+          noExternal: ['vite-plugin-paraglide-editor'],
+        },
+      };
+    },
+
     configResolved(config) {
       viteConfig = config;
       isDev = config.command === "serve";

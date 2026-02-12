@@ -4,9 +4,16 @@
   "description": "Vite plugin that provides an in-browser translation editor for ParaglideJS",
   "type": "module",
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "exports": {
-    ".": "./src/index.js",
-    "./sveltekit": "./src/sveltekit.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./sveltekit": {
+      "types": "./src/sveltekit.d.ts",
+      "default": "./src/sveltekit.js"
+    }
   },
   "files": [
     "src",
