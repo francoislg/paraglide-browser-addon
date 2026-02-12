@@ -25,7 +25,7 @@ export async function initConflictList() {
     const currentLocale = getCurrentLocale();
     const conflicts = await getConflicts(currentLocale);
 
-    console.log(`[paraglide-editor] Found ${conflicts.length} conflicts for locale ${currentLocale}`);
+    console.debug(`[paraglide-editor] Found ${conflicts.length} conflicts for locale ${currentLocale}`);
 
     const conflictCount = document.getElementById('pge-conflict-count');
     if (conflictCount) {
@@ -346,13 +346,13 @@ async function showConflictResolution(conflict) {
 async function handleResolution(conflict, resolution) {
   try {
     await resolveConflict(conflict.locale, conflict.key, resolution);
-    console.log(`[paraglide-editor] Resolved conflict for ${conflict.key}: ${resolution}`);
+    console.debug(`[paraglide-editor] Resolved conflict for ${conflict.key}: ${resolution}`);
 
     await refreshDataStore();
-    console.log('[paraglide-editor] Data store refreshed after conflict resolution');
+    console.debug('[paraglide-editor] Data store refreshed after conflict resolution');
 
     const updatedCount = refreshElementsByKey(conflict.key, conflict.locale);
-    console.log(`[paraglide-editor] Updated ${updatedCount} elements on page for key: ${conflict.key}`);
+    console.debug(`[paraglide-editor] Updated ${updatedCount} elements on page for key: ${conflict.key}`);
 
     await initConflictList();
   } catch (error) {

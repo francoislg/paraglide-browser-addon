@@ -135,7 +135,7 @@ ${
           }
         });
         window.dispatchEvent(event);
-        console.log('[paraglide-editor] Registry initialized with ' + window.__paraglideEditor.registry.size + ' entries');
+        console.debug('[paraglide-editor] Registry initialized with ' + window.__paraglideEditor.registry.size + ' entries');
       });
     }
   }
@@ -179,6 +179,9 @@ export function paraglideEditorPlugin(options = {}) {
   let runtimeUrl;
   let translationsUrl;
 
+  // Verbose logging helper — only emits when PARAGLIDE_EDITOR_VERBOSE=true
+  let verbose = () => {};
+
   /** @type {"post"} */
   const enforce = "post";
 
@@ -197,6 +200,11 @@ export function paraglideEditorPlugin(options = {}) {
       const editorEnv = loadEnv(config.mode, config.root, "PARAGLIDE_");
       isEditorMode = editorEnv.PARAGLIDE_EDITOR === "true";
 
+      const isVerbose = editorEnv.PARAGLIDE_EDITOR_VERBOSE === "true";
+      verbose = isVerbose
+        ? (...args) => console.log("[paraglide-editor]", ...args)
+        : () => {};
+
       const base = config.base || "/";
       runtimeUrl = isDev
         ? "/@paraglide-editor/runtime.js"
@@ -205,13 +213,25 @@ export function paraglideEditorPlugin(options = {}) {
         ? "/@paraglide-editor/langs.json"
         : `${base}paraglide-editor-langs.json`;
 
-      console.log("[paraglide-editor] Plugin configured");
-      console.log("[paraglide-editor] Editor mode:", isEditorMode);
-      console.log("[paraglide-editor] Dev mode:", isDev);
-      console.log(
-        "[paraglide-editor] Environment check:",
-        editorEnv.PARAGLIDE_EDITOR,
-      );
+      // Read languages for the summary line
+      let langSummary = "";
+      if (isEditorMode) {
+        try {
+          const translations = readTranslations(config.root || process.cwd(), verbose);
+          const langs = Object.keys(translations);
+          langSummary = `, ${langs.length} languages (${langs.join(", ")})`;
+        } catch {
+          langSummary = "";
+        }
+      }
+
+      const mode = isDev ? "dev" : "build";
+      if (isEditorMode) {
+        console.log(`[paraglide-editor] Active — ${mode} mode${langSummary}`);
+      }
+      verbose("Editor mode:", isEditorMode);
+      verbose("Dev mode:", isDev);
+      verbose("Environment check:", editorEnv.PARAGLIDE_EDITOR);
     },
 
     // Resolve virtual module IDs
@@ -248,15 +268,18 @@ export function paraglideEditorPlugin(options = {}) {
 
       const rootPath = viteConfig.root || process.cwd();
       try {
-        const translations = readTranslations(rootPath);
+        const translations = readTranslations(rootPath, verbose);
         this.emitFile({
           type: "asset",
           fileName: "paraglide-editor-langs.json",
           source: JSON.stringify(translations),
         });
-        console.log("[paraglide-editor] ✓ Emitted build assets");
+        verbose("✓ Emitted build assets");
       } catch (err) {
-        console.error("[paraglide-editor] Error reading translations for build:", err);
+        console.error(
+          "[paraglide-editor] Error reading translations for build:",
+          err,
+        );
       }
     },
 
@@ -283,9 +306,7 @@ export function paraglideEditorPlugin(options = {}) {
 
         try {
           const code = fs.readFileSync(filePath, "utf-8");
-          console.log(
-            `[paraglide-editor] ✓ Loaded virtual module: ${relativePath}`,
-          );
+          verbose(`✓ Loaded virtual module: ${relativePath}`);
           return code;
         } catch (err) {
           console.error(
@@ -303,21 +324,19 @@ export function paraglideEditorPlugin(options = {}) {
     configureServer(server) {
       if (!isEditorMode) return;
 
-      server.middlewares.use(createEditorMiddleware(viteConfig));
+      server.middlewares.use(createEditorMiddleware(viteConfig, verbose));
 
-      console.log(
-        "[paraglide-editor] ✓ Serving translations at /@paraglide-editor/langs.json",
-      );
+      verbose("✓ Serving translations at /@paraglide-editor/langs.json");
     },
 
     // Serve editor endpoints in preview
     configurePreviewServer(server) {
       if (!isEditorMode) return;
 
-      server.middlewares.use(createEditorMiddleware(viteConfig));
+      server.middlewares.use(createEditorMiddleware(viteConfig, verbose));
 
-      console.log(
-        "[paraglide-editor] ✓ Serving translations at /@paraglide-editor/langs.json (preview)",
+      verbose(
+        "✓ Serving translations at /@paraglide-editor/langs.json (preview)",
       );
     },
 
@@ -343,7 +362,7 @@ export function paraglideEditorPlugin(options = {}) {
         return null;
       }
 
-      console.log("[paraglide-editor] ✓ Intercepting _index.js");
+      verbose("✓ Intercepting _index.js");
 
       this.originalIndexCode = code;
 
@@ -363,9 +382,7 @@ export function paraglideEditorPlugin(options = {}) {
         }
 
         if (moduleFiles.length === 0) {
-          console.log(
-            "[paraglide-editor] No re-exports found, passing through",
-          );
+          verbose("No re-exports found, passing through");
           return null;
         }
 
@@ -387,16 +404,11 @@ export function paraglideEditorPlugin(options = {}) {
         }
 
         if (exportNames.length === 0) {
-          console.log(
-            "[paraglide-editor] No exports found in re-exported modules, passing through",
-          );
+          verbose("No exports found in re-exported modules, passing through");
           return null;
         }
 
-        console.log(
-          "[paraglide-editor] Found message functions:",
-          exportNames.join(", "),
-        );
+        verbose("Found message functions:", exportNames.join(", "));
 
         // Generate wrapper using ?original (same approach as direct-export path)
         wrapperCode = `
@@ -425,16 +437,11 @@ ${exportNames
         const exportNames = parseExportNames(code);
 
         if (exportNames.length === 0) {
-          console.log(
-            "[paraglide-editor] No function exports found, passing through",
-          );
+          verbose("No function exports found, passing through");
           return null;
         }
 
-        console.log(
-          "[paraglide-editor] Found message functions:",
-          exportNames.join(", "),
-        );
+        verbose("Found message functions:", exportNames.join(", "));
 
         // Generate wrapper that imports original via ?original query
         wrapperCode = `

@@ -10,7 +10,7 @@ import fs from 'fs';
  * @param {string} rootPath - Project root directory path
  * @returns {{ [locale: string]: object }} Translations keyed by locale
  */
-export function readTranslations(rootPath) {
+export function readTranslations(rootPath, verbose = () => {}) {
   const projectPath = path.join(rootPath, 'project.inlang');
   const settingsPath = path.join(projectPath, 'settings.json');
 
@@ -29,14 +29,14 @@ export function readTranslations(rootPath) {
       pathPattern.replace('{locale}', locale).replace('./', '')
     );
 
-    console.log('[paraglide-editor] Looking for:', messagePath);
+    verbose('Looking for:', messagePath);
 
     if (fs.existsSync(messagePath)) {
       const messages = JSON.parse(fs.readFileSync(messagePath, 'utf-8'));
       languages[locale] = messages;
-      console.log('[paraglide-editor] ✓ Loaded:', locale);
+      verbose('✓ Loaded:', locale);
     } else {
-      console.log('[paraglide-editor] ✗ Not found:', messagePath);
+      verbose('✗ Not found:', messagePath);
     }
   }
 
@@ -53,19 +53,19 @@ export function readTranslations(rootPath) {
  * @param {string} viteConfig.root - Project root directory path
  * @returns {Function} Express-style middleware function (req, res, next)
  */
-export function createEditorMiddleware(viteConfig) {
+export function createEditorMiddleware(viteConfig, verbose = () => {}) {
   return (req, res, next) => {
     if (req.url === '/@paraglide-editor/langs.json') {
       const rootPath = viteConfig.root || process.cwd();
 
       try {
-        const languages = readTranslations(rootPath);
+        const languages = readTranslations(rootPath, verbose);
 
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.end(JSON.stringify(languages, null, 2));
 
-        console.log('[paraglide-editor] ✓ Served raw translations for:', Object.keys(languages).join(', '));
+        verbose('✓ Served raw translations for:', Object.keys(languages).join(', '));
       } catch (err) {
         console.error('[paraglide-editor] Error serving translations:', err);
         const statusCode = err.message === 'settings.json not found' ? 404 : 500;

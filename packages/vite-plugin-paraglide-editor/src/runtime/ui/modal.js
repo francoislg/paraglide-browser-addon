@@ -299,7 +299,7 @@ export function showEditorModal() {
   `;
 
   const handleLanguageChange = (e) => {
-    console.log('[paraglide-editor] Modal detected language change:', e.detail);
+    console.debug('[paraglide-editor] Modal detected language change:', e.detail);
     initLanguageSelector();
   };
 

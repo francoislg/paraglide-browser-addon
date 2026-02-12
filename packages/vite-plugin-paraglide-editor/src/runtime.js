@@ -29,7 +29,7 @@ import { isPgeEnabled } from "./runtime/helpers.js";
     return;
   }
 
-  console.log("[paraglide-editor] Runtime loading");
+  console.debug("[paraglide-editor] Runtime loading");
 
   window.__paraglideEditor = window.__paraglideEditor || {};
   window.__paraglideEditor.refresh = buildElementRegistry;

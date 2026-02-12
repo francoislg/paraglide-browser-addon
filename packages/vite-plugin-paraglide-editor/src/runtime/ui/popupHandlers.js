@@ -30,7 +30,7 @@ function getServerVariantValue(input, variant) {
 export function setupVariantSelector(popup, languageInputs, globalSelector) {
   globalSelector.addEventListener('change', () => {
     const selectedVariant = globalSelector.value;
-    console.log('[paraglide-editor] Variant selector changed to:', selectedVariant);
+    console.debug('[paraglide-editor] Variant selector changed to:', selectedVariant);
 
     languageInputs.forEach((input, index) => {
       const singleTextarea = popup.querySelector(`.pge-variant-single[data-lang-index="${index}"]`);
@@ -255,19 +255,19 @@ export function setupSaveHandler(popup, languageInputs, key, isPlural, close) {
         const isReverted = valueToSave === serverValueString;
 
         if (isReverted) {
-          console.log(`[paraglide-editor] Reverting ${key} (${locale}) - same as server, deleting edit`);
+          console.debug(`[paraglide-editor] Reverting ${key} (${locale}) - same as server, deleting edit`);
           await revertTranslationEdit(locale, key);
           updateLocalCache(locale, key, serverValue, false, false);
           skippedCount++;
         } else {
           await saveTranslationEdit(locale, key, valueToSave);
-          console.log(`[paraglide-editor] ✓ Saved edit for ${key} (${locale})`);
+          console.debug(`[paraglide-editor] ✓ Saved edit for ${key} (${locale})`);
           updateLocalCache(locale, key, valueToSave, true, false);
           savedCount++;
         }
       }
 
-      console.log(`[paraglide-editor] Save summary: ${savedCount} saved, ${skippedCount} skipped (unchanged)`);
+      console.debug(`[paraglide-editor] Save summary: ${savedCount} saved, ${skippedCount} skipped (unchanged)`);
 
       refreshElementsByKey(key);
 
@@ -342,20 +342,20 @@ export function setupMultiSlotSaveHandler(popup, slotEdits, slotPopupData, captu
           const isReverted = valueToSave === serverValueString;
 
           if (isReverted) {
-            console.log(`[paraglide-editor] Reverting ${key} (${locale}) - same as server, deleting edit`);
+            console.debug(`[paraglide-editor] Reverting ${key} (${locale}) - same as server, deleting edit`);
             await revertTranslationEdit(locale, key);
             updateLocalCache(locale, key, serverValue, false, false);
             totalSkipped++;
           } else {
             await saveTranslationEdit(locale, key, valueToSave);
-            console.log(`[paraglide-editor] ✓ Saved edit for ${key} (${locale})`);
+            console.debug(`[paraglide-editor] ✓ Saved edit for ${key} (${locale})`);
             updateLocalCache(locale, key, valueToSave, true, false);
             totalSaved++;
           }
         }
       }
 
-      console.log(`[paraglide-editor] Multi-slot save summary: ${totalSaved} saved, ${totalSkipped} skipped`);
+      console.debug(`[paraglide-editor] Multi-slot save summary: ${totalSaved} saved, ${totalSkipped} skipped`);
 
       for (const key of keysToRefresh) {
         refreshElementsByKey(key);

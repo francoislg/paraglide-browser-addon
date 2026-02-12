@@ -161,7 +161,7 @@ export function injectOverlayStyles() {
 
   document.head.appendChild(style);
   setOnTopMode(isOnTopEnabled());
-  console.log('[paraglide-editor] ✓ Overlay styles injected');
+  console.debug('[paraglide-editor] ✓ Overlay styles injected');
 }
 
 /**

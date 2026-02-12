@@ -27,14 +27,14 @@ export async function exportEdits() {
       return;
     }
 
-    console.log('[paraglide-editor] Getting server translations from cache...');
+    console.debug('[paraglide-editor] Getting server translations from cache...');
     const serverTranslations = getServerTranslations();
 
     if (!serverTranslations) {
       throw new Error('Server translations not loaded yet');
     }
 
-    console.log('[paraglide-editor] Server translations loaded from cache:', Object.keys(serverTranslations));
+    console.debug('[paraglide-editor] Server translations loaded from cache:', Object.keys(serverTranslations));
 
     const editsByLocale = {};
     edits.forEach(edit => {
@@ -82,10 +82,10 @@ export async function exportEdits() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      console.log(`[paraglide-editor] Exported full ${locale}.json with ${Object.keys(mergedTranslations[locale]).length} keys`);
+      console.debug(`[paraglide-editor] Exported full ${locale}.json with ${Object.keys(mergedTranslations[locale]).length} keys`);
     }
 
-    console.log(`[paraglide-editor] Exported ${locales.length} language files`);
+    console.debug(`[paraglide-editor] Exported ${locales.length} language files`);
     alert(`Successfully exported ${locales.length} complete language files!\n\nFiles: ${locales.map(l => `${l}.json`).join(', ')}`);
   } catch (error) {
     console.error('[paraglide-editor] Export failed:', error);

@@ -22,7 +22,7 @@ import { refreshDataStore, getTranslationsUrl } from './dataStore.js';
 
 export async function syncWithServer() {
   try {
-    console.log('[paraglide-editor] Fetching translations from server...');
+    console.debug('[paraglide-editor] Fetching translations from server...');
 
     const response = await fetch(getTranslationsUrl());
 
@@ -32,14 +32,14 @@ export async function syncWithServer() {
 
     const serverTranslations = await response.json();
 
-    console.log('[paraglide-editor] Server translations fetched:', Object.keys(serverTranslations));
+    console.debug('[paraglide-editor] Server translations fetched:', Object.keys(serverTranslations));
 
     const stats = await syncTranslations(serverTranslations);
 
-    console.log('[paraglide-editor] Sync complete:', stats);
+    console.debug('[paraglide-editor] Sync complete:', stats);
 
     await refreshDataStore();
-    console.log('[paraglide-editor] Data store refreshed after sync');
+    console.debug('[paraglide-editor] Data store refreshed after sync');
 
     if (window.__paraglideEditor?.applySavedEdits) {
       window.__paraglideEditor.applySavedEdits();
@@ -58,7 +58,7 @@ export async function syncWithServer() {
       await window.__paraglideEditor.refreshConflictList();
     }
 
-    console.log(`[paraglide-editor] Sync complete: ${summary}`);
+    console.debug(`[paraglide-editor] Sync complete: ${summary}`);
 
     return stats;
   } catch (error) {

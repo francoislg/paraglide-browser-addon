@@ -51,7 +51,7 @@ export function getElementSlots(element) {
  */
 export async function buildElementRegistry() {
   if (!window.__paraglideEditor.registry) {
-    console.log("[paraglide-editor] Registry not found, waiting for __paraglideInitialized event");
+    console.debug("[paraglide-editor] Registry not found, waiting for __paraglideInitialized event");
     return;
   }
 
@@ -184,7 +184,7 @@ export async function buildElementRegistry() {
   }
 
   window.__paraglideEditor.elements = registry;
-  console.log(
+  console.debug(
     `[paraglide-editor] Found ${registry.length} translated elements`
   );
 
@@ -217,7 +217,7 @@ export function getElements() {
     };
   });
 
-  console.log(
+  console.debug(
     `[paraglide-editor] Found ${elements.length} elements via data attributes`
   );
   return elements;

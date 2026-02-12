@@ -46,7 +46,7 @@ export async function initLanguageSelector() {
       const translations = getServerTranslations();
       if (translations && Object.keys(translations).length > 0) {
         locales = Object.keys(translations);
-        console.log('[paraglide-editor] Loaded locales from cache:', locales);
+        console.debug('[paraglide-editor] Loaded locales from cache:', locales);
       } else {
         console.warn('[paraglide-editor] Server translations not loaded yet, using fallback');
       }
@@ -111,7 +111,7 @@ export async function initLanguageSelector() {
       return;
     }
 
-    console.log('[paraglide-editor] Creating checkboxes for locales:', locales);
+    console.debug('[paraglide-editor] Creating checkboxes for locales:', locales);
     checkboxContainer.innerHTML = '';
 
     locales.forEach(locale => {
@@ -150,21 +150,21 @@ export async function initLanguageSelector() {
         }
 
         saveSelectedLanguages(selected);
-        console.log('[paraglide-editor] Selected languages updated:', selected);
+        console.debug('[paraglide-editor] Selected languages updated:', selected);
       });
 
       label.appendChild(checkbox);
       label.appendChild(labelText);
       checkboxContainer.appendChild(label);
-      console.log(`[paraglide-editor] Created checkbox for locale: ${locale}`);
+      console.debug(`[paraglide-editor] Created checkbox for locale: ${locale}`);
     });
 
-    console.log(`[paraglide-editor] Checkbox container now has ${checkboxContainer.children.length} children`);
+    console.debug(`[paraglide-editor] Checkbox container now has ${checkboxContainer.children.length} children`);
 
     updateSelectedLanguagesDisplay(selectedLanguages);
 
-    console.log(`[paraglide-editor] Language selector initialized with ${locales.length} locales`);
-    console.log(`[paraglide-editor] Current locale: ${currentLocale}, Selected: ${selectedLanguages.join(', ')}`);
+    console.debug(`[paraglide-editor] Language selector initialized with ${locales.length} locales`);
+    console.debug(`[paraglide-editor] Current locale: ${currentLocale}, Selected: ${selectedLanguages.join(', ')}`);
   } catch (error) {
     console.error('[paraglide-editor] Failed to initialize language selector:', error);
   }
@@ -178,7 +178,7 @@ function clearLocaleOverride() {
 }
 
 export function switchLocale(newLocale, { closeModal = true } = {}) {
-  console.log(`[paraglide-editor] Switching locale to: ${newLocale}`);
+  console.debug(`[paraglide-editor] Switching locale to: ${newLocale}`);
   localStorage.setItem('pge-locale-override', newLocale);
 
   if (window.__paraglideEditor.updateCurrentLocale) {

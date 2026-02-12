@@ -129,7 +129,7 @@ export function initElementPicker({ isOverlayEnabled, getPopupElement }) {
       if (!isOverlayEnabled() || !mouseDownElement || e.button !== 0) return;
 
       if (e.shiftKey) {
-        console.log("[paraglide-editor] Shift+click detected, allowing normal interaction");
+        console.debug("[paraglide-editor] Shift+click detected, allowing normal interaction");
         mouseDownElement = null;
         return;
       }

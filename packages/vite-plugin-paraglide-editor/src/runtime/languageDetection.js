@@ -98,7 +98,7 @@ function reRenderAllTranslations(newLocale) {
     setElementOutline(element, overlayEnabled ? worstState : 'none');
   });
 
-  console.log(`[paraglide-editor] ✓ Re-rendered ${renderedCount} elements for locale ${newLocale}`);
+  console.debug(`[paraglide-editor] ✓ Re-rendered ${renderedCount} elements for locale ${newLocale}`);
 }
 
 export function updateCurrentLocale() {
@@ -106,7 +106,7 @@ export function updateCurrentLocale() {
   const oldLocale = window.__paraglideEditor.currentLocale;
 
   if (newLocale !== oldLocale) {
-    console.log(`[paraglide-editor] Language changed: ${oldLocale} → ${newLocale}`);
+    console.debug(`[paraglide-editor] Language changed: ${oldLocale} → ${newLocale}`);
     window.__paraglideEditor.currentLocale = newLocale;
 
     const event = new CustomEvent('__paraglideEditorLanguageChange', {
@@ -122,16 +122,16 @@ export function initLanguageDetection() {
   window.__paraglideEditor = window.__paraglideEditor || {};
 
   window.__paraglideEditor.currentLocale = detectCurrentLocale();
-  console.log('[paraglide-editor] Initial locale:', window.__paraglideEditor.currentLocale);
+  console.debug('[paraglide-editor] Initial locale:', window.__paraglideEditor.currentLocale);
 
   window.addEventListener('__paraglideEditorLanguageChange', (e) => {
-    console.log('[paraglide-editor] Handling __paraglideEditorLanguageChange event:', e.detail);
+    console.debug('[paraglide-editor] Handling __paraglideEditorLanguageChange event:', e.detail);
     reRenderAllTranslations(e.detail.newLocale);
   });
 
   window.addEventListener('storage', (e) => {
     if (e.key === 'pge-locale-override') {
-      console.log('[paraglide-editor] Detected editor locale override change');
+      console.debug('[paraglide-editor] Detected editor locale override change');
       updateCurrentLocale();
     }
   });
@@ -144,7 +144,7 @@ export function initLanguageDetection() {
     );
 
     if (langChanged) {
-      console.log('[paraglide-editor] Detected HTML lang attribute change');
+      console.debug('[paraglide-editor] Detected HTML lang attribute change');
       updateCurrentLocale();
     }
   });
@@ -156,7 +156,7 @@ export function initLanguageDetection() {
 
   window.__paraglideEditor.updateCurrentLocale = updateCurrentLocale;
 
-  console.log('[paraglide-editor] ✓ Language detection initialized');
+  console.debug('[paraglide-editor] ✓ Language detection initialized');
 }
 
 export function getCurrentLocale() {

@@ -37,11 +37,11 @@ export function getTranslationsUrl() {
  */
 export async function initDataStore() {
   if (isInitialized) {
-    console.log('[paraglide-editor] Data store already initialized');
+    console.debug('[paraglide-editor] Data store already initialized');
     return;
   }
 
-  console.log('[paraglide-editor] Initializing data store...');
+  console.debug('[paraglide-editor] Initializing data store...');
 
   try {
     const url = getTranslationsUrl();
@@ -53,7 +53,7 @@ export async function initDataStore() {
         (sum, locale) => sum + Object.keys(locale).length,
         0
       );
-      console.log(
+      console.debug(
         `[paraglide-editor] ✓ Loaded server translations: ${localeCount} locales, ${keyCount} keys`
       );
     } else {
@@ -78,12 +78,12 @@ export async function initDataStore() {
 
     // Check if we need to do an initial sync (DB is empty)
     if (allRecords.length === 0 && Object.keys(serverTranslations).length > 0) {
-      console.log('[paraglide-editor] DB is empty, performing initial sync...');
+      console.debug('[paraglide-editor] DB is empty, performing initial sync...');
 
       // Import syncTranslations to populate the DB
       const { syncTranslations } = await import('./db.js');
       const stats = await syncTranslations(serverTranslations);
-      console.log('[paraglide-editor] Initial sync complete:', stats);
+      console.debug('[paraglide-editor] Initial sync complete:', stats);
 
       // Reload records after sync
       const txAfterSync = database.transaction('translations', 'readonly');
@@ -111,7 +111,7 @@ export async function initDataStore() {
       });
     }
 
-    console.log(`[paraglide-editor] ✓ Loaded local edits: ${localEdits.size} records`);
+    console.debug(`[paraglide-editor] ✓ Loaded local edits: ${localEdits.size} records`);
   } catch (error) {
     console.error('[paraglide-editor] Error loading local edits:', error);
     localEdits = new Map();
@@ -126,7 +126,7 @@ export async function initDataStore() {
   }
 
   isInitialized = true;
-  console.log('[paraglide-editor] ✓ Data store initialized');
+  console.debug('[paraglide-editor] ✓ Data store initialized');
 }
 
 /**
@@ -238,14 +238,14 @@ export function updateLocalCache(locale, key, editedValue, isEdited, hasConflict
     lastEditTime: new Date(),
   });
 
-  console.log(`[paraglide-editor] Updated cache for ${cacheKey}`);
+  console.debug(`[paraglide-editor] Updated cache for ${cacheKey}`);
 }
 
 /**
  * Refresh data store (call after sync to reload server data)
  */
 export async function refreshDataStore() {
-  console.log('[paraglide-editor] Refreshing data store...');
+  console.debug('[paraglide-editor] Refreshing data store...');
   isInitialized = false;
   await initDataStore();
 }

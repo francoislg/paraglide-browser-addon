@@ -100,7 +100,7 @@ function restoreSlotEdits(contentContainer, slotName, slotEdits, slotPopupData) 
  * await createEditPopup(element, 'greeting', {name: 'John'}, 'Hello, John!', '_text');
  */
 export async function createEditPopup(element, key, params, currentText, initialActiveSlot) {
-  console.log('[paraglide-editor] Creating edit popup for:', { key, params, currentText, initialActiveSlot });
+  console.debug('[paraglide-editor] Creating edit popup for:', { key, params, currentText, initialActiveSlot });
 
   // Read all slots from element
   const slots = getElementSlots(element);
@@ -124,7 +124,7 @@ export async function createEditPopup(element, key, params, currentText, initial
 
   const { languageInputs, isPlural, variantForms, activeVariantKey } = popupData;
 
-  console.log('[paraglide-editor] Popup data prepared:', {
+  console.debug('[paraglide-editor] Popup data prepared:', {
     languages: languageInputs.length,
     isPlural,
     variantCount: variantForms.length,
@@ -279,5 +279,5 @@ export async function createEditPopup(element, key, params, currentText, initial
 
   focusFirstInput(popup, '.pge-edit-textarea');
 
-  console.log('[paraglide-editor] ✓ Edit popup created and ready');
+  console.debug('[paraglide-editor] ✓ Edit popup created and ready');
 }

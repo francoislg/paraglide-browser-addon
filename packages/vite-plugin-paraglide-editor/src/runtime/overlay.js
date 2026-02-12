@@ -182,7 +182,7 @@ export function refreshElementsByKey(key, locale = null) {
     }
   });
 
-  console.log(
+  console.debug(
     `[paraglide-editor] Refreshed ${updatedCount} elements with key: ${key}`
   );
   return updatedCount;
@@ -198,7 +198,7 @@ export function refreshElementsByKey(key, locale = null) {
 function applySavedEdits() {
   try {
     const currentLocale = getCurrentLocale();
-    console.log(
+    console.debug(
       "[paraglide-editor] Applying saved edits for locale:",
       currentLocale
     );
@@ -213,7 +213,7 @@ function applySavedEdits() {
       }
     });
 
-    console.log(`[paraglide-editor] ✓ Applied ${appliedCount} saved edits`);
+    console.debug(`[paraglide-editor] ✓ Applied ${appliedCount} saved edits`);
   } catch (error) {
     console.error("[paraglide-editor] Failed to apply saved edits:", error);
   }
@@ -268,7 +268,7 @@ export async function applySavedEditsFromDB(locale = null) {
       }
     });
 
-    console.log(
+    console.debug(
       `[paraglide-editor] ✓ Applied ${appliedCount} saved edits to page (expected ${editedTranslations.length})`
     );
   } catch (error) {
@@ -373,7 +373,7 @@ export function initOverlayMode() {
       ? (element.getAttribute(clickedAttr) || '').trim()
       : element.textContent.trim();
 
-    console.log("[paraglide-editor] Clicked translatable element:", {
+    console.debug("[paraglide-editor] Clicked translatable element:", {
       key,
       params,
       currentText,
@@ -405,7 +405,7 @@ export function initOverlayMode() {
           for (const removed of mutation.removedNodes) {
             if (removed === popup || removed.contains?.(popup)) {
               setPopupElement(null);
-              console.log("[paraglide-editor] Popup closed, cycle state preserved");
+              console.debug("[paraglide-editor] Popup closed, cycle state preserved");
               return;
             }
           }
@@ -422,7 +422,7 @@ export function initOverlayMode() {
   window.__paraglideEditor.setOverlayMode = (enabled) => {
     overlayEnabled = enabled;
     localStorage.setItem("pge-overlay-enabled", enabled.toString());
-    console.log(
+    console.debug(
       `[paraglide-editor] Overlay mode ${enabled ? "enabled" : "disabled"}`
     );
 
@@ -442,5 +442,5 @@ export function initOverlayMode() {
 
   applyOutlinesToAllElements();
 
-  console.log("[paraglide-editor] ✓ Overlay mode initialized");
+  console.debug("[paraglide-editor] ✓ Overlay mode initialized");
 }

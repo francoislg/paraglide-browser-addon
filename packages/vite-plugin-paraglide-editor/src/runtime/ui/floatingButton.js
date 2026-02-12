@@ -52,10 +52,10 @@ export function createFloatingButton(onOpenModal) {
   `;
 
   button.addEventListener('click', () => {
-    console.log('[paraglide-editor] Opening editor modal');
+    console.debug('[paraglide-editor] Opening editor modal');
     onOpenModal();
   });
 
   document.body.appendChild(button);
-  console.log('[paraglide-editor] ✓ Floating button added');
+  console.debug('[paraglide-editor] ✓ Floating button added');
 }
