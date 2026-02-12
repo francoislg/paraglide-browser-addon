@@ -1,0 +1,90 @@
+{
+  "welcome": "Welcome to Paraglide with SvelteKit!",
+  "nav_simple": "Simple",
+  "nav_parameters": "Parameters",
+  "nav_variants": "Variants",
+  "greeting": "Hello, {name}!",
+  "description": "This example demonstrates Paraglide integration with SvelteKit and the debug metadata plugin.",
+  "simple_title": "Simple Translations",
+  "simple_content": "This page demonstrates basic static translations without any dynamic content or parameters.",
+  "simple_example_1": "Welcome to our application",
+  "simple_example_2": "Thank you for visiting",
+  "simple_example_3": "Have a great day!",
+  "parameters_title": "Dynamic Parameters",
+  "parameters_content": "This page shows translations with dynamic parameter interpolation.",
+  "variants_title": "Variants & Pluralization",
+  "pluralization_demo": "Pluralization Demo",
+  "items_count": [{
+    "declarations": [
+      "input count",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural"],
+    "match": {
+      "countPlural=one": "You have {count} product in your catalog.",
+      "countPlural=other": "You have {count} products in your catalog."
+    }
+  }],
+  "finish_position": [{
+    "declarations": [
+      "input position",
+      "local ordinal = position: plural type=ordinal"
+    ],
+    "selectors": ["ordinal"],
+    "match": {
+      "ordinal=one": "You finished {position}st place!",
+      "ordinal=two": "You finished {position}nd place!",
+      "ordinal=few": "You finished {position}rd place!",
+      "ordinal=*": "You finished {position}th place!"
+    }
+  }],
+  "platform_message": [{
+    "match": {
+      "platform=android": "You're using Android",
+      "platform=ios": "You're using iOS",
+      "platform=web": "You're using a web browser",
+      "platform=*": "Unknown platform"
+    }
+  }],
+  "user_activity": [{
+    "declarations": [
+      "input count",
+      "input gender",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural", "gender"],
+    "match": {
+      "countPlural=one, gender=male": "He posted {count} photo",
+      "countPlural=one, gender=female": "She posted {count} photo",
+      "countPlural=one, gender=*": "They posted {count} photo",
+      "countPlural=other, gender=male": "He posted {count} photos",
+      "countPlural=other, gender=female": "She posted {count} photos",
+      "countPlural=*, gender=*": "They posted {count} photos"
+    }
+  }],
+  "nav_stacking": "Stacking",
+  "stacking_title": "Stacking Context Test",
+  "stacking_description": "This page tests that the editor overlay appears above elements with complex CSS stacking.",
+  "stacking_card_title": "Card with absolute overlay",
+  "stacking_card_text": "This text is behind an absolute positioned element with z-index: 10.",
+  "stacking_card_button": "Click me",
+  "stacking_card_link": "I am a link",
+  "stacking_nested_title": "Nested Overlapping Elements",
+  "stacking_nested_hint": "Click the inner box repeatedly to cycle through overlapping elements.",
+  "stacking_outer": "Outer container — click here to edit the outer text.",
+  "stacking_outer_link": "Outer link",
+  "stacking_inner": "Inner nested — click repeatedly to cycle to the outer element.",
+  "stacking_inner_aria": "Overlay button — click to interact, click again to cycle to the outer element",
+  "floating_help": "Need help?",
+  "variants_demo": "Variants Demo",
+  "ordinal_demo": "Ordinal Demo",
+  "matching_demo": "Direct Matching Demo",
+  "multi_selector_demo": "Multi-Selector Demo",
+  "nav_inputs": "Inputs",
+  "inputs_title": "Translated Attributes",
+  "search_placeholder": "Search...",
+  "logo_alt": "Paraglide logo",
+  "close_aria_label": "Close dialog",
+  "submit_label": "Submit",
+  "submit_title": "Click to submit your search"
+}

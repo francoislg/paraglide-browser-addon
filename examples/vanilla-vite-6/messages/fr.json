@@ -1,0 +1,78 @@
+{
+  "welcome": "Bienvenue sur Paraglide Browser Addon!",
+  "greeting": "Bonjour, {name}!",
+  "description": "Ceci est un exemple simple démontrant le plugin Vite personnalisé pour ParaglideJS.",
+  "language_switcher": "Changer de langue",
+  "current_language": "Langue actuelle: Français",
+  "pluralization_demo": "Démonstration de Pluralisation",
+  "items_count": [{
+    "declarations": [
+      "input count",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural"],
+    "match": {
+      "countPlural=one": "Vous avez {count} élément dans votre panier.",
+      "countPlural=other": "Vous avez {count} éléments dans votre panier."
+    }
+  }],
+  "finish_position": [{
+    "declarations": [
+      "input position",
+      "local ordinal = position: plural type=ordinal"
+    ],
+    "selectors": ["ordinal"],
+    "match": {
+      "ordinal=one": "Vous avez terminé {position}ère place!",
+      "ordinal=two": "Vous avez terminé {position}ème place!",
+      "ordinal=few": "Vous avez terminé {position}ème place!",
+      "ordinal=*": "Vous avez terminé {position}ème place!"
+    }
+  }],
+  "platform_message": [{
+    "match": {
+      "platform=android": "Vous utilisez Android",
+      "platform=ios": "Vous utilisez iOS",
+      "platform=web": "Vous utilisez un navigateur web",
+      "platform=*": "Plateforme inconnue"
+    }
+  }],
+  "user_activity": [{
+    "declarations": [
+      "input count",
+      "input gender",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural", "gender"],
+    "match": {
+      "countPlural=one, gender=male": "Il a publié {count} photo",
+      "countPlural=one, gender=female": "Elle a publié {count} photo",
+      "countPlural=one, gender=*": "Ils ont publié {count} photo",
+      "countPlural=other, gender=male": "Il a publié {count} photos",
+      "countPlural=other, gender=female": "Elle a publié {count} photos",
+      "countPlural=*, gender=*": "Ils ont publié {count} photos"
+    }
+  }],
+  "stacking_title": "Test de Contexte d'Empilement",
+  "stacking_description": "Cette section teste que la superposition de l'éditeur apparaît au-dessus des éléments avec un empilement CSS complexe.",
+  "stacking_card_title": "Carte avec superposition absolue",
+  "stacking_card_text": "Ce texte est derrière un élément positionné en absolu avec z-index: 10.",
+  "stacking_card_button": "Cliquez ici",
+  "stacking_card_link": "Je suis un lien",
+  "stacking_nested_title": "Éléments Imbriqués Superposés",
+  "stacking_nested_hint": "Cliquez sur le cadre intérieur à plusieurs reprises pour alterner entre les éléments superposés.",
+  "stacking_outer": "Conteneur extérieur — cliquez ici pour modifier le texte extérieur.",
+  "stacking_outer_link": "Lien extérieur",
+  "stacking_inner": "Intérieur imbriqué — cliquez plusieurs fois pour accéder à l'élément extérieur.",
+  "stacking_inner_aria": "Bouton superposé — cliquez pour interagir, cliquez à nouveau pour accéder à l'élément extérieur",
+  "variants_demo": "Démonstration de Variantes",
+  "ordinal_demo": "Démonstration Ordinale",
+  "matching_demo": "Démonstration de Correspondance Directe",
+  "multi_selector_demo": "Démonstration Multi-Sélecteur",
+  "inputs_title": "Attributs Traduits",
+  "search_placeholder": "Rechercher...",
+  "logo_alt": "Logo de Paraglide",
+  "close_aria_label": "Fermer le dialogue",
+  "submit_label": "Soumettre",
+  "submit_title": "Cliquez pour soumettre votre recherche"
+}

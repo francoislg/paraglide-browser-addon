@@ -1,0 +1,78 @@
+{
+  "welcome": "¡Bienvenido a Paraglide Browser Addon!",
+  "greeting": "¡Hola, {name}!",
+  "description": "Este es un ejemplo simple que demuestra el complemento Vite personalizado para ParaglideJS.",
+  "language_switcher": "Cambiar idioma",
+  "current_language": "Idioma actual: Español",
+  "pluralization_demo": "Demostración de Pluralización",
+  "items_count": [{
+    "declarations": [
+      "input count",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural"],
+    "match": {
+      "countPlural=one": "Tienes {count} elemento en tu carrito.",
+      "countPlural=other": "Tienes {count} elementos en tu carrito."
+    }
+  }],
+  "finish_position": [{
+    "declarations": [
+      "input position",
+      "local ordinal = position: plural type=ordinal"
+    ],
+    "selectors": ["ordinal"],
+    "match": {
+      "ordinal=one": "¡Terminaste en {position}er lugar!",
+      "ordinal=two": "¡Terminaste en {position}do lugar!",
+      "ordinal=few": "¡Terminaste en {position}er lugar!",
+      "ordinal=*": "¡Terminaste en {position}º lugar!"
+    }
+  }],
+  "platform_message": [{
+    "match": {
+      "platform=android": "Estás usando Android",
+      "platform=ios": "Estás usando iOS",
+      "platform=web": "Estás usando un navegador web",
+      "platform=*": "Plataforma desconocida"
+    }
+  }],
+  "user_activity": [{
+    "declarations": [
+      "input count",
+      "input gender",
+      "local countPlural = count: plural"
+    ],
+    "selectors": ["countPlural", "gender"],
+    "match": {
+      "countPlural=one, gender=male": "Él publicó {count} foto",
+      "countPlural=one, gender=female": "Ella publicó {count} foto",
+      "countPlural=one, gender=*": "Publicó {count} foto",
+      "countPlural=other, gender=male": "Él publicó {count} fotos",
+      "countPlural=other, gender=female": "Ella publicó {count} fotos",
+      "countPlural=*, gender=*": "Publicó {count} fotos"
+    }
+  }],
+  "stacking_title": "Prueba de Contexto de Apilamiento",
+  "stacking_description": "Esta sección prueba que la superposición del editor aparece sobre elementos con apilamiento CSS complejo.",
+  "stacking_card_title": "Tarjeta con superposición absoluta",
+  "stacking_card_text": "Este texto está detrás de un elemento posicionado absoluto con z-index: 10.",
+  "stacking_card_button": "Haz clic",
+  "stacking_card_link": "Soy un enlace",
+  "stacking_nested_title": "Elementos Anidados Superpuestos",
+  "stacking_nested_hint": "Haz clic en el cuadro interior repetidamente para alternar entre elementos superpuestos.",
+  "stacking_outer": "Contenedor exterior — haz clic aquí para editar el texto exterior.",
+  "stacking_outer_link": "Enlace exterior",
+  "stacking_inner": "Interior anidado — haz clic repetidamente para llegar al elemento exterior.",
+  "stacking_inner_aria": "Botón superpuesto — haz clic para interactuar, haz clic de nuevo para llegar al elemento exterior",
+  "variants_demo": "Demostración de Variantes",
+  "ordinal_demo": "Demostración Ordinal",
+  "matching_demo": "Demostración de Coincidencia Directa",
+  "multi_selector_demo": "Demostración Multi-Selector",
+  "inputs_title": "Atributos Traducidos",
+  "search_placeholder": "Buscar...",
+  "logo_alt": "Logotipo de Paraglide",
+  "close_aria_label": "Cerrar diálogo",
+  "submit_label": "Enviar",
+  "submit_title": "Haz clic para enviar tu búsqueda"
+}
