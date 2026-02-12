@@ -34,7 +34,7 @@
  * ```
  */
 
-import { requireOptIn, editorEnabled, runtimeUrl, translationsUrl } from "/@paraglide-editor/config.js";
+import { requireOptIn, editorEnabled, runtimeUrl, translationsUrl } from "virtual:paraglide-editor/config.js";
 
 /**
  * SvelteKit `handle` function that conditionally injects the paraglide-editor

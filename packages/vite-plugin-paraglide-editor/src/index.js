@@ -179,6 +179,14 @@ export function paraglideEditorPlugin(options = {}) {
   let runtimeUrl;
   let translationsUrl;
 
+  // Virtual module prefixes:
+  // - URL_PREFIX: used in <script> tags and HTTP requests (browser-facing)
+  // - IMPORT_PREFIX: used in JS imports (SSR-safe, no leading slash)
+  // - RESOLVED_PREFIX: internal resolved ID with \0 (Vite virtual module convention)
+  const URL_PREFIX = "/@paraglide-editor/";
+  const IMPORT_PREFIX = "virtual:paraglide-editor/";
+  const RESOLVED_PREFIX = "\0@paraglide-editor/";
+
   // Verbose logging helper — only emits when PARAGLIDE_EDITOR_VERBOSE=true
   let verbose = () => {};
 
@@ -242,22 +250,27 @@ export function paraglideEditorPlugin(options = {}) {
       verbose("Environment check:", editorEnv.PARAGLIDE_EDITOR);
     },
 
-    // Resolve virtual module IDs
+    // Resolve virtual module IDs using \0 prefix convention
     resolveId(id, importer) {
-      // Handle direct virtual module references
-      if (id.startsWith("/@paraglide-editor/")) {
-        return id;
+      // Handle /@paraglide-editor/ URLs (from <script> tags, browser requests, buildStart emit)
+      if (id.startsWith(URL_PREFIX)) {
+        return RESOLVED_PREFIX + id.slice(URL_PREFIX.length);
+      }
+
+      // Handle virtual:paraglide-editor/ imports (SSR-safe, used by sveltekit.js)
+      if (id.startsWith(IMPORT_PREFIX)) {
+        return RESOLVED_PREFIX + id.slice(IMPORT_PREFIX.length);
       }
 
       // Handle relative imports from virtual modules
-      if (importer && importer.startsWith("/@paraglide-editor/")) {
+      // e.g., importer: \0@paraglide-editor/runtime.js, id: ./runtime/db.js
+      // → \0@paraglide-editor/runtime/db.js
+      if (importer && importer.startsWith(RESOLVED_PREFIX)) {
         if (id.startsWith("./") || id.startsWith("../")) {
-          // Resolve relative path against importer
-          // e.g., importer: /@paraglide-editor/runtime.js, id: ./runtime/db.js
-          // → /@paraglide-editor/runtime/db.js
-          const importerDir = path.dirname(importer);
-          const resolved = path.join(importerDir, id).replace(/\\/g, "/");
-          return resolved;
+          const importerPath = importer.slice(RESOLVED_PREFIX.length);
+          const dir = path.posix.dirname(importerPath);
+          const resolved = path.posix.join(dir, id);
+          return RESOLVED_PREFIX + resolved;
         }
       }
 
@@ -291,25 +304,25 @@ export function paraglideEditorPlugin(options = {}) {
       }
     },
 
-    // Load virtual module content
+    // Load virtual module content (IDs use \0 prefix from resolveId)
     load(id) {
       // Config module is always available (SvelteKit handle imports it unconditionally)
-      if (id === "/@paraglide-editor/config.js") {
+      if (id === RESOLVED_PREFIX + "config.js") {
         return `export const requireOptIn = ${requireOptIn};\nexport const editorEnabled = ${isEditorMode};\nexport const runtimeUrl = ${JSON.stringify(runtimeUrl)};\nexport const translationsUrl = ${JSON.stringify(translationsUrl)};`;
       }
 
       if (!isEditorMode) {
-        if (id === "/@paraglide-editor/runtime.js") {
+        if (id === RESOLVED_PREFIX + "runtime.js") {
           return "// Paraglide editor mode is disabled";
         }
         return null;
       }
 
-      if (id.startsWith("/@paraglide-editor/")) {
-        // Strip the virtual prefix to get the file path
-        // /@paraglide-editor/runtime.js → runtime.js
-        // /@paraglide-editor/runtime/db.js → runtime/db.js
-        const relativePath = id.replace("/@paraglide-editor/", "");
+      if (id.startsWith(RESOLVED_PREFIX)) {
+        // Strip the resolved prefix to get the file path
+        // \0@paraglide-editor/runtime.js → runtime.js
+        // \0@paraglide-editor/runtime/db.js → runtime/db.js
+        const relativePath = id.slice(RESOLVED_PREFIX.length);
         const filePath = path.join(__dirname, relativePath);
 
         try {
